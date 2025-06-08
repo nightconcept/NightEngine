@@ -30,14 +30,24 @@ namespace Night
   public struct WindowMode
   {
     /// <summary>
-    /// Gets or sets the window width in pixels.
+    /// Gets or sets the window width in logical units.
     /// </summary>
     public int Width;
 
     /// <summary>
-    /// Gets or sets the window height in pixels.
+    /// Gets or sets the window height in logical units.
     /// </summary>
     public int Height;
+
+    /// <summary>
+    /// Gets or sets the window width in physical pixels.
+    /// </summary>
+    public int PixelWidth;
+
+    /// <summary>
+    /// Gets or sets the window height in physical pixels.
+    /// </summary>
+    public int PixelHeight;
 
     /// <summary>
     /// Gets or sets a value indicating whether the window is in fullscreen mode.
@@ -90,7 +100,17 @@ namespace Night
     public int MinHeight;
 
     /// <summary>
-    /// Gets or sets a value indicating whether high-dpi mode is allowed on Retina displays (macOS).
+    /// Gets or sets the maximum width of the window, if resizable.
+    /// </summary>
+    public int MaxWidth;
+
+    /// <summary>
+    /// Gets or sets the maximum height of the window, if resizable.
+    /// </summary>
+    public int MaxHeight;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether high-dpi mode is allowed.
     /// </summary>
     public bool HighDpi;
 
@@ -108,5 +128,10 @@ namespace Night
     /// Gets or sets the y-coordinate of the window's position.
     /// </summary>
     public int Y;
+
+    /// <summary>
+    /// Gets or sets the window title.
+    /// </summary>
+    public string Title;
   }
 }

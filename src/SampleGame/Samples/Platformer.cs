@@ -121,28 +121,40 @@ public class Platformer : IGame
     }
 
     this.player.Draw();
-
-    // Player and Level drawing logic will go here in later tasks.
   }
 
   /// <summary>
   /// Handles key press events for the platformer game.
-  /// Called by Night.Engine when a key is pressed.
   /// </summary>
   /// <param name="key">The <see cref="Night.KeySymbol"/> of the pressed key.</param>
   /// <param name="scancode">The <see cref="Night.KeyCode"/> (physical key code) of the pressed key.</param>
   /// <param name="isRepeat">True if this is a repeat key event, false otherwise.</param>
   public void KeyPressed(KeySymbol key, KeyCode scancode, bool isRepeat)
   {
-    // Minimal key handling for now, primarily for closing the window.
-    // System.Console.WriteLine($"SampleGame: KeyPressed - KeySymbol: {key}, Scancode: {scancode}, IsRepeat: {isRepeat}");
+    // Minimal key handling, primarily for closing the window.
     if (key == KeySymbol.Escape)
     {
       Console.WriteLine("SampleGame: Escape key pressed, closing window.");
       Window.Close();
     }
+  }
 
-    // Player input (movement, jump) will be handled in Player.Update using Night.Keyboard.IsDown().
+  /// <inheritdoc/>
+  public void KeyReleased(KeySymbol key, KeyCode scancode)
+  {
+    throw new NotImplementedException();
+  }
+
+  /// <inheritdoc/>
+  public void MousePressed(int x, int y, MouseButton button, bool istouch, int presses)
+  {
+    throw new NotImplementedException();
+  }
+
+  /// <inheritdoc/>
+  public void MouseReleased(int x, int y, MouseButton button, bool istouch, int presses)
+  {
+    throw new NotImplementedException();
   }
 
   // Helper for collision detection (AABB)

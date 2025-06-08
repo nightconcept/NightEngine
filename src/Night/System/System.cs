@@ -39,10 +39,13 @@ namespace Night
       return SDL.SetClipboardText(text);
     }
 
-    // TODO: Consider adding GetClipboardText if in scope for future versions.
-    // public static string GetClipboardText()
-    // {
-    //     return SDL.GetClipboardText();
-    // }
+    /// <summary>
+    /// Gets the current text in the system's clipboard.
+    /// </summary>
+    /// <returns>Clipboard text as a string.</returns>
+    public static string GetClipboardText()
+    {
+      return SDL.GetClipboardText();
+    }
   }
 }

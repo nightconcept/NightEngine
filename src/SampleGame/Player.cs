@@ -48,7 +48,6 @@ namespace SampleGame
     /// </summary>
     public Player()
     {
-      // Initialize properties in Load()
       this.isGrounded = false; // Start in the air or assume Load sets initial grounded state
     }
 

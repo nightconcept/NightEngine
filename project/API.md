@@ -14,13 +14,21 @@
 ### Types (Filesystem)
 
 - FileSystemInfo
+- NightFile
 
 ### Functions (Filesystem)
 
+- Append() - love.filesystem.append
+  - Append(string filename, byte[] data, long? size)
+- CreateDirectory() - love.filesystem.createDirectory
+  - CreateDirectory(string path)
+- GetAppdataDirectory() - love.filesystem.getAppdataDirectory
 - GetInfo() - love.filesystem.getInfo
   - GetInfo(string path, FileSystemInfo info)
   - GetInfo(string path, FileType filterType, FileSystemInfo info)
   - GetInfo(string path, FileType? filterType)
+- Lines() - love.filesystem.lines
+  - Lines(string filePath)
 - ReadBytes() - love.filesystem.readBytes
   - ReadBytes(string path)
 - ReadText() - love.filesystem.readText
@@ -28,6 +36,7 @@
 
 ### Enums (Filesystem)
 
+- BufferMode
 - FileMode
 - FileType
 
@@ -78,6 +87,12 @@
 
 - KeyCode
 - KeySymbol
+
+## Log
+
+### Enums (Log)
+
+- LogLevel
 
 ## Mouse
 

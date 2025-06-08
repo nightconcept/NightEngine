@@ -6,7 +6,8 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nightconcept/NightEngine/badge)](https://scorecard.dev/viewer/?uri=github.com/nightconcept/NightEngine)
 
 > [!WARNING]
->⚠️ WORK IN PROGRESS - NOT FOR PRODUCTION USE ⚠️
+>WORK IN PROGRESS - NOT FOR PRODUCTION USE
+>
 >This project is currently in active development and is considered highly experimental. APIs are subject to change, and features may be incomplete or unstable. It is not recommended for use in production environments.
 
 A cross-platform C# game engine built on top of SDL3.
@@ -104,4 +105,4 @@ Contributions... eventually! When I feel like the code-base is in a good place, 
 ## License
 
 This project is licensed under the [zlib License](LICENSE).
-See also [NOTICE.md](docs/NOTICE.md) for details on third-party software.
+See also [NOTICE.md](project/NOTICE.md) for details on third-party software.

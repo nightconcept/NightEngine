@@ -23,8 +23,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Night;
+using Night.Log;
+using Night.Log.Sinks;
 
 using SDL3;
 
@@ -79,14 +85,14 @@ public class Game : IGame
     this.goalPlatform = new Night.Rectangle(600, 200, 100, 30);
     this.platforms.Add(this.goalPlatform);
 
-    // Set the window icon (assuming icon is in assets/icon.png relative to executable)
+    // Set the window icon (assuming icon is in assets/icon.ico relative to executable)
     // This path will be resolved by Night.Framework if specified in config.json via IconPath.
     // If not in config, or if this call is made after Framework has set from config,
     // this explicit call can override or set it if not in config.
     // For the sample, we'll rely on the config first, but this shows direct API usage.
     // If you want the SampleGame to ALWAYS use a specific icon regardless of config, call it here.
     // For now, we let config drive it. If you want to test direct SetIcon:
-    string iconRelativePath = Path.Combine("assets", "icon.png");
+    string iconRelativePath = Path.Combine("assets", "icon.ico");
     string iconFullPath = Path.Combine(AppContext.BaseDirectory, iconRelativePath);
     _ = Window.SetIcon(iconFullPath);
     Console.WriteLine($"Attempted to set icon from Game.Load. Current icon: {Window.GetIcon()}");
@@ -269,8 +275,24 @@ public class Game : IGame
       var newMode = Window.GetMode();
       Console.WriteLine($"New Window Mode: {newMode.Width}x{newMode.Height}, Fullscreen: {newMode.Fullscreen}, Type: {newMode.FullscreenType}, Borderless: {newMode.Borderless}");
     }
+  }
 
-    // --- End Night.Window Demo ---
+  /// <inheritdoc/>
+  public void KeyReleased(KeySymbol key, KeyCode scancode)
+  {
+    throw new NotImplementedException();
+  }
+
+  /// <inheritdoc/>
+  public void MousePressed(int x, int y, MouseButton button, bool istouch, int presses)
+  {
+    throw new NotImplementedException();
+  }
+
+  /// <inheritdoc/>
+  public void MouseReleased(int x, int y, MouseButton button, bool istouch, int presses)
+  {
+    throw new NotImplementedException();
   }
 
   // Helper for collision detection (AABB)
@@ -283,5 +305,3 @@ public class Game : IGame
            rect1.Y + rect1.Height > rect2.Y;
   }
 }
-
-// Program class removed from here, will be in Program.cs

@@ -14,7 +14,7 @@
 
 - [x] **1. Review Project Documentation:**
   - [x] Read `project/PRD.md`
-  - [x] Read `project/operational-guidelines.md`
+  - [x] Read `project/guidelines.md`
 - [x] **2. Plan Implementation:**
   - [x] Define Problem
   - [x] Outline Solution

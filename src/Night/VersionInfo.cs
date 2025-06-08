@@ -37,7 +37,7 @@ namespace Night
     /// Gets the developer-assigned codename for the current version.
     /// This value is manually updated by the developer.
     /// </summary>
-    public const string CodeName = "Initial Codename"; // Placeholder
+    public const string CodeName = "Initial Codename"; // TODO: Placeholder
 
     /// <summary>
     /// Gets the Semantic Version of the Night library.
@@ -50,4 +50,3 @@ namespace Night
     }
   }
 }
-
