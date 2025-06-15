@@ -61,16 +61,6 @@ namespace Night
   public static class System
   {
     /// <summary>
-    /// Puts text in the system's clipboard.
-    /// </summary>
-    /// <param name="text">The new text to hold in the system's clipboard.</param>
-    /// <returns>True if the operation was successful, false otherwise.</returns>
-    public static bool SetClipboardText(string text)
-    {
-      return SDL.SetClipboardText(text);
-    }
-
-    /// <summary>
     /// Gets the current text in the system's clipboard.
     /// </summary>
     /// <returns>Clipboard text as a string.</returns>
@@ -110,18 +100,6 @@ namespace Night
       }
     }
 
-    /// <summary>
-    /// Gets the amount of logical processors in the system.
-    /// </summary>
-    /// <returns>Amount of logical processors.</returns>
-    /// <remarks>
-    /// The number includes the threads reported if technologies such as Intel's Hyper-threading are enabled.
-    /// For example, on a 4-core CPU with Hyper-threading, this function will return 8.
-    /// </remarks>
-    public static int GetProcessorCount()
-    {
-      return SDL.GetNumLogicalCPUCores();
-    }
 
     /// <summary>
     /// Gets information about the system's power supply.
@@ -167,5 +145,29 @@ namespace Night
 
       return (nightState, nullablePercent, nullableSeconds);
     }
+
+    /// <summary>
+    /// Gets the amount of logical processors in the system.
+    /// </summary>
+    /// <returns>Amount of logical processors.</returns>
+    /// <remarks>
+    /// The number includes the threads reported if technologies such as Intel's Hyper-threading are enabled.
+    /// For example, on a 4-core CPU with Hyper-threading, this function will return 8.
+    /// </remarks>
+    public static int GetProcessorCount()
+    {
+      return SDL.GetNumLogicalCPUCores();
+    }
+
+    /// <summary>
+    /// Puts text in the system's clipboard.
+    /// </summary>
+    /// <param name="text">The new text to hold in the system's clipboard.</param>
+    /// <returns>True if the operation was successful, false otherwise.</returns>
+    public static bool SetClipboardText(string text)
+    {
+      return SDL.SetClipboardText(text);
+    }
+
   }
 }
