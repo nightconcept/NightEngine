@@ -48,6 +48,8 @@
 
 ### Functions (Joysticks)
 
+- GetJoystickByInstanceId() - love.joysticks.getJoystickByInstanceId
+  - GetJoystickByInstanceId(uint instanceId)
 - GetJoystickCount() - love.joysticks.getJoystickCount
 - GetJoysticks() - love.joysticks.getJoysticks
 
@@ -102,6 +104,8 @@
 - GetOS() - love.system.getOS
 - GetPowerInfo() - love.system.getPowerInfo
 - GetProcessorCount() - love.system.getProcessorCount
+- OpenURL() - love.system.openURL
+  - OpenURL(string url)
 - SetClipboardText() - love.system.setClipboardText
   - SetClipboardText(string text)
 

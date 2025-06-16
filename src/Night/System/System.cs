@@ -100,7 +100,6 @@ namespace Night
       }
     }
 
-
     /// <summary>
     /// Gets information about the system's power supply.
     /// This function is similar to LÖVE's love.system.getPowerInfo().
@@ -160,6 +159,16 @@ namespace Night
     }
 
     /// <summary>
+    /// Opens a URL with the user's web or file browser.
+    /// </summary>
+    /// <param name="url">The URL to open. Must be formatted as a proper URL.</param>
+    /// <returns>Whether the URL was opened successfully.</returns>
+    public static bool OpenURL(string url)
+    {
+      return SDL.OpenURL(url);
+    }
+
+    /// <summary>
     /// Puts text in the system's clipboard.
     /// </summary>
     /// <param name="text">The new text to hold in the system's clipboard.</param>
@@ -168,6 +177,5 @@ namespace Night
     {
       return SDL.SetClipboardText(text);
     }
-
   }
 }
