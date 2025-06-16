@@ -20,7 +20,7 @@ Most functions list the Love2D equivalent module/function/callback implementatio
 - [x] `love.joystick`: Provides an interface to connected joysticks.
 - [ ] `love.keyboard`: Provides an interface to the user's keyboard.
 - [ ] `love.mouse`: Provides an interface to the user's mouse.
-- [ ] `love.system`: Provides access to information about the user's system.
+- [x] `love.system`: Provides access to information about the user's system.
 - [x] `love.timer`: Provides high-resolution timing functionality.
 - [ ] `love.window`: Provides an interface for the program's window.
 
