@@ -34,6 +34,6 @@ public class PlatformerGame
   /// </summary>
   public static void PlatformerGameMain()
   {
-    Night.Framework.Run(new Platformer());
+    Night.Framework.Run(new Platformer(), new CLI(System.Array.Empty<string>()));
   }
 }

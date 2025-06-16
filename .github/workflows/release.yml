@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Semantic Version for the release (e.g., 1.0.0, 1.0.0-beta.1). This is the pure SemVer.'
+        description: "Semantic Version for the release (e.g., 1.0.0, 1.0.0-beta.1). This is the pure SemVer."
         required: true
         type: string
 
@@ -29,12 +29,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required to analyze history
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: Validate Version Input (SemVer)
         run: |
@@ -85,7 +85,6 @@ jobs:
           fi
         shell: bash
 
-
       - name: Update Version in .csproj
         id: update_version_csproj
         run: |
@@ -114,11 +113,18 @@ jobs:
           $newSemVer = "${{ github.event.inputs.version }}"
           $versionInfoFilePath = "${{ env.VERSION_INFO_FILE_PATH }}"
           Write-Host "Attempting to update Version constant in '$versionInfoFilePath' to '$newSemVer'"
-          $content = Get-Content $versionInfoFilePath -Raw
+          $content = Get-Content -Path $versionInfoFilePath -Raw
           # Regex to find 'public const string Version = ".*";' and replace the version string part
           $updatedContent = $content -replace '(?<=public const string Version = ")([^"]*)(?=";)', $newSemVer
-          Set-Content -Path $versionInfoFilePath -Value $updatedContent
-          Write-Host "Updated Version constant in '$versionInfoFilePath'"
+
+          # Ensure the content ends with a single LF newline.
+          # Remove all trailing CR and LF characters, then add a single LF.
+          $updatedContent = $updatedContent.TrimEnd("`r", "`n") + "`n"
+
+          # Write the content. UTF-8 is standard for .cs files.
+          Set-Content -Path $versionInfoFilePath -Value $updatedContent -Encoding UTF8
+
+          Write-Host "Updated Version constant in '$versionInfoFilePath', ensuring it ends with a single LF newline."
         shell: pwsh
 
       - name: Commit Version Changes
@@ -143,6 +149,86 @@ jobs:
           echo "Pushed commit to main."
           git push origin "${{ steps.update_version_csproj.outputs.version_tag }}"
           echo "Pushed tag ${{ steps.update_version_csproj.outputs.version_tag }} to remote."
+        shell: bash
+
+      - name: Prepare SDL3 Prebuilt Binaries
+        run: |
+          echo "Looking for SDL3 prebuilt binary ZIP files in platform-specific subdirectories under lib/SDL3-Prebuilt..."
+          SDL_PREBUILT_DIR="lib/SDL3-Prebuilt"
+
+          if ! command -v unzip &> /dev/null; then
+            echo "Error: unzip command not found. Please ensure it's installed on the runner."
+            exit 1
+          fi
+
+          # Linux
+          TARGET_ZIP_BASENAME_LINUX="linux"
+          TARGET_PLATFORM_DIR_LINUX="linux"
+          PLATFORM_DIR_PATH_LINUX="$SDL_PREBUILT_DIR/$TARGET_PLATFORM_DIR_LINUX"
+          PLATFORM_ARCHIVE_PATH_LINUX="$PLATFORM_DIR_PATH_LINUX/$TARGET_ZIP_BASENAME_LINUX.zip"
+          PLATFORM_ARCHIVE_ALT_PATH_LINUX="$PLATFORM_DIR_PATH_LINUX/$TARGET_ZIP_BASENAME_LINUX-binaries.zip"
+          EXTRACTION_DIR_LINUX="$PLATFORM_DIR_PATH_LINUX"
+
+          echo "Attempting to extract for $TARGET_PLATFORM_DIR_LINUX from $PLATFORM_DIR_PATH_LINUX into $EXTRACTION_DIR_LINUX..."
+          mkdir -p "$EXTRACTION_DIR_LINUX" # Ensure platform directory exists
+          if [ -f "$PLATFORM_ARCHIVE_PATH_LINUX" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_LINUX binaries from $PLATFORM_ARCHIVE_PATH_LINUX..."
+            unzip -qo "$PLATFORM_ARCHIVE_PATH_LINUX" -d "$EXTRACTION_DIR_LINUX/"
+            echo "Extracted $TARGET_PLATFORM_DIR_LINUX binaries from $PLATFORM_ARCHIVE_PATH_LINUX."
+          elif [ -f "$PLATFORM_ARCHIVE_ALT_PATH_LINUX" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_LINUX binaries from $PLATFORM_ARCHIVE_ALT_PATH_LINUX..."
+            unzip -qo "$PLATFORM_ARCHIVE_ALT_PATH_LINUX" -d "$EXTRACTION_DIR_LINUX/"
+            echo "Extracted $TARGET_PLATFORM_DIR_LINUX binaries from $PLATFORM_ARCHIVE_ALT_PATH_LINUX."
+          else
+            echo "Info: No $TARGET_PLATFORM_DIR_LINUX SDL binaries ZIP found (checked for $PLATFORM_ARCHIVE_PATH_LINUX and $PLATFORM_ARCHIVE_ALT_PATH_LINUX)."
+          fi
+
+          # macOS
+          TARGET_ZIP_BASENAME_MACOS="macos"
+          TARGET_PLATFORM_DIR_MACOS="macos"
+          PLATFORM_DIR_PATH_MACOS="$SDL_PREBUILT_DIR/$TARGET_PLATFORM_DIR_MACOS"
+          PLATFORM_ARCHIVE_PATH_MACOS="$PLATFORM_DIR_PATH_MACOS/$TARGET_ZIP_BASENAME_MACOS.zip"
+          PLATFORM_ARCHIVE_ALT_PATH_MACOS="$PLATFORM_DIR_PATH_MACOS/$TARGET_ZIP_BASENAME_MACOS-binaries.zip"
+          EXTRACTION_DIR_MACOS="$PLATFORM_DIR_PATH_MACOS"
+
+          echo "Attempting to extract for $TARGET_PLATFORM_DIR_MACOS from $PLATFORM_DIR_PATH_MACOS into $EXTRACTION_DIR_MACOS..."
+          mkdir -p "$EXTRACTION_DIR_MACOS" # Ensure platform directory exists
+          if [ -f "$PLATFORM_ARCHIVE_PATH_MACOS" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_MACOS binaries from $PLATFORM_ARCHIVE_PATH_MACOS..."
+            unzip -qo "$PLATFORM_ARCHIVE_PATH_MACOS" -d "$EXTRACTION_DIR_MACOS/"
+            echo "Extracted $TARGET_PLATFORM_DIR_MACOS binaries from $PLATFORM_ARCHIVE_PATH_MACOS."
+          elif [ -f "$PLATFORM_ARCHIVE_ALT_PATH_MACOS" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_MACOS binaries from $PLATFORM_ARCHIVE_ALT_PATH_MACOS..."
+            unzip -qo "$PLATFORM_ARCHIVE_ALT_PATH_MACOS" -d "$EXTRACTION_DIR_MACOS/"
+            echo "Extracted $TARGET_PLATFORM_DIR_MACOS binaries from $PLATFORM_ARCHIVE_ALT_PATH_MACOS."
+          else
+            echo "Info: No $TARGET_PLATFORM_DIR_MACOS SDL binaries ZIP found (checked for $PLATFORM_ARCHIVE_PATH_MACOS and $PLATFORM_ARCHIVE_ALT_PATH_MACOS)."
+          fi
+
+          # Windows
+          TARGET_ZIP_BASENAME_WINDOWS="windows"
+          TARGET_PLATFORM_DIR_WINDOWS="windows"
+          PLATFORM_DIR_PATH_WINDOWS="$SDL_PREBUILT_DIR/$TARGET_PLATFORM_DIR_WINDOWS"
+          PLATFORM_ARCHIVE_PATH_WINDOWS="$PLATFORM_DIR_PATH_WINDOWS/$TARGET_ZIP_BASENAME_WINDOWS.zip"
+          PLATFORM_ARCHIVE_ALT_PATH_WINDOWS="$PLATFORM_DIR_PATH_WINDOWS/$TARGET_ZIP_BASENAME_WINDOWS-binaries.zip"
+          EXTRACTION_DIR_WINDOWS="$PLATFORM_DIR_PATH_WINDOWS"
+
+          echo "Attempting to extract for $TARGET_PLATFORM_DIR_WINDOWS from $PLATFORM_DIR_PATH_WINDOWS into $EXTRACTION_DIR_WINDOWS..."
+          mkdir -p "$EXTRACTION_DIR_WINDOWS" # Ensure platform directory exists
+          if [ -f "$PLATFORM_ARCHIVE_PATH_WINDOWS" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_WINDOWS binaries from $PLATFORM_ARCHIVE_PATH_WINDOWS..."
+            unzip -qo "$PLATFORM_ARCHIVE_PATH_WINDOWS" -d "$EXTRACTION_DIR_WINDOWS/"
+            echo "Extracted $TARGET_PLATFORM_DIR_WINDOWS binaries from $PLATFORM_ARCHIVE_PATH_WINDOWS."
+          elif [ -f "$PLATFORM_ARCHIVE_ALT_PATH_WINDOWS" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_WINDOWS binaries from $PLATFORM_ARCHIVE_ALT_PATH_WINDOWS..."
+            unzip -qo "$PLATFORM_ARCHIVE_ALT_PATH_WINDOWS" -d "$EXTRACTION_DIR_WINDOWS/"
+            echo "Extracted $TARGET_PLATFORM_DIR_WINDOWS binaries from $PLATFORM_ARCHIVE_ALT_PATH_WINDOWS."
+          else
+            echo "Info: No $TARGET_PLATFORM_DIR_WINDOWS SDL binaries ZIP found (checked for $PLATFORM_ARCHIVE_PATH_WINDOWS and $PLATFORM_ARCHIVE_ALT_PATH_WINDOWS)."
+          fi
+
+          echo "Final listing of contents in $SDL_PREBUILT_DIR after extraction attempts:"
+          ls -R "$SDL_PREBUILT_DIR"
         shell: bash
 
       - name: Build Solution

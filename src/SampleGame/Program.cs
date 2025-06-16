@@ -34,9 +34,10 @@ namespace SampleGame
     /// The main entry point for the application.
     /// Initializes and runs the game using the Night.Framework.
     /// </summary>
-    public static void Main()
+    /// <param name="args">Command-line arguments.</param>
+    public static void Main(string[] args)
     {
-      Framework.Run(new Game());
+      Framework.Run(new SamplePlatformerGame(), new CLI(args));
     }
   }
 }

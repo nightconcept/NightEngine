@@ -32,9 +32,9 @@ namespace SampleGame;
 
 /// <summary>
 /// A sample platformer game implementation using the Night engine.
-/// Implements the <see cref="IGame"/> interface for Night.Engine integration.
+/// Inherits from <see cref="Night.Game"/> to leverage default game loop and event handling.
 /// </summary>
-public class Platformer : IGame
+public class Platformer : Game
 {
   private Player player;
   private List<Night.Rectangle> platforms;
@@ -55,7 +55,7 @@ public class Platformer : IGame
   /// Loads game assets and initializes game state for the platformer.
   /// Called once at the start of the game by the Night.Engine.
   /// </summary>
-  public void Load()
+  public override void Load()
   {
     _ = Night.Window.SetMode(800, 600, SDL.WindowFlags.Resizable);
     Night.Window.SetTitle("Night Platformer Sample");
@@ -83,9 +83,10 @@ public class Platformer : IGame
   /// Called every frame by the Night.Engine.
   /// </summary>
   /// <param name="deltaTime">The time elapsed since the last frame, in seconds.</param>
-  public void Update(double deltaTime)
+  public override void Update(double deltaTime)
   {
-    this.player.Update(deltaTime, this.platforms);
+    // Pass default joystick values as this sample isn't the primary focus for joystick control.
+    this.player.Update(deltaTime, this.platforms, 0.0f, Night.JoystickHat.Centered, false);
 
     Night.Rectangle playerBoundsForGoalCheck = new Night.Rectangle((int)this.player.X, (int)this.player.Y, this.player.Width, this.player.Height + 1);
     if (CheckAABBCollision(playerBoundsForGoalCheck, this.goalPlatform) && !this.goalReachedMessageShown)
@@ -100,7 +101,7 @@ public class Platformer : IGame
   /// Draws the platformer game scene.
   /// Called every frame by the Night.Engine after Update.
   /// </summary>
-  public void Draw()
+  public override void Draw()
   {
     Night.Graphics.Clear(new Night.Color(135, 206, 235)); // Sky blue background
 
@@ -121,28 +122,94 @@ public class Platformer : IGame
     }
 
     this.player.Draw();
-
-    // Player and Level drawing logic will go here in later tasks.
   }
 
   /// <summary>
   /// Handles key press events for the platformer game.
-  /// Called by Night.Engine when a key is pressed.
   /// </summary>
   /// <param name="key">The <see cref="Night.KeySymbol"/> of the pressed key.</param>
   /// <param name="scancode">The <see cref="Night.KeyCode"/> (physical key code) of the pressed key.</param>
   /// <param name="isRepeat">True if this is a repeat key event, false otherwise.</param>
-  public void KeyPressed(KeySymbol key, KeyCode scancode, bool isRepeat)
+  public override void KeyPressed(KeySymbol key, KeyCode scancode, bool isRepeat)
   {
-    // Minimal key handling for now, primarily for closing the window.
-    // System.Console.WriteLine($"SampleGame: KeyPressed - KeySymbol: {key}, Scancode: {scancode}, IsRepeat: {isRepeat}");
+    // Minimal key handling, primarily for closing the window.
     if (key == KeySymbol.Escape)
     {
       Console.WriteLine("SampleGame: Escape key pressed, closing window.");
       Window.Close();
     }
+  }
 
-    // Player input (movement, jump) will be handled in Player.Update using Night.Keyboard.IsDown().
+  /// <inheritdoc/>
+  public override void KeyReleased(KeySymbol key, KeyCode scancode)
+  {
+    // base.KeyReleased(key, scancode); // Call base if you want to extend, or just leave empty.
+  }
+
+  /// <inheritdoc/>
+  public override void MousePressed(int x, int y, MouseButton button, bool istouch, int presses)
+  {
+    // base.MousePressed(x, y, button, istouch, presses);
+  }
+
+  /// <inheritdoc/>
+  public override void MouseReleased(int x, int y, MouseButton button, bool istouch, int presses)
+  {
+    // base.MouseReleased(x, y, button, istouch, presses);
+  }
+
+  /// <inheritdoc/>
+  public override void JoystickAdded(Joystick joystick)
+  {
+    // base.JoystickAdded(joystick);
+  }
+
+  /// <inheritdoc/>
+  public override void JoystickRemoved(Joystick joystick)
+  {
+    // base.JoystickRemoved(joystick);
+  }
+
+  /// <inheritdoc/>
+  public override void JoystickAxis(Joystick joystick, int axis, float value)
+  {
+    // base.JoystickAxis(joystick, axis, value);
+  }
+
+  /// <inheritdoc/>
+  public override void JoystickPressed(Joystick joystick, int button)
+  {
+    // base.JoystickPressed(joystick, button);
+  }
+
+  /// <inheritdoc/>
+  public override void JoystickReleased(Joystick joystick, int button)
+  {
+    // base.JoystickReleased(joystick, button);
+  }
+
+  /// <inheritdoc/>
+  public override void JoystickHat(Joystick joystick, int hat, JoystickHat direction)
+  {
+    // base.JoystickHat(joystick, hat, direction);
+  }
+
+  /// <inheritdoc/>
+  public override void GamepadAxis(Joystick joystick, GamepadAxis axis, float value)
+  {
+    // base.GamepadAxis(joystick, axis, value);
+  }
+
+  /// <inheritdoc/>
+  public override void GamepadPressed(Joystick joystick, GamepadButton button)
+  {
+    // base.GamepadPressed(joystick, button);
+  }
+
+  /// <inheritdoc/>
+  public override void GamepadReleased(Joystick joystick, GamepadButton button)
+  {
+    // base.GamepadReleased(joystick, button);
   }
 
   // Helper for collision detection (AABB)

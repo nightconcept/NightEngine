@@ -2,35 +2,50 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'recursive' # Ensure submodules like SDL are checked out
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive" # Ensure submodules like SDL are checked out
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: | # Specify SDK versions if particular ones are needed, or remove for latest
-          9.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version:
+            | # Specify SDK versions if particular ones are needed, or remove for latest
+            9.0.x
 
-    - name: Check Formatting
-      run: dotnet format --verify-no-changes --verbosity diagnostic Night.sln
+      - name: Check Formatting
+        run: dotnet format --verify-no-changes --verbosity diagnostic Night.sln
 
-    - name: Restore dependencies
-      run: dotnet restore Night.sln
+      - name: Restore dependencies
+        run: dotnet restore Night.sln
 
-    - name: Build Solution
-      run: dotnet build Night.sln --configuration Release --no-restore
+      - name: Build Solution
+        run: dotnet build Night.sln --configuration Release --no-restore
 
-    - name: Run Tests
-      run: dotnet test tests/Night.Tests/Night.Tests.csproj --no-build --configuration Release
+      - name: Run Tests
+        env:
+          SDL_VIDEODRIVER: ${{ (matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest') && 'dummy' || '' }}
+        run: >
+          dotnet test Night.sln --configuration Release --no-build --filter "TestType=Automated"
+          /p:CollectCoverage=true
+          /p:CoverletOutputFormat=opencover
+          /p:Exclude="[xunit.*]*%2c[*.Tests]*%2c[NightTest]*"
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./tests/coverage.opencover.xml
+          fail_ci_if_error: true

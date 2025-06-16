@@ -1,0 +1,11 @@
+{
+  "window": {
+    "title": "Night Test Window",
+    "width": 800,
+    "height": 600,
+    "resizable": true,
+    "vsync": false,
+    "fullscreen": false,
+    "borderless": false
+  }
+}

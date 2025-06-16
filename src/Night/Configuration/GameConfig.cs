@@ -42,10 +42,10 @@ namespace Night
     public bool AppendIdentity { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets the LÖVE version this game targets. Currently informational.
+    /// Gets or sets the Night Engine version this game targets.
     /// </summary>
     [JsonPropertyName("version")]
-    public string Version { get; set; } = "11.4"; // Default to LÖVE 11.4
+    public string Version { get; set; } = VersionInfo.GetVersion();
 
     /// <summary>
     /// Gets or sets a value indicating whether a console window should be attached (Windows only, currently placeholder).
@@ -60,7 +60,7 @@ namespace Night
     public bool AccelerometerJoystick { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets a value indicating whether to request external storage access (Android only, currently placeholder).
+    /// Gets or sets a value indicating whether to request external storage access (Android only).
     /// </summary>
     [JsonPropertyName("externalstorage")]
     public bool ExternalStorage { get; set; } = false;
@@ -89,8 +89,4 @@ namespace Night
     [JsonPropertyName("modules")]
     public ModulesConfig Modules { get; set; } = new ModulesConfig();
   }
-
-  // NOTE: The definitions for AudioConfig, WindowConfig, and ModulesConfig
-  // have been moved to their own files: AudioConfig.cs, WindowConfig.cs, and ModulesConfig.cs
-  // This is to resolve SA1402: File may only contain a single type.
 }

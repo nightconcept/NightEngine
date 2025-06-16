@@ -1,4 +1,4 @@
-name: "CodeQL C# Analysis"
+name: "CodeQL Analysis"
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   analyze:
-    name: Analyze C#
+    name: Analyze code
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["csharp"]
+        language: ["csharp", "python"]
         # CodeQL supports [ csharp, cpp, go, java, javascript, python, ruby ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
@@ -52,11 +52,54 @@ jobs:
       # For .NET Core, ensure that the .NET SDK is available.
       # You might need to add a setup-dotnet step if not using a GitHub-hosted runner with it pre-installed.
       - name: Setup .NET
+        if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 9.0.x
 
+      - name: Prepare SDL3 Prebuilt Binaries (for C#)
+        if: matrix.language == 'csharp'
+        run: |
+          echo "Runner OS is ubuntu-latest. Looking for Linux SDL3 prebuilt binary ZIP files in lib/SDL3-Prebuilt/linux..."
+          SDL_PREBUILT_DIR="lib/SDL3-Prebuilt"
+
+          if ! command -v unzip &> /dev/null; then
+            echo "Error: unzip command not found. Please ensure it's installed on the runner."
+            exit 1
+          fi
+
+          TARGET_ZIP_BASENAME="linux"
+          TARGET_PLATFORM_DIR_NAME="linux" # Using a distinct name for the directory part
+
+          # Define the full path to the platform-specific directory
+          PLATFORM_DIR_PATH="$SDL_PREBUILT_DIR/$TARGET_PLATFORM_DIR_NAME"
+          # Define the expected archive names within that platform directory
+          PLATFORM_ARCHIVE_PATH="$PLATFORM_DIR_PATH/$TARGET_ZIP_BASENAME.zip"
+          PLATFORM_ARCHIVE_ALT_PATH="$PLATFORM_DIR_PATH/$TARGET_ZIP_BASENAME-binaries.zip"
+          # The extraction directory is the platform-specific directory itself
+          EXTRACTION_DIR="$PLATFORM_DIR_PATH"
+
+          echo "Attempting to extract for $TARGET_PLATFORM_DIR_NAME from $PLATFORM_DIR_PATH into $EXTRACTION_DIR..."
+          # Ensure the platform directory exists before trying to access files within it or extract into it.
+          mkdir -p "$EXTRACTION_DIR"
+
+          if [ -f "$PLATFORM_ARCHIVE_PATH" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_NAME binaries from $PLATFORM_ARCHIVE_PATH into $EXTRACTION_DIR/ ..."
+            unzip -qo "$PLATFORM_ARCHIVE_PATH" -d "$EXTRACTION_DIR/"
+            echo "Extracted $TARGET_PLATFORM_DIR_NAME binaries from $PLATFORM_ARCHIVE_PATH."
+          elif [ -f "$PLATFORM_ARCHIVE_ALT_PATH" ]; then
+            echo "Extracting $TARGET_PLATFORM_DIR_NAME binaries from $PLATFORM_ARCHIVE_ALT_PATH into $EXTRACTION_DIR/ ..."
+            unzip -qo "$PLATFORM_ARCHIVE_ALT_PATH" -d "$EXTRACTION_DIR/"
+            echo "Extracted $TARGET_PLATFORM_DIR_NAME binaries from $PLATFORM_ARCHIVE_ALT_PATH."
+          else
+            echo "Info: No $TARGET_PLATFORM_DIR_NAME SDL binaries ZIP found (checked for $PLATFORM_ARCHIVE_PATH and $PLATFORM_ARCHIVE_ALT_PATH). Build might fail if these are required."
+          fi
+
+          echo "Final listing of contents in $SDL_PREBUILT_DIR after extraction attempts:"
+          ls -R "$SDL_PREBUILT_DIR"
+        shell: bash
       - name: Autobuild
+        if: matrix.language == 'csharp'
         uses: github/codeql-action/autobuild@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
 
       - name: Perform CodeQL Analysis

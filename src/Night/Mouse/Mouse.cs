@@ -23,6 +23,7 @@
 using System;
 
 using Night;
+using Night.Log;
 
 using SDL3;
 
@@ -33,6 +34,8 @@ namespace Night
   /// </summary>
   public static class Mouse
   {
+    private static readonly ILogger Logger = LogManager.GetLogger("Night.Mouse.Mouse");
+
     /// <summary>
     /// Checks whether a certain mouse button is down.
     /// This function does not detect mouse wheel scrolling.
@@ -43,7 +46,7 @@ namespace Night
     {
       if (!Framework.IsInputInitialized)
       {
-        Console.WriteLine("Warning: Night.Mouse.IsDown called before input system is initialized. Returning false.");
+        Logger.Warn("Night.Mouse.IsDown called before input system is initialized. Returning false.");
         return false;
       }
 
@@ -83,7 +86,7 @@ namespace Night
     {
       if (!Framework.IsInputInitialized)
       {
-        Console.WriteLine("Warning: Night.Mouse.GetPosition called before input system is initialized. Returning (0,0).");
+        Logger.Warn("Night.Mouse.GetPosition called before input system is initialized. Returning (0,0).");
         return (0, 0);
       }
 

@@ -1,4 +1,4 @@
 sdl2_mixer=2.8.1
-sdl3-core=3.2.14
+sdl3-core=3.2.16
 sdl3_image=3.2.4
 sdl3_ttf=3.2.2
