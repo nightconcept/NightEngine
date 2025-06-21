@@ -275,17 +275,10 @@
     *   `GetDirectoryItems_Empty`: Test on an empty directory.
     *   `GetDirectoryItems_NotFound`: Test on a non-existent path.
 
-#### 8. [ ] `Night.Filesystem.GetIdentity()`
+#### 8. [x] `Night.Filesystem.GetIdentity()`
 *   **Love2D Equivalent:** `love.filesystem.getIdentity()`
-*   **C# Signature Idea:** `public static string GetIdentity()`
-*   **Requirements:**
-    *   Return the current game identity string.
-    *   Default should be "NightDefault".
-*   **Acceptance Criteria:**
-    *   Returns the identity set by `SetIdentity()` or the default.
-*   **Test Scenarios/Cases:**
-    *   `GetIdentity_Default`: Check returns "NightDefault".
-    *   `GetIdentity_AfterSet`: Check after calling `SetIdentity`.
+*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:105)
+*   **Status:** Implemented and tested as part of `GetSaveDirectory` tests.
 
 #### 9. [x] `Night.Filesystem.GetInfo(string path, FileType? filterType = null)`
 *   **Love2D Equivalent:** `love.filesystem.getInfo(path, filtertype)`
@@ -317,23 +310,10 @@
 *   **Test Scenarios/Cases:** TBD.
 *   **Note:** Likely low priority or out of scope.
 
-#### 12. [ ] `Night.Filesystem.GetSaveDirectory()`
+#### 12. [x] `Night.Filesystem.GetSaveDirectory()`
 *   **Love2D Equivalent:** `love.filesystem.getSaveDirectory()`
-*   **C# Signature Idea:** `public static string GetSaveDirectory()`
-*   **Requirements:**
-    *   Return the full, absolute path to the game's save directory.
-    *   Path construction based on OS and `gameIdentity` (e.g., `%APPDATA%\Night\[Identity]\`).
-    *   The directory should be created if it doesn't exist.
-    *   This function is critical and its behavior (paths, creation) must be documented.
-*   **Acceptance Criteria:**
-    *   Returns correct, platform-specific absolute path to the save directory.
-    *   Directory is created if it doesn't exist.
-*   **Test Scenarios/Cases:**
-    *   `GetSaveDirectory_Windows`: Verify path on Windows.
-    *   `GetSaveDirectory_MacOS`: Verify path on macOS.
-    *   `GetSaveDirectory_Linux`: Verify path on Linux.
-    *   `GetSaveDirectory_CreatesDir`: Verify directory creation.
-    *   `GetSaveDirectory_WithCustomIdentity`: Verify path with non-default identity.
+*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:121)
+*   **Status:** Implemented, documented, and tested. See [`tests/Groups/Filesystem/GetSaveDirectoryTests.cs`](tests/Groups/Filesystem/GetSaveDirectoryTests.cs:1).
 
 #### 13. [ ] `Night.Filesystem.GetSource()`
 *   **Love2D Equivalent:** `love.filesystem.getSource()`
@@ -498,23 +478,10 @@
 *   **Test Scenarios/Cases:** TBD.
 *   **Note:** Likely low priority or out of scope.
 
-#### 28. [ ] `Night.Filesystem.SetIdentity(string identityName)`
+#### 28. [x] `Night.Filesystem.SetIdentity(string identityName)`
 *   **Love2D Equivalent:** `love.filesystem.setIdentity(name)`
-*   **C# Signature Idea:** `public static void SetIdentity(string identityName)`
-*   **Requirements:**
-    *   Sets the game's identity, used for the save directory.
-    *   `identityName` should be sanitized (e.g., remove invalid path characters).
-    *   If `identityName` is null or empty, perhaps revert to default or throw error. Love2D uses it directly.
-    *   This will affect subsequent calls to `GetSaveDirectory()` and all write operations.
-    *   The `gameIdentity` static field in [`Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:39) should be updated.
-*   **Acceptance Criteria:**
-    *   `GetIdentity()` returns the new name.
-    *   `GetSaveDirectory()` uses the new name.
-    *   Save operations use the new directory.
-*   **Test Scenarios/Cases:**
-    *   `SetIdentity_ValidName`: Set and verify `GetIdentity` and `GetSaveDirectory`.
-    *   `SetIdentity_InvalidChars`: Test sanitization or error handling.
-    *   `SetIdentity_NullOrEmpty`: Test behavior.
+*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:66)
+*   **Status:** Implemented and tested as part of `GetSaveDirectory` tests.
 
 #### 29. [ ] `Night.Filesystem.SetRequirePath(string path)`
 *   **Love2D Equivalent:** `love.filesystem.setRequirePath(path)`

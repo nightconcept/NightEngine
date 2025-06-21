@@ -211,6 +211,37 @@ namespace NightTest.Core
     }
 
     /// <summary>
+    /// Public method to record a test failure.
+    /// </summary>
+    /// <param name="failureDetails">Specific details about the failure.</param>
+    /// <param name="ex">The exception that caused the failure, if any.</param>
+    public new void RecordFailure(string failureDetails, Exception? ex = null)
+    {
+      if (this.IsDone)
+      {
+        return;
+      }
+
+      base.RecordFailure(failureDetails, ex);
+      this.EndTest();
+    }
+
+    /// <summary>
+    /// Public method to record a test success.
+    /// </summary>
+    /// <param name="successDetails">Specific details about the success.</param>
+    public new void RecordSuccess(string successDetails)
+    {
+      if (this.IsDone)
+      {
+        return;
+      }
+
+      base.RecordSuccess(successDetails);
+      this.EndTest();
+    }
+
+    /// <summary>
     /// Performs the specific load logic for the test case.
     /// Derived classes can override this method to implement their core load behavior.
     /// This method is called by the <see cref="InternalLoad"/> method, which is ultimately
@@ -333,7 +364,7 @@ namespace NightTest.Core
         else
         {
           // If condition is not met, it's a failure due to timeout
-          this.RecordFailure(failDetailsTimeout?.Invoke() ?? $"Test failed: Timed out after {milliseconds}ms.");
+          this.RecordFailure(failDetailsCondition?.Invoke() ?? failDetailsTimeout?.Invoke() ?? $"Test failed: Timed out after {milliseconds}ms.");
         }
 
         this.EndTest(); // End the test on timeout regardless of success or failure
@@ -393,37 +424,6 @@ namespace NightTest.Core
       }
 
       return false; // Test not yet completed
-    }
-
-    /// <summary>
-    /// Public method to record a test failure.
-    /// </summary>
-    /// <param name="failureDetails">Specific details about the failure.</param>
-    /// <param name="ex">The exception that caused the failure, if any.</param>
-    public new void RecordFailure(string failureDetails, Exception? ex = null)
-    {
-      if (this.IsDone)
-      {
-        return;
-      }
-
-      base.RecordFailure(failureDetails, ex);
-      this.EndTest();
-    }
-
-    /// <summary>
-    /// Public method to record a test success.
-    /// </summary>
-    /// <param name="successDetails">Specific details about the success.</param>
-    public new void RecordSuccess(string successDetails)
-    {
-      if (this.IsDone)
-      {
-        return;
-      }
-
-      base.RecordSuccess(successDetails);
-      this.EndTest();
     }
   }
 }

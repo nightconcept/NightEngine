@@ -37,7 +37,6 @@ namespace NightTest.Groups.Joysticks
   {
     private TestState currentState = TestState.InitialPromptConnect;
     private string instructionText = string.Empty;
-
     private List<string> consoleMessages = new List<string>();
     private Joystick? lastConnectedJoystick;
     private Joystick? lastDisconnectedJoystick;
@@ -184,6 +183,8 @@ namespace NightTest.Groups.Joysticks
           this.instructionText = "Unknown test state.";
           break;
       }
+
+      Console.WriteLine(this.instructionText);
     }
   }
 }

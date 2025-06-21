@@ -75,6 +75,7 @@ run = [
   "dotnet clean Night.sln",
   "dotnet tool restore",
   "dotnet format --verbosity diagnostic Night.sln",
+  "dotnet format --verify-no-changes --verbosity diagnostic Night.sln",
   "dotnet build Night.sln",
   "SDL_VIDEODRIVER=dummy dotnet test --filter TestType=Automated",
   "dotnet docfx docs/docfx.json",
