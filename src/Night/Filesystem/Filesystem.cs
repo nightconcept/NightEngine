@@ -36,7 +36,10 @@ namespace Night
   public static partial class Filesystem
   {
     private static readonly ILogger Logger = LogManager.GetLogger("Night.Filesystem.Filesystem");
-    private static string gameIdentity = "NightDefault"; // Placeholder, to be managed by SetIdentity/GetIdentity
+    private static string _gameIdentity = "NightDefault";
+    private static readonly object GameIdentityLock = new object();
+    private static string? _saveDirectoryCache;
+    private static string? _sourceDirectoryCache;
 
     /// <summary>
     /// Specifies the type to return file contents as when reading.
@@ -52,6 +55,188 @@ namespace Night
       /// Read content as raw byte data.
       /// </summary>
       Data,
+    }
+
+    /// <summary>
+    /// Sets the identity of the game. This is used to determine the save directory.
+    /// </summary>
+    /// <param name="identityName">The name to use for the game's identity.
+    /// If null or empty, the identity will be reset to "NightDefault".
+    /// Invalid path characters will be replaced with underscores.</param>
+    public static void SetIdentity(string? identityName)
+    {
+      lock (GameIdentityLock)
+      {
+        if (string.IsNullOrWhiteSpace(identityName))
+        {
+          _gameIdentity = "NightDefault";
+          Logger.Info("Game identity reset to default: NightDefault.");
+        }
+        else
+        {
+          string sanitizedName = identityName;
+          char[] invalidChars = Path.GetInvalidFileNameChars(); // Identity is used as a directory name
+          foreach (char c in invalidChars)
+          {
+            if (sanitizedName.Contains(c))
+            {
+              sanitizedName = sanitizedName.Replace(c, '_');
+            }
+          }
+
+          if (sanitizedName != identityName)
+          {
+            Logger.Warn($"Game identity '{identityName}' contained invalid characters and was sanitized to '{sanitizedName}'.");
+          }
+
+          _gameIdentity = sanitizedName;
+        }
+
+        // Invalidate cached save directory path as it depends on identity
+        _saveDirectoryCache = null;
+        Logger.Info($"Game identity set to: {_gameIdentity}");
+      }
+    }
+
+    /// <summary>
+    /// Gets the current identity of the game.
+    /// </summary>
+    /// <returns>The current game identity.</returns>
+    public static string GetIdentity()
+    {
+      lock (GameIdentityLock)
+      {
+        return _gameIdentity;
+      }
+    }
+
+    /// <summary>
+    /// Gets the full path to the directory where the game can save files.
+    /// The directory is created if it doesn't exist.
+    /// The path depends on the operating system and the game's identity.
+    /// </summary>
+    /// <returns>The absolute path to the save directory.</returns>
+    /// <exception cref="IOException">Thrown if the save directory could not be created.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if permissions are insufficient to create the save directory.</exception>
+    public static string GetSaveDirectory()
+    {
+      lock (GameIdentityLock)
+      {
+        if (_saveDirectoryCache != null)
+        {
+          return _saveDirectoryCache;
+        }
+
+        string basePath;
+        string nightFolderName = "Night"; // For Windows and macOS
+
+        if (OperatingSystem.IsWindows())
+        {
+          basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+          basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support");
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+          nightFolderName = "night"; // Lowercase for Linux as per Love2D convention
+          basePath = Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? string.Empty;
+          if (string.IsNullOrEmpty(basePath) || !Directory.Exists(basePath)) // Check if XDG_DATA_HOME is valid
+          {
+            basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
+          }
+        }
+        else
+        {
+          // Fallback for other OSes, though less specific.
+          // Consider throwing UnsupportedPlatformException if strict adherence to defined platforms is required.
+          Logger.Warn($"Unsupported OS detected for save directory. Falling back to ApplicationData folder with 'Night' subfolder.");
+          basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+          if (string.IsNullOrEmpty(basePath)) // Highly unlikely, but as a last resort
+          {
+            basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".NightFallbackData");
+            Logger.Warn($"ApplicationData folder not found. Using fallback: {basePath}");
+          }
+        }
+
+        string savePath = Path.Combine(basePath, nightFolderName, _gameIdentity);
+
+        try
+        {
+          if (!Directory.Exists(savePath))
+          {
+            Directory.CreateDirectory(savePath);
+            Logger.Info($"Created save directory: {savePath}");
+          }
+        }
+        catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is SecurityException)
+        {
+          Logger.Error($"Failed to create or access save directory '{savePath}'. Error: {ex.Message}", ex);
+          throw; // Re-throw critical exceptions
+        }
+        catch (Exception ex)
+        {
+          Logger.Error($"An unexpected error occurred while creating save directory '{savePath}'. Error: {ex.Message}", ex);
+          // Depending on policy, might throw a more generic exception or a custom one.
+          // For now, re-throw to indicate failure.
+          throw new IOException($"Could not ensure save directory exists at '{savePath}'.", ex);
+        }
+
+        _saveDirectoryCache = savePath;
+        return savePath;
+      }
+    }
+
+    /// <summary>
+    /// Gets the full path to the application's source directory (usually the directory containing the executable).
+    /// </summary>
+    /// <returns>The absolute path to the source directory.</returns>
+    public static string GetSource()
+    {
+      if (_sourceDirectoryCache == null)
+      {
+        _sourceDirectoryCache = AppContext.BaseDirectory ?? Directory.GetCurrentDirectory();
+      }
+
+      return _sourceDirectoryCache;
+    }
+
+    /// <summary>
+    /// Gets the full path to the directory containing the application's source directory.
+    /// </summary>
+    /// <returns>The absolute path to the base directory of the source, or null if the source is a root directory.</returns>
+    public static string? GetSourceBaseDirectory()
+    {
+      return Path.GetDirectoryName(GetSource());
+    }
+
+    /// <summary>
+    /// Gets the full path to the current user's home directory.
+    /// </summary>
+    /// <returns>The absolute path to the user's home directory.</returns>
+    public static string GetUserDirectory()
+    {
+      return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    }
+
+    /// <summary>
+    /// Gets the current working directory of the application.
+    /// </summary>
+    /// <returns>The absolute path to the current working directory.</returns>
+    public static string GetWorkingDirectory()
+    {
+      return Directory.GetCurrentDirectory();
+    }
+
+    /// <summary>
+    /// Gets whether the game is in "fused mode".
+    /// In Night, this concept is not directly applicable as with .love files, so it always returns false.
+    /// </summary>
+    /// <returns><c>false</c>.</returns>
+    public static bool IsFused()
+    {
+      return false;
     }
 
     /// <summary>
@@ -289,6 +474,10 @@ namespace Night
     /// <returns>The full path to the application data directory.</returns>
     public static string GetAppdataDirectory()
     {
+      // This method's behavior might need to be re-evaluated in light of GetSaveDirectory().
+      // For now, it retains its original logic but uses the locked GetIdentity().
+      string currentIdentity = GetIdentity(); // Use the thread-safe getter
+
       string basePath;
       if (OperatingSystem.IsWindows())
       {
@@ -301,33 +490,38 @@ namespace Night
       else if (OperatingSystem.IsLinux())
       {
         basePath = Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? string.Empty;
-        if (string.IsNullOrEmpty(basePath))
+        if (string.IsNullOrEmpty(basePath) || !Directory.Exists(basePath))
         {
           basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
         }
       }
       else
       {
-        // Fallback for other OSes or if above checks fail, though less specific
-        // This could also throw an UnsupportedPlatformException
         basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-        // If even ApplicationData is not available (highly unlikely for supported .NET platforms)
         if (string.IsNullOrEmpty(basePath))
         {
-          basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".NightFallback");
+          basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".NightFallbackData"); // Ensure distinct from GetSaveDirectory fallback
         }
       }
 
-      string appDataPath = Path.Combine(basePath, gameIdentity);
+      // Original GetAppdataDirectory combines directly with identity, e.g., %APPDATA%\MyGame
+      // GetSaveDirectory combines with "Night" then identity, e.g., %APPDATA%\Night\MyGame
+      // This distinction is maintained here.
+      string appDataPath = Path.Combine(basePath, currentIdentity);
 
       try
       {
-        _ = Directory.CreateDirectory(appDataPath);
+        if (!Directory.Exists(appDataPath))
+        {
+          Directory.CreateDirectory(appDataPath);
+          Logger.Info($"Created appdata directory (legacy GetAppdataDirectory call): {appDataPath}");
+        }
       }
       catch (Exception ex)
       {
-        Logger.Warn($"Could not create appdata directory '{appDataPath}': {ex.Message}");
+        Logger.Warn($"Could not create appdata directory '{appDataPath}' (legacy GetAppdataDirectory call): {ex.Message}");
+        // Depending on requirements, this might throw or return a non-guaranteed path.
+        // For now, it returns the path even if creation failed, consistent with original.
       }
 
       return appDataPath;
