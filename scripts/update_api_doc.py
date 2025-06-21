@@ -200,7 +200,7 @@ def generate_markdown(all_module_data, output_file):
 
 def main():
     framework_dir = os.path.join("src", "Night")
-    output_md_file = os.path.join("docs", "API.md")
+    output_md_file = os.path.join("project", "API.md")
 
     all_module_data = defaultdict(lambda: {"functions": {}, "enums": [], "types": []})
 

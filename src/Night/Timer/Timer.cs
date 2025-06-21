@@ -166,10 +166,6 @@ namespace Night
 
       // Initialize for the first call to Step()
       LastStepTime = SDL.GetPerformanceCounter();
-
-      // _timerStartTime is already initialized at class load (line 14) and should remain as such
-      // to reflect "time since module loaded" for GetTime().
-      // Do not re-assign _timerStartTime here.
     }
   }
 }

@@ -24,6 +24,27 @@ alias = "game"
 description = "Run the sample game."
 run = ["dotnet run --project src/SampleGame/SampleGame.csproj"]
 
+[tasks.test]
+alias = "test"
+description = "Run automated tests"
+run = ["SDL_VIDEODRIVER=dummy dotnet test --filter TestType=Automated"]
+run_windows = ["dotnet test --filter TestType=Automated"]
+
+[tasks.test-disp]
+alias = "test-disp"
+description = "Run automated tests with a real display"
+run = ["dotnet test --filter TestType=Automated"]
+
+[tasks.test-offscreen]
+alias = "test-off"
+description = "Run automated tests with an offscreen display"
+run = ["SDL_VIDEODRIVER=offscreen dotnet test --filter TestType=Automated"]
+
+[tasks.manual-test]
+alias = "man-test"
+description = "Run manual tests"
+run = ["dotnet test --filter TestType=Manual"]
+
 [tasks.clean]
 alias = "clean"
 description = "Clean bin and obj directories."
@@ -52,9 +73,20 @@ alias = "prepare"
 description = "Prepare everything before a commit."
 run = [
   "dotnet clean Night.sln",
+  "dotnet tool restore",
+  "dotnet format --verbosity diagnostic Night.sln",
+  "dotnet format --verify-no-changes --verbosity diagnostic Night.sln",
+  "dotnet build Night.sln",
+  "SDL_VIDEODRIVER=dummy dotnet test --filter TestType=Automated",
+  "dotnet docfx docs/docfx.json",
+  "python scripts/update_api_doc.py",
+]
+run_windows = [
+  "dotnet clean Night.sln",
+  "dotnet tool restore",
   "dotnet format --verbosity diagnostic Night.sln",
   "dotnet build Night.sln",
-  "dotnet test",
+  "dotnet test --filter TestType=Automated",
   "dotnet docfx docs/docfx.json",
   "python scripts/update_api_doc.py",
 ]
@@ -64,7 +96,7 @@ alias = "docs"
 description = "Generate docs."
 run = ["dotnet docfx docs/docfx.json"]
 
-[tasks.format]
-alias = "format"
-description = "Format files."
-run = ["dotnet format --verbosity verbose Night.sln"]
+[tasks.lint]
+alias = "lint"
+description = "Lint files."
+run = ["dotnet format --verbosity diagnostic Night.sln"]

@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Night
 {
   /// <summary>
-  /// Configuration for enabling/disabling engine modules (similar to t.modules in LÖVE's conf.lua).
+  /// Configuration for enabling/disabling engine modules.
   /// </summary>
   public class ModulesConfig
   {
@@ -95,7 +95,7 @@ namespace Night
 
     /// <summary>Gets or sets a value indicating whether the Window module is enabled.</summary>
     [JsonPropertyName("window")]
-    public bool WindowModule { get; set; } = true; // Renamed to avoid conflict with Night.Window namespace
+    public bool WindowModule { get; set; } = true;
 
     /// <summary>Gets or sets a value indicating whether the Thread module is enabled.</summary>
     [JsonPropertyName("thread")]

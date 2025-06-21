@@ -23,6 +23,9 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
+
+using Night.Log;
 
 using SDL3;
 
@@ -31,12 +34,13 @@ namespace Night
   /// <summary>
   /// Provides an interface for modifying and retrieving information about the program's window.
   /// </summary>
-  public static class Window
+  public static partial class Window
   {
+    private static readonly ILogger Logger = LogManager.GetLogger("Night.Window.Window");
+    private static readonly object WindowLock = new object(); // Thread synchronization for window operations
+
     private static nint window = nint.Zero;
     private static nint renderer = nint.Zero;
-
-    // private static bool isVideoInitialized = false; // Removed: SDL lifecycle managed externally (e.g., by SDLFixture or Framework.Run)
     private static bool isWindowOpen = false;
     private static FullscreenType currentFullscreenType = FullscreenType.Desktop;
     private static ImageData? currentIconData = null;
@@ -63,13 +67,13 @@ namespace Night
 
       if (window == nint.Zero)
       {
-        Console.WriteLine("Night.Window.SetIcon: Window handle is null. Icon not set.");
+        Logger.Warn("Window handle is null. Icon not set.");
         return false;
       }
 
       if (string.IsNullOrEmpty(imagePath))
       {
-        Console.WriteLine("Night.Window.SetIcon: imagePath is null or empty. Icon not set.");
+        Logger.Warn("imagePath is null or empty. Icon not set.");
         return false;
       }
 
@@ -78,7 +82,7 @@ namespace Night
       if (loadedSurfacePtr == nint.Zero)
       {
         string imgError = SDL.GetError();
-        Console.WriteLine($"Night.Window.SetIcon: Failed to load image '{imagePath}' using SDL_image. Error: {imgError}");
+        Logger.Error($"Failed to load image '{imagePath}' using SDL_image. Error: {imgError}");
         return false;
       }
 
@@ -88,7 +92,7 @@ namespace Night
       if (convertedSurfacePtr == nint.Zero)
       {
         string sdlError = SDL.GetError();
-        Console.WriteLine($"Night.Window.SetIcon: Failed to convert surface to target format. SDL Error: {sdlError}");
+        Logger.Error($"Failed to convert surface to target format. SDL Error: {sdlError}");
         SDL.DestroySurface(loadedSurfacePtr);
         return false;
       }
@@ -98,7 +102,7 @@ namespace Night
         if (!SDL.SetWindowIcon(window, convertedSurfacePtr))
         {
           string sdlError = SDL.GetError();
-          Console.WriteLine($"Night.Window.SetIcon: SDL_SetWindowIcon failed. SDL Error: {sdlError}");
+          Logger.Error($"SDL_SetWindowIcon failed. SDL Error: {sdlError}");
           return false;
         }
 
@@ -110,7 +114,7 @@ namespace Night
         if (detailsPtr == IntPtr.Zero)
         {
           string sdlError = SDL.GetError();
-          Console.WriteLine($"Night.Window.SetIcon: Failed to get pixel format details. SDL Error: {sdlError}");
+          Logger.Error($"Failed to get pixel format details. SDL Error: {sdlError}");
           return false;
         }
 
@@ -119,7 +123,7 @@ namespace Night
 
         if (bytesPerPixel != 4)
         {
-          Console.WriteLine($"Night.Window.SetIcon: Converted surface is not 4bpp as expected for RGBA. Actual bpp: {bytesPerPixel}, Format: {convertedSurfaceStruct.Format}");
+          Logger.Error($"Converted surface is not 4bpp as expected for RGBA. Actual bpp: {bytesPerPixel}, Format: {convertedSurfaceStruct.Format}");
           return false;
         }
 
@@ -131,7 +135,7 @@ namespace Night
       }
       catch (Exception e)
       {
-        Console.WriteLine($"Night.Window.SetIcon: Error processing surface or creating ImageData. Error: {e.Message}");
+        Logger.Error($"Error processing surface or creating ImageData.", e);
         return false;
       }
       finally
@@ -155,57 +159,6 @@ namespace Night
     public static ImageData? GetIcon()
     {
       return currentIconData;
-    }
-
-    /// <summary>
-    ///     Sets the display mode and properties of the window.
-    /// </summary>
-    /// <param name="width">The width of the window.</param>
-    /// <param name="height">The height of the window.</param>
-    /// <param name="flags">SDL Window flags to apply.</param>
-    /// <returns>True if the mode was set successfully, false otherwise.</returns>
-    public static bool SetMode(int width, int height, SDL.WindowFlags flags)
-    {
-      // Assuming SDL Video subsystem is initialized by the caller (e.g., Framework.Run or SDLFixture for tests)
-      // if (!isVideoInitialized) // Removed
-      // {
-      //   if (!SDL.InitSubSystem(SDL.InitFlags.Video)) // Removed
-      //   {
-      //     return false;
-      //   }
-      //   isVideoInitialized = true; // Removed
-      // }
-      if (window != nint.Zero)
-      {
-        if (renderer != nint.Zero)
-        {
-          SDL.DestroyRenderer(renderer);
-          renderer = nint.Zero;
-        }
-
-        SDL.DestroyWindow(window);
-        window = nint.Zero;
-        isWindowOpen = false;
-      }
-
-      window = SDL.CreateWindow("Night Engine", width, height, flags);
-      if (window == nint.Zero)
-      {
-        isWindowOpen = false;
-        return false;
-      }
-
-      renderer = SDL.CreateRenderer(window, null);
-      if (renderer == nint.Zero)
-      {
-        SDL.DestroyWindow(window);
-        window = nint.Zero;
-        isWindowOpen = false;
-        return false;
-      }
-
-      isWindowOpen = true;
-      return true;
     }
 
     /// <summary>
@@ -233,187 +186,19 @@ namespace Night
     /// <returns>True if the window is open, false otherwise.</returns>
     public static bool IsOpen()
     {
-      return isWindowOpen && window != nint.Zero;
+      // Added more explicit check for debugging
+      bool result = isWindowOpen && window != nint.Zero && renderer != nint.Zero;
+
+      return result;
     }
 
     /// <summary>
     /// Signals that the window should close.
-    /// This is typically called by the engine when a quit event is received.
-    /// TODO: Does this need to align with Love2D more? https://love2d.org/wiki/love.window.close.
     /// </summary>
     public static void Close()
     {
+      Logger.Info($"Window.Close called. Setting isWindowOpen to false. Current window handle: {window}");
       isWindowOpen = false;
-    }
-
-    /// <summary>
-    /// Gets the number of connected monitors.
-    /// </summary>
-    /// <returns>The number of currently connected displays.</returns>
-    public static int GetDisplayCount()
-    {
-      // Assuming SDL Video subsystem is initialized by the caller
-      // if (!isVideoInitialized) // Removed
-      // {
-      //   EnsureVideoInitialized(); // Removed
-      // }
-      uint[]? displays = SDL.GetDisplays(out int count);
-      if (displays == null || count < 0)
-      {
-        return 0;
-      }
-
-      return count;
-    }
-
-    /// <summary>
-    /// Gets the width and height of the desktop.
-    /// </summary>
-    /// <param name="displayIndex">The index of the display to query (0 for the primary display).</param>
-    /// <returns>A tuple containing the width and height of the desktop, or (0,0) if an error occurs.</returns>
-    public static (int Width, int Height) GetDesktopDimensions(int displayIndex = 0)
-    {
-      // Assuming SDL Video subsystem is initialized by the caller
-      // if (!isVideoInitialized) // Removed
-      // {
-      //   EnsureVideoInitialized(); // Removed
-      // }
-      uint[]? actualDisplayIDs = SDL.GetDisplays(out int displayCount);
-      if (actualDisplayIDs == null || displayCount <= 0 || displayIndex < 0 || displayIndex >= displayCount)
-      {
-        return (0, 0);
-      }
-
-      uint targetDisplayID = actualDisplayIDs[displayIndex];
-
-      SDL.DisplayMode? mode = SDL.GetDesktopDisplayMode(targetDisplayID);
-      if (mode == null)
-      {
-        return (0, 0);
-      }
-
-      return (mode.Value.W, mode.Value.H);
-    }
-
-    /// <summary>
-    /// Gets whether the window is fullscreen.
-    /// </summary>
-    /// <returns>A tuple: (bool IsFullscreen, FullscreenType FsType).
-    /// IsFullscreen is true if the window is in any fullscreen mode, false otherwise.
-    /// FsType indicates the type of fullscreen mode used.</returns>
-    public static (bool IsFullscreen, FullscreenType FsType) GetFullscreen()
-    {
-      if (window == nint.Zero)
-      {
-        return (false, currentFullscreenType);
-      }
-
-      var flags = SDL.GetWindowFlags(window);
-
-      // Check for SDL's native/exclusive fullscreen first
-      if ((flags & SDL.WindowFlags.Fullscreen) != 0)
-      {
-        return (true, FullscreenType.Exclusive);
-      }
-
-      // Check for our "Desktop Fullscreen" mode
-      if (currentFullscreenType == FullscreenType.Desktop && (flags & SDL.WindowFlags.Borderless) != 0)
-      {
-        return (true, FullscreenType.Desktop);
-      }
-
-      return (false, currentFullscreenType);
-    }
-
-    /// <summary>
-    /// Enters or exits fullscreen. The display to use when entering fullscreen is chosen
-    /// based on which display the window is currently in, if multiple monitors are connected.
-    /// </summary>
-    /// <param name="fullscreen">Whether to enter or exit fullscreen mode.</param>
-    /// <param name="fsType">The type of fullscreen mode to use (Desktop or Exclusive).</param>
-    /// <returns>True if the operation was successful, false otherwise.</returns>
-    public static bool SetFullscreen(bool fullscreen, FullscreenType fsType = FullscreenType.Desktop)
-    {
-      if (window == nint.Zero)
-      {
-        return false;
-      }
-
-      if (fullscreen)
-      {
-        currentFullscreenType = fsType;
-        if (fsType == FullscreenType.Exclusive)
-        {
-          uint displayID = SDL.GetDisplayForWindow(window);
-          if (displayID == 0 && SDL.GetError() != null && SDL.GetError().Length > 0)
-          {
-            return false;
-          }
-
-          SDL.DisplayMode? dm = SDL.GetDesktopDisplayMode(displayID);
-          if (dm.HasValue)
-          {
-            if (!SDL.SetWindowFullscreenMode(window, dm.Value))
-            {
-              return false;
-            }
-          }
-          else
-          {
-            return false;
-          }
-        }
-        else
-        {
-          if (!SDL.SetWindowFullscreenMode(window, nint.Zero))
-          {
-            // This might not be critical if it fails.
-          }
-
-          if (!SDL.SetWindowBordered(window, false))
-          {
-            return false;
-          }
-
-          uint displayID = SDL.GetDisplayForWindow(window);
-          if (displayID == 0 && SDL.GetError() != null && SDL.GetError().Length > 0)
-          {
-            return false;
-          }
-
-          var (desktopW, desktopH) = GetDesktopDimensionsForDisplayID(displayID);
-
-          if (desktopW > 0 && desktopH > 0)
-          {
-            _ = SDL.SetWindowPosition(window, 0, 0);
-            if (!SDL.SetWindowSize(window, desktopW, desktopH))
-            {
-              // Even if this fails to resize, we've set it borderless.
-              // The issue of it not resizing is separate from the borderless toggle.
-            }
-          }
-          else
-          {
-            return false;
-          }
-        }
-      }
-      else
-      {
-        currentFullscreenType = FullscreenType.Desktop; // Conceptually, when we exit, we are aiming for a non-fullscreen desktop window.
-        _ = SDL.SetWindowFullscreenMode(window, nint.Zero); // Turn off SDL's exclusive fullscreen
-
-        if (!SDL.SetWindowBordered(window, true))
-        {
-          return false;
-        }
-
-        _ = SDL.RestoreWindow(window);
-        _ = SDL.SetWindowSize(window, 800, 600); // Explicitly set a defined windowed size.
-        _ = SDL.RaiseWindow(window);
-      }
-
-      return true;
     }
 
     /// <summary>
@@ -423,11 +208,6 @@ namespace Night
     /// <returns>A list of (Width, Height) tuples representing available modes, or an empty list on error.</returns>
     public static List<(int Width, int Height)> GetFullscreenModes(int displayIndex = 0)
     {
-      // Assuming SDL Video subsystem is initialized by the caller
-      // if (!isVideoInitialized) // Removed
-      // {
-      //   EnsureVideoInitialized(); // Removed
-      // }
       var modesList = new List<(int Width, int Height)>();
       var uniqueModes = new HashSet<(int Width, int Height)>();
 
@@ -438,7 +218,6 @@ namespace Night
       }
 
       uint targetDisplayID = actualDisplayIDs[displayIndex];
-
       SDL.DisplayMode[]? displayModes = SDL.GetFullscreenDisplayModes(targetDisplayID, out int count);
 
       if (displayModes == null || count <= 0 || displayModes.Length != count)
@@ -459,76 +238,9 @@ namespace Night
     }
 
     /// <summary>
-    /// Gets the current window mode (width, height, and flags).
+    /// Gets the DPI scaling factor of the display containing the window.
     /// </summary>
-    /// <returns>A WindowMode struct containing width, height, and current flags.</returns>
-    public static WindowMode GetMode()
-    {
-      if (window == nint.Zero)
-      {
-        return new WindowMode { Width = 0, Height = 0, Fullscreen = false, FullscreenType = currentFullscreenType, Borderless = false };
-      }
-
-      _ = SDL.GetWindowSize(window, out int w, out int h);
-      var flags = SDL.GetWindowFlags(window);
-
-      bool isSdlExclusiveFullscreen = (flags & SDL.WindowFlags.Fullscreen) != 0;
-      bool isSdlBorderless = (flags & SDL.WindowFlags.Borderless) != 0;
-      FullscreenType reportedFsType = currentFullscreenType;
-
-      bool actualReportedFullscreenState;
-
-      if (isSdlExclusiveFullscreen)
-      {
-        actualReportedFullscreenState = true;
-        reportedFsType = FullscreenType.Exclusive;
-      }
-      else if (isSdlBorderless)
-      {
-        if (currentFullscreenType == FullscreenType.Desktop)
-        {
-          uint currentDisplayID = SDL.GetDisplayForWindow(window);
-          if (currentDisplayID != 0)
-          {
-            var (desktopW, desktopH) = GetDesktopDimensionsForDisplayID(currentDisplayID);
-            if (w == desktopW && h == desktopH)
-            {
-              actualReportedFullscreenState = true;
-            }
-            else
-            {
-              actualReportedFullscreenState = false;
-            }
-          }
-          else
-          {
-            actualReportedFullscreenState = false;
-          }
-        }
-        else
-        {
-          actualReportedFullscreenState = false;
-        }
-      }
-      else
-      {
-        actualReportedFullscreenState = false;
-      }
-
-      return new WindowMode
-      {
-        Width = w,
-        Height = h,
-        Fullscreen = actualReportedFullscreenState,
-        FullscreenType = reportedFsType,
-        Borderless = isSdlBorderless,
-      };
-    }
-
-    /// <summary>
-    /// Gets the DPI scale factor of the display containing the window.
-    /// </summary>
-    /// <returns>The DPI scale factor, or 1.0f on error or if not applicable.</returns>
+    /// <returns>The DPI scaling factor (e.g., 1.0f for 96 DPI, 2.0f for 192 DPI), or 1.0f if unable to determine.</returns>
     public static float GetDPIScale()
     {
       if (window == nint.Zero)
@@ -536,111 +248,116 @@ namespace Night
         return 1.0f;
       }
 
-      float dpiScale = SDL.GetWindowDisplayScale(window);
-      if (dpiScale <= 0f)
+      uint displayID = SDL.GetDisplayForWindow(window);
+      if (displayID == 0 && !string.IsNullOrEmpty(SDL.GetError()))
+      {
+        displayID = SDL.GetPrimaryDisplay();
+        if (displayID == 0 && !string.IsNullOrEmpty(SDL.GetError()))
+        {
+          return 1.0f;
+        }
+      }
+
+      if (displayID == 0)
       {
         return 1.0f;
       }
 
-      return dpiScale;
+      float contentScale = SDL.GetDisplayContentScale(displayID);
+      if (contentScale > 0.0f)
+      {
+        return contentScale;
+      }
+      else
+      {
+        _ = SDL.GetWindowSize(window, out int windowWidth, out _);
+        _ = SDL.GetWindowSizeInPixels(window, out int pixelWidth, out _);
+
+        if (windowWidth > 0 && pixelWidth > 0 && pixelWidth != windowWidth)
+        {
+          return (float)pixelWidth / windowWidth;
+        }
+
+        return 1.0f;
+      }
     }
 
     /// <summary>
-    /// Converts a value from density-independent units to pixels, using the window's current DPI scale.
+    /// Converts a value from logical units to pixels, using the window's DPI scale.
     /// </summary>
-    /// <param name="value">The value in density-independent units.</param>
-    /// <returns>The equivalent value in pixels.</returns>
+    /// <param name="value">The value in logical units.</param>
+    /// <returns>The value in pixels.</returns>
     public static float ToPixels(float value)
     {
       return value * GetDPIScale();
     }
 
     /// <summary>
-    /// Converts a value from pixels to density-independent units, using the window's current DPI scale.
+    /// Converts a value from pixels to logical units, using the window's DPI scale.
     /// </summary>
     /// <param name="value">The value in pixels.</param>
-    /// <returns>The equivalent value in density-independent units.</returns>
+    /// <returns>The value in logical units.</returns>
     public static float FromPixels(float value)
     {
-      float dpiScale = GetDPIScale();
-      if (dpiScale == 0f)
-      {
-        return value;
-      }
-
-      return value / dpiScale;
+      float scale = GetDPIScale();
+      return scale == 0 ? value : value / scale;
     }
 
     /// <summary>
-    /// Internal method to shut down the window and renderer, and quit the video subsystem.
-    /// Should be called by the FrameworkLoop at the end of the application.
+    /// Cleans up window and renderer resources.
     /// </summary>
     internal static void Shutdown()
     {
-      if (renderer != nint.Zero)
+      lock (WindowLock)
       {
-        SDL.DestroyRenderer(renderer);
-        renderer = nint.Zero;
-      }
+        Logger.Info($"Shutdown called. Current window: {window}, renderer: {renderer}");
 
-      if (window != nint.Zero)
-      {
-        SDL.DestroyWindow(window);
-        window = nint.Zero;
-      }
+        if (renderer != nint.Zero)
+        {
+          SDL.DestroyRenderer(renderer);
+          renderer = nint.Zero;
+          Logger.Debug("Renderer destroyed.");
+        }
 
-      // Do not call SDL.QuitSubSystem here. Lifecycle managed externally.
-      // if (isVideoInitialized) // Removed
-      // {
-      //   SDL.QuitSubSystem(SDL.InitFlags.Video); // Removed
-      //   isVideoInitialized = false; // Removed
-      // }
-      isWindowOpen = false;
+        if (window != nint.Zero)
+        {
+          SDL.DestroyWindow(window);
+          window = nint.Zero;
+          Logger.Debug("Window destroyed.");
+        }
+
+        ResetInternalState();
+        Logger.Debug("State reset.");
+      }
     }
 
     /// <summary>
-    /// Resets the internal static state of the Window class without quitting the SDL video subsystem.
-    /// This is intended for use in testing scenarios where the SDL lifecycle is managed externally.
+    /// Resets internal state variables of the Window module.
     /// </summary>
     internal static void ResetInternalState()
     {
-      if (renderer != nint.Zero)
-      {
-        SDL.DestroyRenderer(renderer);
-        renderer = nint.Zero;
-      }
-
-      if (window != nint.Zero)
-      {
-        SDL.DestroyWindow(window);
-        window = nint.Zero;
-      }
-
-      // Do not call SDL.QuitSubSystem(SDL.InitFlags.Video) here.
-      // Only reset the internal flag for Night.Window's own state.
-      // isVideoInitialized = false; // Removed as the field is removed.
+      Logger.Debug("ResetInternalState called.");
       isWindowOpen = false;
-      currentIconData = null;
       currentFullscreenType = FullscreenType.Desktop;
+      currentIconData = null;
     }
 
-    // EnsureVideoInitialized() method removed as Night.Window no longer manages SDL video subsystem init.
-
     /// <summary>
-    /// Gets the dimensions of the desktop for a specific display ID.
+    /// Helper to get desktop dimensions for a specific display ID.
     /// </summary>
-    /// <param name="displayID">The actual ID of the display to query.</param>
-    /// <returns>A tuple containing the width and height of the desktop, or (0,0) if an error occurs.</returns>
+    /// <param name="displayID">The SDL display ID.</param>
+    /// <returns>Tuple of (Width, Height), or (0,0) on error.</returns>
     private static (int Width, int Height) GetDesktopDimensionsForDisplayID(uint displayID)
     {
-      // Assuming SDL Video subsystem is initialized by the caller
-      // if (!isVideoInitialized) // Removed
-      // {
-      //   EnsureVideoInitialized(); // Removed
-      // }
+      if (displayID == 0)
+      {
+        return (0, 0);
+      }
+
       SDL.DisplayMode? mode = SDL.GetDesktopDisplayMode(displayID);
       if (mode == null)
       {
+        Logger.Warn($"GetDesktopDimensionsForDisplayID: Failed to get desktop display mode for display {displayID}. SDL Error: {SDL.GetError()}");
         return (0, 0);
       }
 

@@ -31,13 +31,13 @@ namespace Night
     /// Gets the full semantic version string (e.g., "1.0.0", "1.2.3-beta.1").
     /// This value is updated by the GitHub release Action.
     /// </summary>
-    public const string Version = "0.0.1";
+    public const string Version = "0.0.2";
 
     /// <summary>
     /// Gets the developer-assigned codename for the current version.
     /// This value is manually updated by the developer.
     /// </summary>
-    public const string CodeName = "Initial Codename"; // Placeholder
+    public const string CodeName = "Initial Codename"; // TODO: Placeholder
 
     /// <summary>
     /// Gets the Semantic Version of the Night library.
@@ -50,4 +50,3 @@ namespace Night
     }
   }
 }
-

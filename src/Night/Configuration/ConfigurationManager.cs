@@ -25,6 +25,7 @@ using System.IO;
 using System.Text.Json;
 
 using Night;
+using Night.Log;
 
 namespace Night
 {
@@ -33,6 +34,7 @@ namespace Night
   /// </summary>
   public static class ConfigurationManager
   {
+    private static readonly ILogger Logger = LogManager.GetLogger("Night.Configuration.ConfigurationManager");
     private static readonly string ConfigFileName = "config.json";
     private static GameConfig currentConfig = new GameConfig();
     private static bool isLoaded = false;
@@ -83,28 +85,28 @@ namespace Night
             }
             else
             {
-              Console.WriteLine($"Warning: Could not parse '{ConfigFileName}' from '{configFilePath}'. Using default configuration.");
+              Logger.Warn($"Could not parse '{ConfigFileName}' from '{configFilePath}'. Using default configuration.");
             }
           }
           else
           {
-            Console.WriteLine($"Warning: '{ConfigFileName}' found at '{configFilePath}' is empty. Using default configuration.");
+            Logger.Warn($"'{ConfigFileName}' found at '{configFilePath}' is empty. Using default configuration.");
           }
         }
         catch (JsonException jsonEx)
         {
-          Console.WriteLine($"Error deserializing '{ConfigFileName}' from '{configFilePath}': {jsonEx.Message}. Using default configuration.");
+          Logger.Error($"Error deserializing '{ConfigFileName}' from '{configFilePath}'. Using default configuration.", jsonEx);
         }
 
         // Catch-all for other potential issues
         catch (Exception ex)
         {
-          Console.WriteLine($"Night.ConfigurationManager: Error loading or deserializing config.json: {ex.Message}. Using default configuration.");
+          Logger.Error($"Error loading or deserializing config.json. Using default configuration.", ex);
         }
       }
       else
       {
-        Console.WriteLine($"Info: '{ConfigFileName}' not found at '{configFilePath}'. Using default configuration.");
+        Logger.Info($"'{ConfigFileName}' not found at '{configFilePath}'. Using default configuration.");
       }
 
       isLoaded = true;

@@ -1,2 +1,18 @@
 # Auto detect text files and perform LF normalization
-* text eol=lf
+* text=auto eol=lf
+
+# Explicitly mark binary files to prevent corruption
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.dll binary
+*.dylib binary
+*.so binary
+*.exe binary
+*.pdb binary
+*.ase binary
+*.aseprite binary
+*.zip binary
+# Add any other binary extensions your project uses

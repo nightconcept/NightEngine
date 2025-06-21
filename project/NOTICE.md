@@ -28,7 +28,7 @@ This project incorporates copyrighted material from the following third-party pr
 - License: zlib
 - Website: [https://github.com/libsdl-org/SDL_ttf](https://github.com/libsdl-org/SDL_ttf)
 - Dependency licenses:
-  - FreeType, licensed under [FTL](https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT)
+  - FreeType, licensed under [FTL license](https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT)
   - HarfBuzz licensed under the [MIT license](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING)
   - PlutoSVG, licensed under the [MIT license](https://github.com/sammycage/plutosvg/blob/master/LICENSE)
   - PlutoVG, licensed under the [MIT license](https://github.com/sammycage/plutovg/blob/master/LICENSE)
@@ -45,15 +45,22 @@ This project incorporates copyrighted material from the following third-party pr
 - License: Apache 2.0
 - Website: [https://github.com/google/material-design-icons](https://github.com/google/material-design-icons)
 
-### Crunch (Texture Packer)
+### Love2D Wiki Documentation
 
-- Copyright (c) 2017 Chevy Ray Johnston
-- License: MIT
-- Website: [https://github.com/ChevyRay/crunch](https://github.com/ChevyRay/crunch)
+- Copyright (c) 2006-2010 LÖVE Development Team.
+- License: FreeBSD
+- Website: [https://love2d.org/wiki/Main_Page](https://love2d.org/wiki/Main_Page)
+- License specifics:
+  - Redistribution and use in source (XML) and compiled forms (HTML) with or without modification, are permitted provided that the following conditions are met:
+
+    - Redistributions of source code (XML) must retain the above copyright notice, this list of conditions and the following disclaimer as the first lines of this file unmodified.
+    - Redistributions in compiled form (HTML) must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 ## License Texts
 
 ### zlib
+
+SPDX-License-Identifier: Zlib
 
 ```plaintext
 This software is provided ‘as-is’, without any express or implied
@@ -77,6 +84,8 @@ distribution.
 ```
 
 ### FTL
+
+SPDX-License-Identifier: FTL
 
 ```plaintext
                     The FreeType Project LICENSE
@@ -249,6 +258,8 @@ Legal Terms
 
 ### MIT
 
+SPDX-License-Identifier: MIT
+
 ```plaintext
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -258,6 +269,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ```
 
 ### Apache 2.0
+
+SPDX-License-Identifier: Apache-2.0
 
 ```plaintext
 
@@ -463,3 +476,33 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    See the License for the specific language governing permissions and
    limitations under the License.
 ```
+
+### FreeBSD
+
+SPDX-License-Identifier: BSD-2-Clause
+
+```plaintext
+
+ Copyright (c) [year] [your name]
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.
+ ```
