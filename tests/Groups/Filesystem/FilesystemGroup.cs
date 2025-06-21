@@ -181,6 +181,17 @@ namespace NightTest.Groups.Filesystem
     }
 
     /// <summary>
+    /// Runs all Filesystem.GetSaveDirectory mod test cases.
+    /// </summary>
+    [Fact]
+    [Trait("TestType", "Automated")]
+    public void Run_FilesystemGetSaveDirectory_ModTests()
+    {
+      this.Run_ModTestCase(new GetSaveDirectory_DefaultIdentityTest());
+      this.Run_ModTestCase(new GetSaveDirectory_CustomIdentityTest());
+    }
+
+    /// <summary>
     /// Runs all <see cref="Night.NightFile"/> mod test cases.
     /// </summary>
     [Fact]

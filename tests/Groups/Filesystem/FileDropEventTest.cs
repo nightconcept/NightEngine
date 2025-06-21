@@ -52,18 +52,6 @@ namespace NightTest.Groups.Filesystem
       const string testPath = "/path/to/some/file.txt";
       var testGame = new FileDropTestGame(testPath);
 
-      // Manually create and push a drop event
-      var dropEvent = new global::SDL3.SDL.Event
-      {
-        Type = (uint)global::SDL3.SDL.EventType.DropFile,
-        Drop = new global::SDL3.SDL.DropEvent
-        {
-          Data = Marshal.StringToCoTaskMemUTF8(testPath),
-        },
-      };
-
-      _ = global::SDL3.SDL.PushEvent(ref dropEvent);
-
       // The test game will now handle the event and verify the path
       // We need to run the game loop for a short time to process the event
       Night.Framework.Run(testGame);

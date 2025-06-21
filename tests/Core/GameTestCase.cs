@@ -318,29 +318,37 @@ namespace NightTest.Core
     {
       if (this.IsDone)
       {
-        return true; // Already done, report as handled
+        return true;
       }
 
+      // First, check for timeout
       if (this.TestStopwatch.ElapsedMilliseconds >= milliseconds)
       {
-        if (successCondition == null || successCondition())
+        // On timeout, check the success condition one last time
+        if (successCondition != null && successCondition())
         {
-          this.CurrentStatus = TestStatus.Passed;
-          this.Details = passDetails != null ? passDetails() : "Test passed: Met condition or reached duration.";
+          // If condition is met at the very end, it's a success
+          this.RecordSuccess(passDetails?.Invoke() ?? $"Test passed at timeout: Condition met after {this.TestStopwatch.ElapsedMilliseconds}ms.");
         }
         else
         {
-          this.CurrentStatus = TestStatus.Failed;
-
-          // If condition failed, use failDetailsCondition, otherwise (timeout without specific condition failure) use failDetailsTimeout
-          this.Details = failDetailsCondition != null ? failDetailsCondition() : (failDetailsTimeout != null ? failDetailsTimeout() : "Test failed: Condition not met or timed out.");
+          // If condition is not met, it's a failure due to timeout
+          this.RecordFailure(failDetailsTimeout?.Invoke() ?? $"Test failed: Timed out after {milliseconds}ms.");
         }
 
-        this.EndTest();
-        return true; // Test completed
+        this.EndTest(); // End the test on timeout regardless of success or failure
+        return true;
       }
 
-      return false; // Test not yet completed
+      // If not timed out, check the success condition
+      if (successCondition != null && successCondition())
+      {
+        this.RecordSuccess(passDetails?.Invoke() ?? $"Test passed: Condition met at {this.TestStopwatch.ElapsedMilliseconds}ms.");
+        this.EndTest(); // End the test as soon as the condition is met
+        return true;
+      }
+
+      return false; // Test is not yet complete
     }
 
     /// <summary>
@@ -385,6 +393,37 @@ namespace NightTest.Core
       }
 
       return false; // Test not yet completed
+    }
+
+    /// <summary>
+    /// Public method to record a test failure.
+    /// </summary>
+    /// <param name="failureDetails">Specific details about the failure.</param>
+    /// <param name="ex">The exception that caused the failure, if any.</param>
+    public new void RecordFailure(string failureDetails, Exception? ex = null)
+    {
+      if (this.IsDone)
+      {
+        return;
+      }
+
+      base.RecordFailure(failureDetails, ex);
+      this.EndTest();
+    }
+
+    /// <summary>
+    /// Public method to record a test success.
+    /// </summary>
+    /// <param name="successDetails">Specific details about the success.</param>
+    public new void RecordSuccess(string successDetails)
+    {
+      if (this.IsDone)
+      {
+        return;
+      }
+
+      base.RecordSuccess(successDetails);
+      this.EndTest();
     }
   }
 }

@@ -78,5 +78,15 @@ namespace NightTest.Core
         this.Details = failureDetails;
       }
     }
+
+    /// <summary>
+    /// Public method to record a test success.
+    /// </summary>
+    /// <param name="successDetails">Specific details about the success.</param>
+    public void RecordSuccess(string successDetails)
+    {
+      this.CurrentStatus = TestStatus.Passed;
+      this.Details = successDetails;
+    }
   }
 }

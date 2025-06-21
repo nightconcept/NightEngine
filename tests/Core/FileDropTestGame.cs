@@ -20,7 +20,11 @@
 // 3. This notice may not be removed or altered from any source distribution.
 // </copyright>
 
+using System.Runtime.InteropServices;
+
 using Night;
+
+using SDL3;
 
 using Xunit;
 
@@ -60,11 +64,43 @@ namespace NightTest.Core
     }
 
     /// <inheritdoc/>
+    protected override void Load()
+    {
+      // Create a proper SDL drop event
+      // Note: In SDL3, we need to use UTF8 encoding for the Data field
+      // For testing purposes, we'll create the event structure manually
+      var dropEvent = new SDL.Event
+      {
+        Type = (uint)SDL.EventType.DropFile,
+        Drop = new SDL.DropEvent
+        {
+          Type = SDL.EventType.DropFile,
+          Timestamp = SDL.GetTicksNS(),
+          WindowID = SDL.GetWindowID(Window.Handle),
+          X = 0,
+          Y = 0,
+          Source = IntPtr.Zero,
+          Data = Marshal.StringToCoTaskMemUTF8(this.expectedPath), // Use UTF8 encoding
+        },
+      };
+
+      bool success = SDL.PushEvent(ref dropEvent);
+
+      // Don't free the memory immediately - let SDL handle it
+      // The framework will handle cleanup as noted in the TODO comment
+      if (!success)
+      {
+        this.RecordFailure($"Failed to push SDL drop event: {SDL.GetError()}");
+        this.EndTest();
+      }
+    }
+
+    /// <inheritdoc/>
     protected override void Update(double deltaTime)
     {
       // The test will be driven by the FileDropped event
       // We can add a timeout condition here if we want
-      if (this.CheckCompletionAfterDuration(5000, () => this.actualPath != null, passDetails: () => $"File drop event received with path: {this.actualPath}", failDetailsTimeout: () => "Test failed: Timed out waiting for file drop event."))
+      if (this.CheckCompletionAfterDuration(1000, () => this.actualPath != null, passDetails: () => $"File drop event received with path: {this.actualPath}", failDetailsTimeout: () => "Test failed: Timed out waiting for file drop event."))
       {
         return;
       }

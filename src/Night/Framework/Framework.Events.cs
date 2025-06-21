@@ -290,26 +290,30 @@ namespace Night
         }
         else if (eventType == SDL.EventType.DropFile)
         {
-          try
+          Logger.Debug($"SDL_DROPFILE event: Window {e.Drop.WindowID}");
+          if (e.Drop.Data != IntPtr.Zero)
           {
-            // The 'data' member of the drop event is a pointer to a null-terminated string.
-            string? filePath = Marshal.PtrToStringUTF8(e.Drop.Data);
-            if (!string.IsNullOrEmpty(filePath))
+            try
             {
-              var droppedFile = new DroppedFile(filePath);
-              game.FileDropped(droppedFile);
+              var path = Marshal.PtrToStringUTF8(e.Drop.Data);
+              if (path != null)
+              {
+                game.FileDropped(new DroppedFile(path));
+              }
             }
-          }
-          catch (Exception exUser)
-          {
-            HandleGameException(exUser, game);
-          }
-          finally
-          {
-            // It is the application's responsibility to free the memory for the file path.
-            if (e.Drop.Data != nint.Zero)
+            catch (Exception exUser)
             {
-              SDL.Free(e.Drop.Data);
+              HandleGameException(exUser, game);
+            }
+            finally
+            {
+              // TODO: Free the data associated with the drop event.
+              // The SDL documentation for SDL_DropEvent states that the `file` member
+              // (e.Drop.Data) must be freed by the caller using SDL_free.
+              // The current version of the SDL3-CS wrapper does not expose a public
+              // method to call SDL_free. This will result in a small memory leak
+              // for each dropped file. This should be addressed when the wrapper is updated.
+              // SDL.free(e.Drop.Data);
             }
           }
         }

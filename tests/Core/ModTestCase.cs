@@ -54,7 +54,7 @@ namespace NightTest.Core
     /// Public method to record a test success, typically called by an xUnit wrapper when an exception occurs.
     /// </summary>
     /// <param name="successDetails">Specific details about the success.</param>
-    public void RecordSuccess(string successDetails)
+    public new void RecordSuccess(string successDetails)
     {
       this.CurrentStatus = TestStatus.Passed;
       this.Details = successDetails;

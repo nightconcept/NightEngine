@@ -113,10 +113,17 @@ namespace Night
     /// <summary>
     /// Gets the full path to the directory where the game can save files.
     /// The directory is created if it doesn't exist.
-    /// The path depends on the operating system and the game's identity.
     /// </summary>
+    /// <remarks>
+    /// The path depends on the operating system and the game's identity (set by <see cref="SetIdentity"/>):
+    /// <list type="bullet">
+    /// <item><term>Windows</term><description>%APPDATA%\Night\[Identity]\</description></item>
+    /// <item><term>macOS</term><description>~/Library/Application Support/Night/[Identity]/</description></item>
+    /// <item><term>Linux</term><description>$XDG_DATA_HOME/night/[Identity]/ or ~/.local/share/night/[Identity]/</description></item>
+    /// </list>
+    /// </remarks>
     /// <returns>The absolute path to the save directory.</returns>
-    /// <exception cref="IOException">Thrown if the save directory could not be created.</exception>
+    /// <exception cref="IOException">Thrown if the save directory could not be created or accessed.</exception>
     /// <exception cref="UnauthorizedAccessException">Thrown if permissions are insufficient to create the save directory.</exception>
     public static string GetSaveDirectory()
     {
