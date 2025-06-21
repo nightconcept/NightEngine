@@ -453,9 +453,9 @@
     *   `filepath` needs to be resolved: check save directory first, then source directory.
 *   **Status:** Exists. Path resolution needs implementation. [`ContainerType`](src/Night/Filesystem/Filesystem.cs:43) enum also exists.
 
-#### 26. [ ] `Night.Filesystem.Remove(string filepath)`
+#### 26. [x] `Night.Filesystem.Remove(string filepath)`
 *   **Love2D Equivalent:** `love.filesystem.remove(filepath)`
-*   **C# Signature Idea:** `public static bool Remove(string filepath)`
+*   **C# Implementation:** In `src/Night/Filesystem/Filesystem.Remove.cs`
 *   **Requirements:**
     *   Removes a file or an empty directory.
     *   `filepath` is relative to the **save directory**. Operations outside save directory are forbidden.
@@ -464,13 +464,13 @@
     *   Fails to remove items outside save directory or non-empty directories.
     *   Returns true on success, false on failure.
 *   **Test Scenarios/Cases:**
-    *   `Remove_FileInSaveDir`: Test removing a file.
-    *   `Remove_EmptyDirInSaveDir`: Test removing an empty directory.
-    *   `Remove_NonEmptyDir`: Verify fails.
-    *   `Remove_OutsideSaveDir`: Verify fails.
-    *   `Remove_NotFound`: Verify behavior for non-existent path.
+    *   `Remove_FileInSaveDir`: Test removing a file. (Implemented in `RemoveFileTest`)
+    *   `Remove_EmptyDirInSaveDir`: Test removing an empty directory. (Implemented in `RemoveEmptyDirTest`)
+    *   `Remove_NonEmptyDir`: Verify fails. (Implemented in `RemoveNonEmptyDirTest`)
+    *   `Remove_OutsideSaveDir`: Verify fails. (Implemented in `RemoveOutsideSaveDirTest`)
+    *   `Remove_NotFound`: Verify behavior for non-existent path. (Implemented in `RemoveNotFoundTest`)
 
-#### 27. [ ] `Night.Filesystem.SetCRequirePath(string path)`
+#### 27. [~] `Night.Filesystem.SetCRequirePath(string path)`
 *   **Love2D Equivalent:** `love.filesystem.setCRequirePath(path)`
 *   **C# Signature Idea:** `public static void SetCRequirePath(string path)`
 *   **Requirements:** Lua-specific. See `GetCRequirePath`.

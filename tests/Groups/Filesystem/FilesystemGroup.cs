@@ -260,5 +260,19 @@ namespace NightTest.Groups.Filesystem
     {
       this.Run_ModTestCase(new FileDropEventTest());
     }
+
+    /// <summary>
+    /// Runs all Filesystem.Remove mod test cases.
+    /// </summary>
+    [Fact]
+    [Trait("TestType", "Automated")]
+    public void Run_FilesystemRemove_ModTests()
+    {
+      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveFileTest());
+      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveEmptyDirTest());
+      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveNonEmptyDirTest());
+      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveOutsideSaveDirTest());
+      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveNotFoundTest());
+    }
   }
 }
