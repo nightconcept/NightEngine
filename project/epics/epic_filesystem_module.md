@@ -36,7 +36,7 @@
 *   The module integrates seamlessly with the existing `Night.Framework`.
 *   Save directory paths and behavior are clearly documented.
 
-**Status:** To Do
+**Status:** In-Progress
 **Assigned Agent:** AI Dev Agent
 **Date Started:** 2025-06-16
 **Date Completed:** TBD
@@ -66,7 +66,7 @@
 
 ### Types
 
-#### 1. [ ] `Night.DroppedFile`
+#### 1. [x] `Night.DroppedFile`
 *   **Love2D Equivalent:** `love.filesystem.DroppedFile` (Added since 0.10.0)
 *   **Description:** Represents a file dropped onto the window. (This implies integration with `Night.Window` or `Night.Framework` event system for file drop events).
 *   **C# Definition Idea:**
@@ -86,15 +86,18 @@
     }
     ```
 *   **Requirements:**
-    *   Define a `DroppedFile` class.
-    *   Store the absolute path of the dropped file.
-    *   Integrate with a file drop event from the windowing system.
+    *   [x] Define a `DroppedFile` class.
+    *   [x] Store the absolute path of the dropped file.
+    *   [x] Integrate with a file drop event from the windowing system.
 *   **Acceptance Criteria:**
-    *   `DroppedFile` objects are correctly created when files are dropped on the game window.
-    *   The `Path` property provides the correct absolute path to the dropped file.
+    *   [x] `DroppedFile` objects are correctly created when files are dropped on the game window.
+    *   [x] The `Path` property provides the correct absolute path to the dropped file.
 *   **Test Scenarios/Cases:**
-    *   `DroppedFile_EventFires`: Verify file drop event triggers and provides `DroppedFile` instances.
-    *   `DroppedFile_PathCorrectness`: Check `Path` property for various dropped files.
+    *   `DroppedFile_PathCorrectness`: Check `Path` property for various dropped files. (Automated test created)
+    *   **Manual Test:** `DroppedFile_EventFires`:
+        *   **Setup:** Run the `SampleGame` or a dedicated test application.
+        *   **Action:** Drag and drop a file from the host OS onto the game window.
+        *   **Expected Result:** The application's `FileDropped` callback should be triggered, and the received `DroppedFile` object should contain the correct absolute path of the dropped file, which should be logged or displayed on screen for verification.
 
 #### 2. [~] `Night.File` (Implemented as `NightFile.cs`)
 *   **Love2D Equivalent:** `love.filesystem.File`

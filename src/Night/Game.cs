@@ -213,6 +213,16 @@ namespace Night
     }
 
     /// <summary>
+    /// Callback function triggered when a file is dropped onto the window.
+    /// Override this method to handle file drop events.
+    /// </summary>
+    /// <param name="file">The file that was dropped.</param>
+    public virtual void FileDropped(DroppedFile file)
+    {
+      // Default implementation is empty.
+    }
+
+    /// <summary>
     /// Provides the main game loop iteration logic as a callable function.
     /// This default implementation mirrors LÖVE's `love.run()` behavior for a single frame,
     /// returning a function that, when called, executes one iteration of the game loop.

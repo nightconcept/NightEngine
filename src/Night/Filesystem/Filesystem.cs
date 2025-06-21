@@ -36,10 +36,10 @@ namespace Night
   public static partial class Filesystem
   {
     private static readonly ILogger Logger = LogManager.GetLogger("Night.Filesystem.Filesystem");
-    private static string _gameIdentity = "NightDefault";
     private static readonly object GameIdentityLock = new object();
-    private static string? _saveDirectoryCache;
-    private static string? _sourceDirectoryCache;
+    private static string gameIdentity = "NightDefault";
+    private static string? saveDirectoryCache;
+    private static string? sourceDirectoryCache;
 
     /// <summary>
     /// Specifies the type to return file contents as when reading.
@@ -69,7 +69,7 @@ namespace Night
       {
         if (string.IsNullOrWhiteSpace(identityName))
         {
-          _gameIdentity = "NightDefault";
+          gameIdentity = "NightDefault";
           Logger.Info("Game identity reset to default: NightDefault.");
         }
         else
@@ -89,12 +89,12 @@ namespace Night
             Logger.Warn($"Game identity '{identityName}' contained invalid characters and was sanitized to '{sanitizedName}'.");
           }
 
-          _gameIdentity = sanitizedName;
+          gameIdentity = sanitizedName;
         }
 
         // Invalidate cached save directory path as it depends on identity
-        _saveDirectoryCache = null;
-        Logger.Info($"Game identity set to: {_gameIdentity}");
+        saveDirectoryCache = null;
+        Logger.Info($"Game identity set to: {gameIdentity}");
       }
     }
 
@@ -106,7 +106,7 @@ namespace Night
     {
       lock (GameIdentityLock)
       {
-        return _gameIdentity;
+        return gameIdentity;
       }
     }
 
@@ -122,9 +122,9 @@ namespace Night
     {
       lock (GameIdentityLock)
       {
-        if (_saveDirectoryCache != null)
+        if (saveDirectoryCache != null)
         {
-          return _saveDirectoryCache;
+          return saveDirectoryCache;
         }
 
         string basePath;
@@ -142,7 +142,7 @@ namespace Night
         {
           nightFolderName = "night"; // Lowercase for Linux as per Love2D convention
           basePath = Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? string.Empty;
-          if (string.IsNullOrEmpty(basePath) || !Directory.Exists(basePath)) // Check if XDG_DATA_HOME is valid
+          if (string.IsNullOrEmpty(basePath) || !Directory.Exists(basePath))
           {
             basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
           }
@@ -153,20 +153,20 @@ namespace Night
           // Consider throwing UnsupportedPlatformException if strict adherence to defined platforms is required.
           Logger.Warn($"Unsupported OS detected for save directory. Falling back to ApplicationData folder with 'Night' subfolder.");
           basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-          if (string.IsNullOrEmpty(basePath)) // Highly unlikely, but as a last resort
+          if (string.IsNullOrEmpty(basePath))
           {
             basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".NightFallbackData");
             Logger.Warn($"ApplicationData folder not found. Using fallback: {basePath}");
           }
         }
 
-        string savePath = Path.Combine(basePath, nightFolderName, _gameIdentity);
+        string savePath = Path.Combine(basePath, nightFolderName, gameIdentity);
 
         try
         {
           if (!Directory.Exists(savePath))
           {
-            Directory.CreateDirectory(savePath);
+            _ = Directory.CreateDirectory(savePath);
             Logger.Info($"Created save directory: {savePath}");
           }
         }
@@ -178,12 +178,13 @@ namespace Night
         catch (Exception ex)
         {
           Logger.Error($"An unexpected error occurred while creating save directory '{savePath}'. Error: {ex.Message}", ex);
+
           // Depending on policy, might throw a more generic exception or a custom one.
           // For now, re-throw to indicate failure.
           throw new IOException($"Could not ensure save directory exists at '{savePath}'.", ex);
         }
 
-        _saveDirectoryCache = savePath;
+        saveDirectoryCache = savePath;
         return savePath;
       }
     }
@@ -194,12 +195,12 @@ namespace Night
     /// <returns>The absolute path to the source directory.</returns>
     public static string GetSource()
     {
-      if (_sourceDirectoryCache == null)
+      if (sourceDirectoryCache == null)
       {
-        _sourceDirectoryCache = AppContext.BaseDirectory ?? Directory.GetCurrentDirectory();
+        sourceDirectoryCache = AppContext.BaseDirectory ?? Directory.GetCurrentDirectory();
       }
 
-      return _sourceDirectoryCache;
+      return sourceDirectoryCache;
     }
 
     /// <summary>
@@ -513,13 +514,14 @@ namespace Night
       {
         if (!Directory.Exists(appDataPath))
         {
-          Directory.CreateDirectory(appDataPath);
+          _ = Directory.CreateDirectory(appDataPath);
           Logger.Info($"Created appdata directory (legacy GetAppdataDirectory call): {appDataPath}");
         }
       }
       catch (Exception ex)
       {
         Logger.Warn($"Could not create appdata directory '{appDataPath}' (legacy GetAppdataDirectory call): {ex.Message}");
+
         // Depending on requirements, this might throw or return a non-guaranteed path.
         // For now, it returns the path even if creation failed, consistent with original.
       }

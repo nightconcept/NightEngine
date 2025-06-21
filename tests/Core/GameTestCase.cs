@@ -205,6 +205,11 @@ namespace NightTest.Core
       throw new NotImplementedException();
     }
 
+    /// <inheritdoc/>
+    public virtual void FileDropped(DroppedFile file)
+    {
+    }
+
     /// <summary>
     /// Performs the specific load logic for the test case.
     /// Derived classes can override this method to implement their core load behavior.

@@ -13,6 +13,7 @@
 
 ### Types (Filesystem)
 
+- DroppedFile
 - FileSystemInfo
 - NightFile
 

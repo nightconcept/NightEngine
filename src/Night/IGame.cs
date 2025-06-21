@@ -146,6 +146,12 @@ namespace Night
     void GamepadReleased(Joystick joystick, GamepadButton button);
 
     /// <summary>
+    /// Callback function triggered when a file is dropped onto the window.
+    /// </summary>
+    /// <param name="file">The file that was dropped.</param>
+    void FileDropped(DroppedFile file);
+
+    /// <summary>
     /// The main callback function, containing the main loop logic.
     /// A sensible default is used when not overridden.
     /// This function, when obtained, should be called repeatedly by the engine's main loop.

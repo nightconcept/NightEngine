@@ -239,5 +239,15 @@ namespace NightTest.Groups.Filesystem
       this.Run_ModTestCase(new FileSystemInfo_Constructor_DefaultValues());
       this.Run_ModTestCase(new FileSystemInfo_Constructor());
     }
+
+    /// <summary>
+    /// Runs the FileDropEventTest.
+    /// </summary>
+    [Fact]
+    [Trait("TestType", "Automated")]
+    public void Run_FileDropEventTest()
+    {
+      this.Run_ModTestCase(new FileDropEventTest());
+    }
   }
 }

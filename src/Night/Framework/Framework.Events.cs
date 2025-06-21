@@ -23,6 +23,8 @@
 using System;
 
 // using Night.Joysticks; // This was incorrect as Joysticks is a static class, types are in Night namespace.
+using System.Runtime.InteropServices;
+
 using SDL3;
 
 namespace Night
@@ -284,6 +286,31 @@ namespace Night
           else
           {
             Logger.Warn($"Received GamepadButtonUp for unknown joystick instance ID {e.GButton.Which}");
+          }
+        }
+        else if (eventType == SDL.EventType.DropFile)
+        {
+          try
+          {
+            // The 'data' member of the drop event is a pointer to a null-terminated string.
+            string? filePath = Marshal.PtrToStringUTF8(e.Drop.Data);
+            if (!string.IsNullOrEmpty(filePath))
+            {
+              var droppedFile = new DroppedFile(filePath);
+              game.FileDropped(droppedFile);
+            }
+          }
+          catch (Exception exUser)
+          {
+            HandleGameException(exUser, game);
+          }
+          finally
+          {
+            // It is the application's responsibility to free the memory for the file path.
+            if (e.Drop.Data != nint.Zero)
+            {
+              SDL.Free(e.Drop.Data);
+            }
           }
         }
 
