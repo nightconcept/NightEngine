@@ -29,12 +29,12 @@ using Night;
 
 using NightTest.Core;
 
-namespace NightTest.Tests.Filesystem
+namespace NightTest.Groups.Filesystem
 {
   /// <summary>
   /// Base class for GetDirectoryItems tests, handling setup and cleanup.
   /// </summary>
-  internal abstract class BaseGetDirectoryItemsTest : GameTestCase
+  public abstract class BaseGetDirectoryItemsTest : GameTestCase
   {
     /// <summary>
     /// Gets the name of the temporary directory used for testing.
@@ -87,7 +87,7 @@ namespace NightTest.Tests.Filesystem
   /// <summary>
   /// Tests GetDirectoryItems with files in both save and source directories.
   /// </summary>
-  internal class GetDirectoryItems_SaveAndSource_Combined : BaseGetDirectoryItemsTest
+  public class GetDirectoryItems_SaveAndSource_Combined : BaseGetDirectoryItemsTest
   {
     /// <inheritdoc/>
     public override string Name => "Filesystem.GetDirectoryItems_SaveAndSource_Combined";
@@ -138,7 +138,7 @@ namespace NightTest.Tests.Filesystem
   /// <summary>
   /// Tests GetDirectoryItems with files only in the save directory.
   /// </summary>
-  internal class GetDirectoryItems_SaveOnly : BaseGetDirectoryItemsTest
+  public class GetDirectoryItems_SaveOnly : BaseGetDirectoryItemsTest
   {
     /// <inheritdoc/>
     public override string Name => "Filesystem.GetDirectoryItems_SaveOnly";
@@ -182,7 +182,7 @@ namespace NightTest.Tests.Filesystem
   /// <summary>
   /// Tests GetDirectoryItems with files only in the source directory.
   /// </summary>
-  internal class GetDirectoryItems_SourceOnly : BaseGetDirectoryItemsTest
+  public class GetDirectoryItems_SourceOnly : BaseGetDirectoryItemsTest
   {
     /// <inheritdoc/>
     public override string Name => "Filesystem.GetDirectoryItems_SourceOnly";
@@ -226,7 +226,7 @@ namespace NightTest.Tests.Filesystem
   /// <summary>
   /// Tests GetDirectoryItems on a non-existent directory.
   /// </summary>
-  internal class GetDirectoryItems_NotFound : BaseGetDirectoryItemsTest
+  public class GetDirectoryItems_NotFound : BaseGetDirectoryItemsTest
   {
     /// <inheritdoc/>
     public override string Name => "Filesystem.GetDirectoryItems_NotFound";

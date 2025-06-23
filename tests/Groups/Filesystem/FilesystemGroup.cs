@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using Night;
 
 using NightTest.Core;
-using NightTest.Tests.Groups.Filesystem;
 
 using Xunit;
 using Xunit.Abstractions;

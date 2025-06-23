@@ -27,7 +27,7 @@ using Night;
 
 using NightTest.Core;
 
-namespace NightTest.Tests.Groups.Filesystem
+namespace NightTest.Groups.Filesystem
 {
   /// <summary>
   /// Base class for Filesystem.Remove tests, handling setup and teardown.
