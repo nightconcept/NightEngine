@@ -133,50 +133,22 @@
     *   `NightFile_SeekAndTell`: Test seeking to various positions and `Tell` reporting correctly.
     *   `NightFile_WriteData`: Test writing strings and bytes.
 
-#### 3. [ ] `Night.FileData`
+#### 3. [x] `Night.FileData`
 *   **Love2D Equivalent:** `love.filesystem.FileData`
 *   **Description:** Data representing the contents of a file, typically loaded from disk or created from a string/byte array in memory.
-*   **C# Definition Idea:**
-    ```csharp
-    namespace Night
-    {
-        public class FileData // : IDisposable if it holds unmanaged resources, though likely just byte[]/string
-        {
-            private readonly byte[] _data;
-            private readonly string _filenameHint; // Original filename, for extension etc.
-
-            public FileData(byte[] data, string filenameHint = "data")
-            {
-                _data = data ?? throw new ArgumentNullException(nameof(data));
-                _filenameHint = filenameHint;
-            }
-
-            public FileData(string content, string filenameHint = "data.txt")
-            {
-                _data = System.Text.Encoding.UTF8.GetBytes(content ?? throw new ArgumentNullException(nameof(content)));
-                _filenameHint = filenameHint;
-            }
-
-            public byte[] GetBytes() => (byte[])_data.Clone(); // Return a copy
-            public string GetString() => System.Text.Encoding.UTF8.GetString(_data);
-            public long GetSize() => _data.Length;
-            public string GetFilenameHint() => _filenameHint;
-            // public string GetExtension() => Path.GetExtension(_filenameHint); // Example utility
-        }
-    }
-    ```
+*   **C# Definition:** [`src/Night/Filesystem/FileData.cs`](src/Night/Filesystem/FileData.cs)
 *   **Requirements:**
-    *   Define a `FileData` class.
-    *   Allow creation from byte array or string.
-    *   Provide methods to get content as bytes or string, get size.
-    *   Store a "filename hint" for context (e.g., for `love.image.newImageData(filedata)`).
+    *   [x] Define a `FileData` class.
+    *   [x] Allow creation from byte array or string.
+    *   [x] Provide methods to get content as bytes or string, get size.
+    *   [x] Store a "filename hint" for context (e.g., for `love.image.newImageData(filedata)`).
 *   **Acceptance Criteria:**
-    *   `FileData` can be created from raw bytes or string content.
-    *   `GetBytes()`, `GetString()`, `GetSize()` return correct information.
+    *   [x] `FileData` can be created from raw bytes or string content.
+    *   [x] `GetBytes()`, `GetString()`, `GetSize()` return correct information.
 *   **Test Scenarios/Cases:**
-    *   `FileData_CreateFromBytes`: Verify content and size.
-    *   `FileData_CreateFromString`: Verify content and size.
-    *   `FileData_FilenameHint`: Check hint is stored and retrievable.
+    *   `FileData_CreateFromBytes`: Verify content and size. (Implemented in `NewFileDataFromBytesTest`)
+    *   `FileData_CreateFromString`: Verify content and size. (Implemented in `NewFileDataFromStringTest`)
+    *   `FileData_FilenameHint`: Check hint is stored and retrievable. (Implemented in tests)
 
 ### Enums
 
@@ -405,19 +377,17 @@
         3.  Construct `NightFile` with this resolved absolute path.
 *   **Status:** Exists. Path resolution logic within `NewFile` or `NightFile.Open` needs significant work.
 
-#### 23. [ ] `Night.Filesystem.NewFileData(byte[] data, string name)`
+#### 23. [x] `Night.Filesystem.NewFileData(byte[] data, string name)`
 *   **Love2D Equivalent:** `love.filesystem.newFileData(string, name)` or `love.filesystem.newFileData(data, name)`
-*   **C# Signature Idea:**
-    *   `public static FileData NewFileData(byte[] data, string name)`
-    *   `public static FileData NewFileData(string content, string name)`
+*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.NewFileData.cs`](src/Night/Filesystem/Filesystem.NewFileData.cs)
 *   **Requirements:**
-    *   Create a `FileData` object from raw bytes or string.
-    *   `name` is used as the filename hint for the `FileData`.
+    *   [x] Create a `FileData` object from raw bytes or string.
+    *   [x] `name` is used as the filename hint for the `FileData`.
 *   **Acceptance Criteria:**
-    *   Correctly creates `FileData` instances.
+    *   [x] Correctly creates `FileData` instances.
 *   **Test Scenarios/Cases:**
-    *   `NewFileData_FromBytes`: Verify.
-    *   `NewFileData_FromString`: Verify.
+    *   `NewFileData_FromBytes`: Verify. (Implemented in `NewFileDataFromBytesTest`)
+    *   `NewFileData_FromString`: Verify. (Implemented in `NewFileDataFromStringTest`)
 
 #### 24. [x] `Night.Filesystem.Read(string filepath, long? sizeToRead = null)`
 *   **Love2D Equivalent:** `love.filesystem.read(filepath, size)`

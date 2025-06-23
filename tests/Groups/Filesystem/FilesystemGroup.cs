@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using Night;
 
 using NightTest.Core;
-using NightTest.Tests.Filesystem;
+using NightTest.Tests.Groups.Filesystem;
 
 using Xunit;
 using Xunit.Abstractions;
@@ -270,11 +270,22 @@ namespace NightTest.Groups.Filesystem
     [Trait("TestType", "Automated")]
     public void Run_FilesystemRemove_ModTests()
     {
-      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveFileTest());
-      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveEmptyDirTest());
-      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveNonEmptyDirTest());
-      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveOutsideSaveDirTest());
-      this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveNotFoundTest());
+      this.Run_GameTestCase(new RemoveFileTest());
+      this.Run_GameTestCase(new RemoveEmptyDirTest());
+      this.Run_GameTestCase(new RemoveNonEmptyDirTest());
+      this.Run_GameTestCase(new RemoveOutsideSaveDirTest());
+      this.Run_GameTestCase(new RemoveNotFoundTest());
+    }
+
+    /// <summary>
+    /// Runs all Filesystem.NewFileData mod test cases.
+    /// </summary>
+    [Fact]
+    [Trait("TestType", "Automated")]
+    public void Run_FilesystemNewFileData_ModTests()
+    {
+      this.Run_GameTestCase(new NewFileDataFromBytesTest());
+      this.Run_GameTestCase(new NewFileDataFromStringTest());
     }
 
     /// <summary>

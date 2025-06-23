@@ -14,6 +14,7 @@
 ### Types (Filesystem)
 
 - DroppedFile
+- FileData
 - FileSystemInfo
 - NightFile
 
