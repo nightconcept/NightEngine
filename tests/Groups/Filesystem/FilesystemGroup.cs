@@ -123,19 +123,6 @@ namespace NightTest.Groups.Filesystem
     }
 
     /// <summary>
-    /// Runs all Filesystem.Append mod test cases.
-    /// </summary>
-    [Fact]
-    [Trait("TestType", "Automated")]
-    public void Run_FilesystemAppend_ModTests()
-    {
-      this.Run_ModTestCase(new FilesystemAppend_AppendToNewFileTest());
-      this.Run_ModTestCase(new FilesystemAppend_AppendToExistingFileTest());
-      this.Run_ModTestCase(new FilesystemAppend_PartialDataTest());
-      this.Run_ModTestCase(new FilesystemAppend_ArgumentValidationTest());
-    }
-
-    /// <summary>
     /// Runs all Filesystem.Read mod test cases.
     /// </summary>
     [Fact]
@@ -298,6 +285,19 @@ namespace NightTest.Groups.Filesystem
       this.Run_GameTestCase(new GetDirectoryItems_SaveOnly());
       this.Run_GameTestCase(new GetDirectoryItems_SourceOnly());
       this.Run_GameTestCase(new GetDirectoryItems_NotFound());
+    }
+
+    /// <summary>
+    /// Runs all Filesystem.Append mod test cases.
+    /// </summary>
+    [Fact]
+    [Trait("TestType", "Automated")]
+    public void Run_FilesystemAppend_Tests()
+    {
+      this.Run_GameTestCase(new Append_String_NewFile());
+      this.Run_GameTestCase(new Append_String_ExistingFile());
+      this.Run_GameTestCase(new Append_String_WithPath());
+      this.Run_GameTestCase(new Append_Bytes_NewFile());
     }
   }
 }

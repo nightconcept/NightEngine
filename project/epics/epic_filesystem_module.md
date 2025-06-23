@@ -177,25 +177,26 @@
 
 #### 1. [x] `Night.Filesystem.Append(string filepath, byte[] data, long? size = null)`
 *   **Love2D Equivalent:** `love.filesystem.append(filepath, data, size)`
-*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:196) (byte[] overload)
+*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.Append.cs`](src/Night/Filesystem/Filesystem.Append.cs) (byte[] overload)
 *   **Enhancement:**
     *   Overload `Append(string filepath, string data, long? size = null)` should exist (it does in Love2D).
     *   Ensure `filepath` is resolved relative to the **save directory**. The directory should be created if it doesn't exist.
-*   **Status:** Partially exists. String overload and path resolution needed.
+*   **Status:** Implemented. Path resolution to save directory and auto-creation of subdirs is complete.
 
-#### 2. [ ] `Night.Filesystem.Append(string filepath, string data, long? size = null)`
+#### 2. [x] `Night.Filesystem.Append(string filepath, string data, long? size = null)`
 *   **Love2D Equivalent:** `love.filesystem.append(filepath, data, size)`
-*   **C# Signature Idea:** `public static (bool Success, string? ErrorMessage) Append(string filepath, string data, long? size = null)`
+*   **C# Implementation:** `public static (bool Success, string? ErrorMessage) Append(string filepath, string data, long? size = null)` in [`src/Night/Filesystem/Filesystem.Append.cs`](src/Night/Filesystem/Filesystem.Append.cs)
 *   **Requirements:**
-    *   Append string data (UTF-8 encoded) to a file.
-    *   Filepath is relative to the **save directory**.
-    *   Create file/directory if it doesn't exist within the save directory.
+    *   [x] Append string data (UTF-8 encoded) to a file.
+    *   [x] Filepath is relative to the **save directory**.
+    *   [x] Create file/directory if it doesn't exist within the save directory.
 *   **Acceptance Criteria:**
-    *   Data is correctly appended. Path resolved to save directory.
+    *   [x] Data is correctly appended. Path resolved to save directory.
 *   **Test Scenarios/Cases:**
-    *   `Append_String_NewFile`: Appending to a non-existent file in save dir.
-    *   `Append_String_ExistingFile`: Appending to an existing file in save dir.
-    *   `Append_String_WithPath`: Appending to a file in a subdirectory of save dir.
+    *   [x] `Append_String_NewFile`: Appending to a non-existent file in save dir.
+    *   [x] `Append_String_ExistingFile`: Appending to an existing file in save dir.
+    *   [x] `Append_String_WithPath`: Appending to a file in a subdirectory of save dir.
+    *   [x] Tests implemented in [`tests/Groups/Filesystem/AppendTests.cs`](tests/Groups/Filesystem/AppendTests.cs).
 
 #### 4. [x] `Night.Filesystem.CreateDirectory(string path)`
 *   **Love2D Equivalent:** `love.filesystem.createDirectory(path)`
@@ -251,16 +252,6 @@
 *   **Test Scenarios/Cases:**
     *   `GetRealDirectory_SaveFile`: Test with a file in the save directory.
     *   `GetRealDirectory_SourceFile`: Test with a file in the source directory.
-
-#### 11. [ ] `Night.Filesystem.GetRequirePath()`
-*   **Love2D Equivalent:** `love.filesystem.getRequirePath()`
-*   **C# Signature Idea:** `public static string GetRequirePath()` (or `IEnumerable<string>`)
-*   **Requirements:**
-    *   Love2D: "Gets the filesystem paths that will be searched when require is called."
-    *   Night: Lua-specific. See `GetCRequirePath`.
-*   **Acceptance Criteria:** TBD.
-*   **Test Scenarios/Cases:** TBD.
-*   **Note:** Likely low priority or out of scope.
 
 #### 12. [x] `Night.Filesystem.GetSaveDirectory()`
 *   **Love2D Equivalent:** `love.filesystem.getSaveDirectory()`

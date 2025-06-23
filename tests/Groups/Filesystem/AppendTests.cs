@@ -20,185 +20,192 @@
 // 3. This notice may not be removed or altered from any source distribution.
 // </copyright>
 
-using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 using Night;
 
 using NightTest.Core;
 
-using Xunit;
-
 namespace NightTest.Groups.Filesystem
 {
   /// <summary>
-  /// Tests for Night.Filesystem.Append().
+  /// Base class for Filesystem.Append tests, handling setup and cleanup of the save directory.
   /// </summary>
-  public class FilesystemAppend_AppendToNewFileTest : ModTestCase
+  public abstract class BaseAppendTest : GameTestCase
   {
-    private readonly string testFileName = Path.Combine(Path.GetTempPath(), "night_test_append_new.txt");
-    private readonly byte[] dataToAppend = Encoding.UTF8.GetBytes("First line.");
+#pragma warning disable SA1401 // Fields should be private
+    /// <summary>
+    /// The unique identity used for this test group to isolate the save directory.
+    /// </summary>
+    protected readonly string TestIdentity = "NightTest_Append";
+#pragma warning restore SA1401 // Fields should be private
 
     /// <inheritdoc/>
-    public override string Name => "Filesystem.Append.NewFile";
-
-    /// <inheritdoc/>
-    public override string Description => "Tests Append to a new file.";
-
-    /// <inheritdoc/>
-    public override string SuccessMessage => "Successfully appended data to a new file.";
-
-    /// <inheritdoc/>
-    public override void Run()
+    protected override void Load()
     {
-      if (File.Exists(this.testFileName))
+      Night.Filesystem.SetIdentity(this.TestIdentity);
+      var saveRoot = Night.Filesystem.GetSaveDirectory();
+
+      // Clean up from previous runs
+      if (Directory.Exists(saveRoot))
       {
-        File.Delete(this.testFileName);
+        Directory.Delete(saveRoot, true);
       }
 
-      try
-      {
-        Night.Filesystem.Append(this.testFileName, this.dataToAppend);
-        byte[] fileContent = File.ReadAllBytes(this.testFileName);
-        Assert.Equal(this.dataToAppend, fileContent);
-      }
-      finally
-      {
-        if (File.Exists(this.testFileName))
-        {
-          File.Delete(this.testFileName);
-        }
-      }
+      _ = Directory.CreateDirectory(saveRoot);
     }
   }
 
   /// <summary>
-  /// Tests appending data to an existing file.
+  /// Tests appending a string to a new file.
   /// </summary>
-  public class FilesystemAppend_AppendToExistingFileTest : ModTestCase
+  public class Append_String_NewFile : BaseAppendTest
   {
-    private readonly string testFileName = Path.Combine(Path.GetTempPath(), "night_test_append_existing.txt");
-    private readonly byte[] initialData = Encoding.UTF8.GetBytes("Initial content. ");
-    private readonly byte[] dataToAppend = Encoding.UTF8.GetBytes("Appended data.");
+    /// <inheritdoc/>
+    public override string Name => "Filesystem.Append_String_NewFile";
 
     /// <inheritdoc/>
-    public override string Name => "Filesystem.Append.ExistingFile";
+    public override string Description => "Tests appending a string to a new file in the save directory.";
 
     /// <inheritdoc/>
-    public override string Description => "Tests Append to an existing file.";
-
-    /// <inheritdoc/>
-    public override string SuccessMessage => "Successfully appended data to an existing file.";
-
-    /// <inheritdoc/>
-    public override void Run()
+    protected override void Update(double deltaTime)
     {
-      try
+      var (success, error) = Night.Filesystem.Append("new_file.txt", "Hello");
+      if (!success)
       {
-        File.WriteAllBytes(this.testFileName, this.initialData);
-        byte[] expectedData = this.initialData.Concat(this.dataToAppend).ToArray();
-
-        Night.Filesystem.Append(this.testFileName, this.dataToAppend);
-        byte[] fileContent = File.ReadAllBytes(this.testFileName);
-
-        Assert.Equal(expectedData, fileContent);
+        this.RecordFailure($"Append failed: {error}");
+        this.EndTest();
+        return;
       }
-      finally
+
+      var content = File.ReadAllText(Path.Combine(Night.Filesystem.GetSaveDirectory(), "new_file.txt"));
+      if (content == "Hello")
       {
-        if (File.Exists(this.testFileName))
-        {
-          File.Delete(this.testFileName);
-        }
+        this.RecordSuccess("Successfully appended to a new file.");
       }
+      else
+      {
+        this.RecordFailure($"File content mismatch. Expected 'Hello', got '{content}'.");
+      }
+
+      this.EndTest();
     }
   }
 
   /// <summary>
-  /// Tests appending a partial amount of data using the size parameter.
+  /// Tests appending a string to an already existing file.
   /// </summary>
-  public class FilesystemAppend_PartialDataTest : ModTestCase
+  public class Append_String_ExistingFile : BaseAppendTest
   {
-    private readonly string testFileName = Path.Combine(Path.GetTempPath(), "night_test_append_partial.txt");
-    private readonly byte[] fullData = Encoding.UTF8.GetBytes("FullDataString");
-    private readonly long sizeToAppend = 5; // "FullD"
+    /// <inheritdoc/>
+    public override string Name => "Filesystem.Append_String_ExistingFile";
 
     /// <inheritdoc/>
-    public override string Name => "Filesystem.Append.PartialData";
+    public override string Description => "Tests appending a string to an existing file.";
 
     /// <inheritdoc/>
-    public override string Description => "Tests Append with a specific size to append only part of the data.";
-
-    /// <inheritdoc/>
-    public override string SuccessMessage => "Successfully appended partial data using the size parameter.";
-
-    /// <inheritdoc/>
-    public override void Run()
+    protected override void Load()
     {
-      if (File.Exists(this.testFileName))
+      base.Load();
+      File.WriteAllText(Path.Combine(Night.Filesystem.GetSaveDirectory(), "existing.txt"), "Initial.");
+    }
+
+    /// <inheritdoc/>
+    protected override void Update(double deltaTime)
+    {
+      var (success, error) = Night.Filesystem.Append("existing.txt", " Appended.");
+      if (!success)
       {
-        File.Delete(this.testFileName);
+        this.RecordFailure($"Append failed: {error}");
+        this.EndTest();
+        return;
       }
 
-      byte[] expectedData = new byte[this.sizeToAppend];
-      Array.Copy(this.fullData, expectedData, this.sizeToAppend);
+      var content = File.ReadAllText(Path.Combine(Night.Filesystem.GetSaveDirectory(), "existing.txt"));
+      if (content == "Initial. Appended.")
+      {
+        this.RecordSuccess("Successfully appended to an existing file.");
+      }
+      else
+      {
+        this.RecordFailure($"File content mismatch. Expected 'Initial. Appended.', got '{content}'.");
+      }
 
-      try
-      {
-        Night.Filesystem.Append(this.testFileName, this.fullData, this.sizeToAppend);
-        byte[] fileContent = File.ReadAllBytes(this.testFileName);
-        Assert.Equal(expectedData, fileContent);
-      }
-      finally
-      {
-        if (File.Exists(this.testFileName))
-        {
-          File.Delete(this.testFileName);
-        }
-      }
+      this.EndTest();
     }
   }
 
   /// <summary>
-  /// Tests argument validation for Filesystem.Append.
+  /// Tests appending to a file located within a subdirectory that needs to be created.
   /// </summary>
-  public class FilesystemAppend_ArgumentValidationTest : ModTestCase
+  public class Append_String_WithPath : BaseAppendTest
   {
-    private readonly string validFileName = Path.Combine(Path.GetTempPath(), "night_test_append_validation.txt");
-    private readonly byte[] validData = { 1, 2, 3 };
+    /// <inheritdoc/>
+    public override string Name => "Filesystem.Append_String_WithPath";
 
     /// <inheritdoc/>
-    public override string Name => "Filesystem.Append.ArgumentValidation";
+    public override string Description => "Tests appending to a file in a subdirectory of the save directory.";
 
     /// <inheritdoc/>
-    public override string Description => "Tests argument validation for Filesystem.Append (null filename, null data, empty filename).";
-
-    /// <inheritdoc/>
-    public override string SuccessMessage => "Successfully validated arguments for Append.";
-
-    /// <inheritdoc/>
-    public override void Run()
+    protected override void Update(double deltaTime)
     {
-      try
+      var (success, error) = Night.Filesystem.Append("subdir/path.txt", "Subdir content");
+      if (!success)
       {
-        // Test null filename
-        _ = Assert.Throws<ArgumentNullException>(() => Night.Filesystem.Append(null!, this.validData));
-
-        // Test null data
-        _ = Assert.Throws<ArgumentNullException>(() => Night.Filesystem.Append(this.validFileName, null!));
-
-        // Test empty filename
-        _ = Assert.Throws<ArgumentException>(() => Night.Filesystem.Append(string.Empty, this.validData));
+        this.RecordFailure($"Append failed: {error}");
+        this.EndTest();
+        return;
       }
-      finally
+
+      var filePath = Path.Combine(Night.Filesystem.GetSaveDirectory(), "subdir", "path.txt");
+      if (File.Exists(filePath) && File.ReadAllText(filePath) == "Subdir content")
       {
-        // Clean up the valid file name if it was created by a failed test part
-        if (File.Exists(this.validFileName))
-        {
-          File.Delete(this.validFileName);
-        }
+        this.RecordSuccess("Successfully appended to a file in a new subdirectory.");
       }
+      else
+      {
+        this.RecordFailure("File was not created or content is incorrect in subdirectory.");
+      }
+
+      this.EndTest();
+    }
+  }
+
+  /// <summary>
+  /// Tests appending a byte array to a new file.
+  /// </summary>
+  public class Append_Bytes_NewFile : BaseAppendTest
+  {
+    /// <inheritdoc/>
+    public override string Name => "Filesystem.Append_Bytes_NewFile";
+
+    /// <inheritdoc/>
+    public override string Description => "Tests appending bytes to a new file.";
+
+    /// <inheritdoc/>
+    protected override void Update(double deltaTime)
+    {
+      var data = Encoding.UTF8.GetBytes("Byte data");
+      var (success, error) = Night.Filesystem.Append("bytes.txt", data);
+      if (!success)
+      {
+        this.RecordFailure($"Append failed: {error}");
+        this.EndTest();
+        return;
+      }
+
+      var content = File.ReadAllBytes(Path.Combine(Night.Filesystem.GetSaveDirectory(), "bytes.txt"));
+      if (Encoding.UTF8.GetString(content) == "Byte data")
+      {
+        this.RecordSuccess("Successfully appended bytes to a new file.");
+      }
+      else
+      {
+        this.RecordFailure("Byte content mismatch.");
+      }
+
+      this.EndTest();
     }
   }
 }

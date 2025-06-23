@@ -387,59 +387,6 @@ namespace Night
     }
 
     /// <summary>
-    /// Appends data to an existing file. If the file does not exist, it will be created.
-    /// </summary>
-    /// <param name="filename">The path to the file.</param>
-    /// <param name="data">The data to append to the file.</param>
-    /// <param name="size">The number of bytes from the data to append. If null, all data is appended.</param>
-    /// <exception cref="ArgumentNullException">Thrown if filename or data is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if filename is empty.</exception>
-    /// <exception cref="IOException">Thrown if an I/O error occurs.</exception>
-    public static void Append(string filename, byte[] data, long? size = null)
-    {
-      if (filename == null)
-      {
-        throw new ArgumentNullException(nameof(filename));
-      }
-
-      if (data == null)
-      {
-        throw new ArgumentNullException(nameof(data));
-      }
-
-      if (string.IsNullOrEmpty(filename))
-      {
-        throw new ArgumentException("Filename cannot be empty.", nameof(filename));
-      }
-
-      long bytesToWrite = data.Length;
-      if (size.HasValue)
-      {
-        if (size.Value < 0)
-        {
-          // Or throw new ArgumentOutOfRangeException(nameof(size), "Size cannot be negative.");
-          // LÖVE's documentation doesn't specify behavior for negative size.
-          // Assuming no operation for negative size, or one could throw.
-          // For now, let's be lenient and write nothing if size is negative.
-          // Consider logging this case if it's unexpected.
-          return;
-        }
-
-        bytesToWrite = Math.Min(size.Value, data.Length);
-      }
-
-      if (bytesToWrite == 0)
-      {
-        return; // Nothing to write
-      }
-
-      using (var stream = new FileStream(filename, global::System.IO.FileMode.Append, FileAccess.Write))
-      {
-        stream.Write(data, 0, (int)bytesToWrite);
-      }
-    }
-
-    /// <summary>
     /// Creates a directory.
     /// </summary>
     /// <param name="path">The path of the directory to create.</param>
@@ -585,6 +532,26 @@ namespace Night
         Logger.Error($"Unexpected error in Filesystem.NewFile('{filename}', '{mode}'): {ex.Message}", ex);
         return (null, $"An unexpected error occurred: {ex.Message}");
       }
+    }
+
+    /// <summary>
+    /// Resolves a relative path to a full path within the save directory.
+    /// </summary>
+    /// <param name="relativePath">The relative path to resolve.</param>
+    /// <returns>The full, absolute path inside the save directory.</returns>
+    /// <exception cref="ArgumentException">Thrown if the relative path attempts to escape the save directory.</exception>
+    private static string GetFullPathInSaveDirectory(string relativePath)
+    {
+      string saveDir = GetSaveDirectory();
+      string fullPath = Path.GetFullPath(Path.Combine(saveDir, relativePath));
+
+      // Security check: Ensure the resolved path is still within the save directory.
+      if (!fullPath.StartsWith(saveDir, StringComparison.Ordinal))
+      {
+        throw new ArgumentException("Path cannot escape the save directory.", nameof(relativePath));
+      }
+
+      return fullPath;
     }
   }
 }
