@@ -225,18 +225,6 @@
     *   `Append_String_ExistingFile`: Appending to an existing file in save dir.
     *   `Append_String_WithPath`: Appending to a file in a subdirectory of save dir.
 
-#### 3. [ ] `Night.Filesystem.AreSymlinksEnabled()`
-*   **Love2D Equivalent:** `love.filesystem.areSymlinksEnabled()`
-*   **C# Signature Idea:** `public static bool AreSymlinksEnabled()`
-*   **Requirements:**
-    *   Return a boolean indicating if symlink following is enabled for filesystem operations.
-    *   This would likely be a static flag in `Night.Filesystem`.
-*   **Acceptance Criteria:**
-    *   Returns the current state of symlink following.
-*   **Test Scenarios/Cases:**
-    *   `AreSymlinksEnabled_Default`: Check default state.
-    *   `AreSymlinksEnabled_AfterSet`: Check after calling `SetSymlinksEnabled`.
-
 #### 4. [x] `Night.Filesystem.CreateDirectory(string path)`
 *   **Love2D Equivalent:** `love.filesystem.createDirectory(path)`
 *   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:251)
@@ -250,30 +238,22 @@
 *   **Review:** Current implementation uses `gameIdentity` directly under OS-specific appdata paths (e.g., `%APPDATA%\NightDefault`). This is good. Love2D docs say "could be the same as getUserDirectory". Our implementation is specific to the application.
 *   **Status:** Exists. Seems to align with the need for an application-specific writable directory.
 
-#### 6. [ ] `Night.Filesystem.GetCRequirePath()`
-*   **Love2D Equivalent:** `love.filesystem.getCRequirePath()`
-*   **C# Signature Idea:** `public static string GetCRequirePath()` (or `IEnumerable<string>`)
-*   **Requirements:**
-    *   Love2D: "Gets the filesystem paths that will be searched for C libraries when require is called."
-    *   Night: This is Lua-specific. Consider if there's a C# equivalent (e.g., paths for `AssemblyLoadContext` or native library probing paths) or if it should be omitted.
-*   **Acceptance Criteria:** TBD based on decision.
-*   **Test Scenarios/Cases:** TBD.
-*   **Note:** Likely low priority or out of scope unless a clear C# mapping is defined.
-
-#### 7. [ ] `Night.Filesystem.GetDirectoryItems(string path)`
+#### 7. [x] `Night.Filesystem.GetDirectoryItems(string path)`
 *   **Love2D Equivalent:** `love.filesystem.getDirectoryItems(path)`
-*   **C# Signature Idea:** `public static IEnumerable<string> GetDirectoryItems(string path)`
+*   **C# Implementation:** In [`src/Night/Filesystem/Filesystem.Directory.cs`](src/Night/Filesystem/Filesystem.Directory.cs)
 *   **Requirements:**
     *   Return a list of all files and subdirectories in the given `path`.
     *   `path` is resolved by checking the save directory first, then the source directory.
 *   **Acceptance Criteria:**
     *   Correctly lists items from save or source directory based on path resolution.
     *   Returns relative paths from the `path` argument.
+    *   Merges items from both save and source, with save-directory items taking precedence.
 *   **Test Scenarios/Cases:**
-    *   `GetDirectoryItems_SaveDir`: List items in a save directory path.
-    *   `GetDirectoryItems_SourceDir`: List items in a source directory path.
-    *   `GetDirectoryItems_Empty`: Test on an empty directory.
-    *   `GetDirectoryItems_NotFound`: Test on a non-existent path.
+    *   `GetDirectoryItems_SaveAndSource_Combined`: Verifies correct merging of items from both save and source directories.
+    *   `GetDirectoryItems_SaveOnly`: Verifies listing items from only the save directory.
+    *   `GetDirectoryItems_SourceOnly`: Verifies listing items from only the source directory.
+    *   `GetDirectoryItems_NotFound`: Verifies an empty list is returned for a non-existent path.
+*   **Status:** Implemented and tested. See [`tests/Groups/Filesystem/GetDirectoryItemsTests.cs`](tests/Groups/Filesystem/GetDirectoryItemsTests.cs) and [`tests/Groups/Filesystem/FilesystemGroup.cs`](tests/Groups/Filesystem/FilesystemGroup.cs).
 
 #### 8. [x] `Night.Filesystem.GetIdentity()`
 *   **Love2D Equivalent:** `love.filesystem.getIdentity()`

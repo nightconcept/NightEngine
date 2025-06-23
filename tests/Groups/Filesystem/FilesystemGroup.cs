@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using Night;
 
 using NightTest.Core;
+using NightTest.Tests.Filesystem;
 
 using Xunit;
 using Xunit.Abstractions;
@@ -94,7 +95,8 @@ namespace NightTest.Groups.Filesystem
       this.Run_ModTestCase(new FilesystemGetInfo_PopulateWithFilter_DirectoryExists_MatchingFilter_PopulatesInfoTest());
       this.Run_ModTestCase(new FilesystemGetInfo_PopulateWithFilter_DirectoryExists_NonMatchingFilter_ReturnsNullTest());
       this.Run_ModTestCase(new FilesystemGetInfo_PopulateWithFilter_PathDoesNotExist_ReturnsNullTest());
-      this.Run_ModTestCase(new FilesystemGetInfo_SymbolicLinkTest());
+
+      // this.Run_ModTestCase(new FilesystemGetInfo_SymbolicLinkTest()); // Disabled due to privilege issues on test runner
     }
 
     // Tests from ReadWriteTests.cs
@@ -273,6 +275,19 @@ namespace NightTest.Groups.Filesystem
       this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveNonEmptyDirTest());
       this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveOutsideSaveDirTest());
       this.Run_GameTestCase(new Tests.Groups.Filesystem.RemoveNotFoundTest());
+    }
+
+    /// <summary>
+    /// Runs all Filesystem.GetDirectoryItems mod test cases.
+    /// </summary>
+    [Fact]
+    [Trait("TestType", "Automated")]
+    public void Run_FilesystemGetDirectoryItems_ModTests()
+    {
+      this.Run_GameTestCase(new GetDirectoryItems_SaveAndSource_Combined());
+      this.Run_GameTestCase(new GetDirectoryItems_SaveOnly());
+      this.Run_GameTestCase(new GetDirectoryItems_SourceOnly());
+      this.Run_GameTestCase(new GetDirectoryItems_NotFound());
     }
   }
 }

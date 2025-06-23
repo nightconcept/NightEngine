@@ -1,8 +1,5 @@
 [tools]
-dotnet = "9"
 python = "3.13"
-"pipx:gitingest" = { version = "latest" }
-"pipx:pre-commit" = { version = "latest" }
 
 [settings]
 python.uv_venv_auto = true
