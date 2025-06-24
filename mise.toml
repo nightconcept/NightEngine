@@ -1,5 +1,4 @@
 [tools]
-dotnet = "9"
 python = "3.13"
 
 [settings]
@@ -9,13 +8,6 @@ python.uv_venv_auto = true
 alias = "build"
 description = "Build the solution."
 run = ["dotnet build Night.sln"]
-
-[tasks.digest]
-alias = "digest"
-description = "Run gitingest on current directory."
-run = [
-  "gitingest -o project/digest.txt -e *.toml,*.txt,.roo/*,.cursor/*,build/*,.devenv/*,.direnv/*,project/digest.txt,project/archive/*,*.lock,bin/*,obj/*,lib/*,.venv/*,.windsurf/*,src/SampleGame/bin/*,src/Night/bin/*,src/SampleGame/obj/*,src/Night/obj/*,site/_site/*,site/api/*,tests/Night.Tests/bin/*,tests/Night.Tests/obj/* .",
-]
 
 [tasks.game]
 alias = "game"
@@ -32,11 +24,6 @@ run_windows = ["dotnet test --filter TestType=Automated"]
 alias = "test-disp"
 description = "Run automated tests with a real display"
 run = ["dotnet test --filter TestType=Automated"]
-
-[tasks.test-offscreen]
-alias = "test-off"
-description = "Run automated tests with an offscreen display"
-run = ["SDL_VIDEODRIVER=offscreen dotnet test --filter TestType=Automated"]
 
 [tasks.manual-test]
 alias = "man-test"
@@ -71,22 +58,18 @@ alias = "prepare"
 description = "Prepare everything before a commit."
 run = [
   "dotnet clean Night.sln",
-  "dotnet tool restore",
   "dotnet format --verbosity diagnostic Night.sln",
   "dotnet format --verify-no-changes --verbosity diagnostic Night.sln",
   "dotnet build Night.sln",
   "SDL_VIDEODRIVER=dummy dotnet test --filter TestType=Automated",
-  "dotnet docfx docs/docfx.json",
-  "python scripts/update_api_doc.py",
 ]
 run_windows = [
+  "python scripts/env.py",
   "dotnet clean Night.sln",
-  "dotnet tool restore",
   "dotnet format --verbosity diagnostic Night.sln",
+  "dotnet format --verify-no-changes --verbosity diagnostic Night.sln",
   "dotnet build Night.sln",
   "dotnet test --filter TestType=Automated",
-  "dotnet docfx docs/docfx.json",
-  "python scripts/update_api_doc.py",
 ]
 
 [tasks.docs]

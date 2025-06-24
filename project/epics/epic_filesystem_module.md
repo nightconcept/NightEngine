@@ -47,6 +47,7 @@
     *   Reviewed existing files: [`BufferMode.cs`](src/Night/Filesystem/BufferMode.cs:1), [`FileMode.cs`](src/Night/Filesystem/FileMode.cs:1), [`FileSystemInfo.cs`](src/Night/Filesystem/FileSystemInfo.cs:1), [`FileType.cs`](src/Night/Filesystem/FileType.cs:1), [`Filesystem.Read.cs`](src/Night/Filesystem/Filesystem.Read.cs:1), [`Filesystem.Write.cs`](src/Night/Filesystem/Filesystem.Write.cs:1), [`Filesystem.cs`](src/Night/Filesystem/Filesystem.cs:1), [`NightFile.cs`](src/Night/Filesystem/NightFile.cs:1).
     *   Key focus areas: `SetIdentity`/`GetIdentity`, `GetSaveDirectory`, read/write path resolution logic, and ensuring all write operations are sandboxed to the save directory.
     *   Documentation of save paths is a priority.
+*   2025-06-23: Updated `devenv.nix` to use .NET 9 SDK from the `nixpkgs-unstable` channel to support C# 13 development.
 
 **Dependencies:**
 
