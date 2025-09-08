@@ -52,7 +52,7 @@ jobs:
       # For .NET Core, ensure that the .NET SDK is available.
       # You might need to add a setup-dotnet step if not using a GitHub-hosted runner with it pre-installed.
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 9.0.x
 
