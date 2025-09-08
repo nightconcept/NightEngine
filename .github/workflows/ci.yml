@@ -18,7 +18,7 @@ jobs:
         submodules: 'recursive' # Ensure submodules like SDL are checked out
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: | # Specify SDK versions if particular ones are needed, or remove for latest
           9.0.x
