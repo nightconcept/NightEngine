@@ -4,7 +4,7 @@ This guide will help you get Night Engine set up and running.
 
 ## Prerequisites
 
-* **.NET 9 SDK**.
+* **.NET 10 SDK**.
 * A C# compatible IDE (e.g., Visual Studio, JetBrains Rider, VS Code with C# Dev Kit).
 
 ## Dependencies
@@ -15,7 +15,7 @@ Night Engine relies on SDL3 and its related libraries. These are managed as foll
 * **Native SDL3 Binaries:**
   * The core SDL3, SDL3_image, SDL3_mixer, and SDL3_ttf native libraries are required at runtime.
   * These are fetched into the `lib/SDL3-Prebuilt/` directory using the `scripts/sync_sdl3.py` Python script.
-  * The `src/Night.SampleGame/Night.SampleGame.csproj` project is configured to copy these necessary native binaries (e.g., `SDL3.dll`, `SDL3_image.dll`) to its output directory during the build process.
+  * The `src/SampleGame/SampleGame.csproj` project is configured to copy these necessary native binaries (e.g., `SDL3.dll`, `SDL3_image.dll`) to its output directory during the build process.
 
 ## Setup and Building
 
@@ -35,15 +35,15 @@ Night Engine relies on SDL3 and its related libraries. These are managed as foll
 
     This will:
     * Compile the `Night` class library (`src/Night/Night.csproj`) into `Night.dll`.
-    * Compile the `Night.SampleGame` application (`src/Night.SampleGame/Night.SampleGame.csproj`).
-    * Copy the necessary SDL3 native binaries to the `Night.SampleGame` output directory (e.g., `src/Night.SampleGame/bin/Debug/net9.0/`).
+    * Compile the `SampleGame` application (`src/SampleGame/SampleGame.csproj`).
+    * Copy the necessary SDL3 native binaries to the `SampleGame` output directory (e.g., `src/SampleGame/bin/Debug/net10.0/`).
 
 ## Running the Sample Game
 
 After a successful build, you can run the sample game:
 
 ```bash
-dotnet run --project src/Night.SampleGame/Night.SampleGame.csproj
+dotnet run --project src/SampleGame/SampleGame.csproj
 ```
 
 This will launch the `SampleGame` application, which demonstrates various features of the `Night` framework.
@@ -60,6 +60,6 @@ This will launch the `SampleGame` application, which demonstrates various featur
 
 ## Next Steps
 
-* Explore the code in `src/Night.SampleGame/Program.cs` to see how `Night.Framework` is used.
+* Explore the code in `src/SampleGame/Program.cs` to see how `Night.Framework` is used.
 * Review the API documentation (once available) for `Night.Framework` modules (e.g., `Night.Window`, `Night.Graphics`, `Night.Keyboard`, `Night.Mouse`).
 * Consult the [Introduction](introduction.md) for a higher-level overview of the engine.

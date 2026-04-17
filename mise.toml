@@ -1,5 +1,9 @@
 [tools]
+"core:dotnet" = "10.0.202"
 python = "3.13"
+uv = "latest"
+"pipx:gitingest" = { version = "latest" }
+"pipx:pre-commit" = { version = "latest" }
 
 [settings]
 python.uv_venv_auto = true
@@ -13,22 +17,6 @@ run = ["dotnet build Night.sln"]
 alias = "game"
 description = "Run the sample game."
 run = ["dotnet run --project src/SampleGame/SampleGame.csproj"]
-
-[tasks.test]
-alias = "test"
-description = "Run automated tests"
-run = ["SDL_VIDEODRIVER=dummy dotnet test --filter TestType=Automated"]
-run_windows = ["dotnet test --filter TestType=Automated"]
-
-[tasks.test-disp]
-alias = "test-disp"
-description = "Run automated tests with a real display"
-run = ["dotnet test --filter TestType=Automated"]
-
-[tasks.manual-test]
-alias = "man-test"
-description = "Run manual tests"
-run = ["dotnet test --filter TestType=Manual"]
 
 [tasks.clean]
 alias = "clean"
@@ -59,17 +47,10 @@ description = "Prepare everything before a commit."
 run = [
   "dotnet clean Night.sln",
   "dotnet format --verbosity diagnostic Night.sln",
-  "dotnet format --verify-no-changes --verbosity diagnostic Night.sln",
   "dotnet build Night.sln",
-  "SDL_VIDEODRIVER=dummy dotnet test --filter TestType=Automated",
-]
-run_windows = [
-  "python scripts/env.py",
-  "dotnet clean Night.sln",
-  "dotnet format --verbosity diagnostic Night.sln",
-  "dotnet format --verify-no-changes --verbosity diagnostic Night.sln",
-  "dotnet build Night.sln",
-  "dotnet test --filter TestType=Automated",
+  "dotnet test",
+  "dotnet docfx docs/docfx.json",
+  "python scripts/update_api_doc.py",
 ]
 
 [tasks.docs]
@@ -77,7 +58,7 @@ alias = "docs"
 description = "Generate docs."
 run = ["dotnet docfx docs/docfx.json"]
 
-[tasks.lint]
-alias = "lint"
-description = "Lint files."
-run = ["dotnet format --verbosity diagnostic Night.sln"]
+[tasks.format]
+alias = "format"
+description = "Format files."
+run = ["dotnet format --verbosity verbose Night.sln"]

@@ -82,6 +82,7 @@ namespace Night
 
       inErrorState = false;
       IsInputInitialized = false;
+      Graphics.ResetInternalState();
 
       ConfigurationManager.LoadConfig();
       var windowConfig = ConfigurationManager.CurrentConfig.Window;
@@ -430,6 +431,7 @@ namespace Night
       {
         Logger.Debug($"Entering finally block. sdlSuccessfullyInitializedThisRun: {sdlSuccessfullyInitializedThisRun}, isSdlInitialized (static): {isSdlInitialized}");
         Window.Shutdown();
+        Graphics.ResetInternalState();
         Night.Joysticks.ClearJoysticks(); // Clear joystick resources
 
         lock (SdlLock)

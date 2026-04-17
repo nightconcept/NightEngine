@@ -41,5 +41,13 @@ namespace Night
     {
       return backgroundColor;
     }
+
+    /// <summary>
+    /// Resets graphics module state between framework runs.
+    /// </summary>
+    internal static void ResetInternalState()
+    {
+      backgroundColor = Color.Black;
+    }
   }
 }
