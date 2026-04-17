@@ -24,7 +24,6 @@ using System;
 using System.Runtime.InteropServices;
 
 using Night;
-using Night.Log;
 
 using SDL3;
 
@@ -35,8 +34,6 @@ namespace Night
   /// </summary>
   public static class Keyboard
   {
-    private static readonly ILogger Logger = LogManager.GetLogger("Night.Keyboard.Keyboard");
-
     /// <summary>
     /// Checks whether a certain key is down.
     /// </summary>
@@ -46,17 +43,11 @@ namespace Night
     {
       if (!Framework.IsInputInitialized)
       {
-        Logger.Warn("Night.Keyboard.IsDown called before input system is initialized. Returning false.");
+        Console.WriteLine("Warning: Night.Keyboard.IsDown called before input system is initialized. Returning false.");
         return false;
       }
 
-      bool[] keyboardState = SDL.GetKeyboardState(out int _);
-
-      if (keyboardState == null)
-      {
-        Logger.Warn("SDL.GetKeyboardState returned a null array.");
-        return false;
-      }
+      ReadOnlySpan<bool> keyboardState = SDL.GetKeyboardState(out int numKeys);
 
       SDL.Scancode sdlScancode = (SDL.Scancode)key;
 
@@ -65,9 +56,9 @@ namespace Night
         return false;
       }
 
-      if ((int)sdlScancode >= keyboardState.Length || (int)sdlScancode < 0)
+      if ((int)sdlScancode >= numKeys || (int)sdlScancode < 0)
       {
-        Logger.Warn($"Scancode {(int)sdlScancode} is out of bounds (numKeys: {keyboardState.Length}).");
+        Console.WriteLine($"Warning: Scancode {(int)sdlScancode} is out of bounds (numKeys: {numKeys}).");
         return false;
       }
 

@@ -24,13 +24,9 @@ LIBRARIES_CONFIG = {
     },
     "sdl2_mixer": {
         "tag_prefix": "sdl3_mixer-release-",
-        "asset_lib_name": {
-            "windows": "SDL2_mixer",        # Windows asset zip uses SDL2_mixer
-            "macos": "SDL3_mixer",
-            "linux": "SDL3_mixer"
-        },
+        "asset_lib_name": "SDL3_mixer",
         "lib_files": {
-            "windows": "SDL2_mixer.dll",
+            "windows": "SDL3_mixer.dll",
             "macos": "libSDL3_mixer.0.dylib",
             "linux": "libSDL3_mixer.so.0",
         },
@@ -84,19 +80,32 @@ def get_version_from_csproj(csproj_path):
     try:
         tree = ET.parse(csproj_path)
         root = tree.getroot()
-        nugetPropertyGroup = root.find("./PropertyGroup[@Label='NuGet']")
-        if nugetPropertyGroup is not None:
-            version_element = nugetPropertyGroup.find("Version")
-            if version_element is not None and version_element.text:
-                full_version = version_element.text.strip()
-                # Convert "X.Y.Z.W" to "X.Y.Z"
-                parts = full_version.split('.')
-                if len(parts) >= 3:
-                    return ".".join(parts[:3])
-                else:
-                    print(f"Warning: Version '{full_version}' in {csproj_path} is not in expected X.Y.Z.W format.")
-                    return None
-        print(f"Warning: Could not find <Version> tag under <PropertyGroup Label='NuGet'> in {csproj_path}.")
+
+        def normalize_version(raw_version):
+            if not raw_version:
+                return None
+
+            clean_version = raw_version.strip().split("-", 1)[0]
+            parts = clean_version.split(".")
+            if len(parts) >= 3:
+                return ".".join(parts[:3])
+
+            print(f"Warning: Version '{raw_version}' in {csproj_path} is not in an expected semantic version format.")
+            return None
+
+        property_groups = root.findall("./PropertyGroup")
+        nuget_property_groups = [group for group in property_groups if group.get("Label") == "NuGet"]
+        search_groups = nuget_property_groups if nuget_property_groups else property_groups
+
+        for property_group in search_groups:
+            for version_tag in ("Version", "VersionPrefix"):
+                version_element = property_group.find(version_tag)
+                if version_element is not None and version_element.text:
+                    normalized_version = normalize_version(version_element.text)
+                    if normalized_version:
+                        return normalized_version
+
+        print(f"Warning: Could not find <Version> or <VersionPrefix> in {csproj_path}.")
         return None
     except ET.ParseError:
         print(f"Error: Could not parse XML from {csproj_path}.")

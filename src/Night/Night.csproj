@@ -31,7 +31,7 @@
     <Content Include="../../lib/SDL3-Prebuilt/windows/SDL3.dll" Link="runtimes/win-x64/native/SDL3.dll" Pack="true" PackagePath="runtimes/win-x64/native/SDL3.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../lib/SDL3-Prebuilt/windows/SDL3_image.dll" Link="runtimes/win-x64/native/SDL3_image.dll" Pack="true" PackagePath="runtimes/win-x64/native/SDL3_image.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../lib/SDL3-Prebuilt/windows/SDL3_ttf.dll" Link="runtimes/win-x64/native/SDL3_ttf.dll" Pack="true" PackagePath="runtimes/win-x64/native/SDL3_ttf.dll" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../lib/SDL3-Prebuilt/windows/SDL2_mixer.dll" Link="runtimes/win-x64/native/SDL2_mixer.dll" Pack="true" PackagePath="runtimes/win-x64/native/SDL2_mixer.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../lib/SDL3-Prebuilt/windows/SDL3_mixer.dll" Link="runtimes/win-x64/native/SDL3_mixer.dll" Pack="true" PackagePath="runtimes/win-x64/native/SDL3_mixer.dll" CopyToOutputDirectory="PreserveNewest" />
     <!-- Linux x64 -->
     <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Link="runtimes/linux-x64/native/libSDL3.so.0" Pack="true" PackagePath="runtimes/linux-x64/native/libSDL3.so.0" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3_image.so.0" Link="runtimes/linux-x64/native/libSDL3_image.so.0" Pack="true" PackagePath="runtimes/linux-x64/native/libSDL3_image.so.0" CopyToOutputDirectory="PreserveNewest" />

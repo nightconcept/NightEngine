@@ -1,3 +1,4 @@
 [submodule "lib/SDL3-CS"]
 	path = lib/SDL3-CS
-	url = https://github.com/edwardgushchin/SDL3-CS.git
+	url = https://forge.solivan.dev/nightconcept/SDL3-CS.git
+	branch = NightEngine
