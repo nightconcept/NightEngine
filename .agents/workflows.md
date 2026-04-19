@@ -2,14 +2,17 @@
 
 ## Default Loop
 1. Install toolchain with `mise install`.
-2. Build with `mise build`.
-3. Run targeted tests with `dotnet test` or the full sweep with `mise prepare`.
-4. Regenerate docs with `mise docs` or `python scripts/update_api_doc.py` when public API/docs changed.
+2. Restore repo-local tools with `mise setup`.
+3. Build with `mise build`.
+4. Run targeted tests with `dotnet test` or the full quality gate with `mise gate`.
+5. Regenerate docs with `mise docs` or `python scripts/update_api_doc.py` when public API/docs changed.
 
 ## Commands
-- Build: `dotnet build Night.sln`
+- Build: `dotnet build Night.slnx`
 - Clean: `mise clean`
-- Format: `dotnet format --verbosity verbose Night.sln`
+- Format: `dotnet format --verbosity verbose Night.slnx`
+- Setup: `mise setup`
+- Gate: `mise gate`
 - Test: `dotnet test`
 - Run sample: `dotnet run --project src/SampleGame/SampleGame.csproj`
 - Generate docs site: `dotnet docfx docs/docfx.json`

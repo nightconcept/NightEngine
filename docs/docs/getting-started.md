@@ -26,7 +26,15 @@ Night Engine relies on SDL3 and its related libraries. These are managed as foll
     cd NightEngine
     ```
 
-2. **Build the Solution:**
+2. **Restore Repo-Local Tools:**
+
+    ```bash
+    mise setup
+    ```
+
+    This restores the local .NET tools manifest used by repo workflows such as docs generation.
+
+3. **Build the Solution:**
     You can build the entire solution (`Night.slnx`) using your IDE or the .NET CLI:
 
     ```bash
@@ -37,6 +45,14 @@ Night Engine relies on SDL3 and its related libraries. These are managed as foll
     * Compile the `Night` class library (`src/Night/Night.csproj`) into `Night.dll`.
     * Compile the `SampleGame` application (`src/SampleGame/SampleGame.csproj`).
     * Copy the necessary SDL3 native binaries to the `SampleGame` output directory (e.g., `src/SampleGame/bin/Debug/net10.0/`).
+
+4. **Run the Quality Gate Before Committing:**
+
+    ```bash
+    mise gate
+    ```
+
+    This runs the repo's expected pre-commit verification sweep, including clean, format, build, test, doc generation, and API doc refresh steps.
 
 ## Running the Sample Game
 

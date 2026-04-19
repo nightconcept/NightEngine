@@ -87,13 +87,25 @@ The core of the project is the `Night.dll` library. This assembly contains:
     mise install
     ```
 
-4. Build the solution:
+4. Restore repo-local tools:
+
+    ```bash
+    mise setup
+    ```
+
+5. Build the solution:
 
     ```bash
     mise build
     ```
 
-5. Run the sample game:
+6. Run the local quality gate before committing:
+
+    ```bash
+    mise gate
+    ```
+
+7. Run the sample game:
 
     ```bash
     mise game

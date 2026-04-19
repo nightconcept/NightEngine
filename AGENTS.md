@@ -21,7 +21,7 @@ Current work centers on the `Night` framework library, sample game, tests, and g
 - **Test**: `dotnet test`
 - **Format**: `mise format`
 - **Docs**: `mise docs`
-- **Pre-commit sweep**: `mise prepare`
+- **Pre-commit sweep**: `mise gate`
 - **Refresh SDL/tooling**: `mise sdl`, `mise tools`
 
 ## Working Rules

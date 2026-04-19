@@ -2,11 +2,15 @@
 "core:dotnet" = "10.0.202"
 python = "3.13"
 uv = "latest"
-"pipx:gitingest" = { version = "latest" }
 "pipx:pre-commit" = { version = "latest" }
 
 [settings]
 python.uv_venv_auto = true
+
+[tasks.setup]
+alias = "setup"
+description = "Restore repo-local tools needed for build and docs workflows."
+run = ["dotnet tool restore"]
 
 [tasks.build]
 alias = "build"
@@ -41,10 +45,11 @@ run = [
 description = "Update API docs."
 run = ["python scripts/update_api_doc.py"]
 
-[tasks.prepare]
-alias = "prepare"
-description = "Prepare everything before a commit."
+[tasks.gate]
+alias = "gate"
+description = "Run the repo quality gate before a commit."
 run = [
+  "dotnet tool restore",
   "dotnet clean Night.slnx",
   "dotnet format --verbosity diagnostic Night.slnx",
   "dotnet build Night.slnx",
@@ -56,7 +61,7 @@ run = [
 [tasks.docs]
 alias = "docs"
 description = "Generate docs."
-run = ["dotnet docfx docs/docfx.json"]
+run = ["dotnet tool restore", "dotnet docfx docs/docfx.json"]
 
 [tasks.format]
 alias = "format"

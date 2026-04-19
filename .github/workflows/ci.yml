@@ -21,13 +21,15 @@ jobs:
         global-json-file: global.json
 
     - name: Check Formatting
-      run: dotnet format --verify-no-changes --verbosity diagnostic Night.sln
+      run: dotnet format --verify-no-changes --verbosity diagnostic Night.slnx
 
     - name: Restore dependencies
-      run: dotnet restore Night.sln
+      run: dotnet restore Night.slnx
 
     - name: Build Solution
-      run: dotnet build Night.sln --configuration Release --no-restore
+      run: dotnet build Night.slnx --configuration Release --no-restore
 
     - name: Run Tests
+      env:
+        SDL_VIDEODRIVER: dummy
       run: dotnet test tests/NightTest.csproj --no-build --configuration Release --filter "TestType=Automated"
