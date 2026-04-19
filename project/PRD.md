@@ -126,7 +126,7 @@ These are planned features for the higher-level engine, to be built upon `Night.
 graph TD
     A(any2) --> B(README.md);
     A --> C(LICENSE);
-    A --> D(Night.sln);
+    A --> D(Night.slnx);
     A --> E(.editorconfig);
     A --> F(.pre-commit-config.yaml);
     A --> G(docs);
@@ -262,7 +262,7 @@ graph TD
 
     - `TestRunner.cs`: Manages and reports the status of various tests within NightTest
 
-- `Night.sln`: Visual Studio solution file.
+- `Night.slnx`: Visual Studio solution file.
 
 - `README.md`: Main project readme.
 
@@ -272,7 +272,7 @@ graph TD
 
 ## 5. File Descriptions
 
-- **`Night.sln`**: Visual Studio Solution file grouping `Night.Engine` and `Night.SampleGame` projects. Defines project paths and configurations.
+- **`Night.slnx`**: Visual Studio solution file grouping `Night.Engine` and `Night.SampleGame` projects. Defines project paths and configurations.
 
 - **`src/Night/Night.csproj`**: The MSBuild project file for the main `Night` C# class library. This library, `Night.dll`, includes the `Night` namespace (for the Love2D-like framework) and the `Night.Engine` namespace (for future higher-level engine features).
 

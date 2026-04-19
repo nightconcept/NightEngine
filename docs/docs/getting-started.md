@@ -27,10 +27,10 @@ Night Engine relies on SDL3 and its related libraries. These are managed as foll
     ```
 
 2. **Build the Solution:**
-    You can build the entire solution (`Night.sln`) using your IDE or the .NET CLI:
+    You can build the entire solution (`Night.slnx`) using your IDE or the .NET CLI:
 
     ```bash
-    dotnet build Night.sln
+    dotnet build Night.slnx
     ```
 
     This will:
@@ -56,7 +56,7 @@ This will launch the `SampleGame` application, which demonstrates various featur
 * **`src/`**: All C# source code.
   * **`src/Night/`**: The core `Night.Framework` and future `Night.Engine` library.
   * **`src/SampleGame/`**: The sample game application demonstrating engine features. Use this as a starting template for your game.
-* **`Night.sln`**: The main Visual Studio solution file.
+* **`Night.slnx`**: The main Visual Studio solution file.
 
 ## Next Steps
 

@@ -11,7 +11,7 @@ python.uv_venv_auto = true
 [tasks.build]
 alias = "build"
 description = "Build the solution."
-run = ["dotnet build Night.sln"]
+run = ["dotnet build Night.slnx"]
 
 [tasks.game]
 alias = "game"
@@ -21,7 +21,7 @@ run = ["dotnet run --project src/SampleGame/SampleGame.csproj"]
 [tasks.clean]
 alias = "clean"
 description = "Clean bin and obj directories."
-run = ["dotnet clean Night.sln"]
+run = ["dotnet clean Night.slnx"]
 
 [tasks.sdl]
 description = "Update SDL bindings and sync SDL libs."
@@ -45,9 +45,9 @@ run = ["python scripts/update_api_doc.py"]
 alias = "prepare"
 description = "Prepare everything before a commit."
 run = [
-  "dotnet clean Night.sln",
-  "dotnet format --verbosity diagnostic Night.sln",
-  "dotnet build Night.sln",
+  "dotnet clean Night.slnx",
+  "dotnet format --verbosity diagnostic Night.slnx",
+  "dotnet build Night.slnx",
   "dotnet test",
   "dotnet docfx docs/docfx.json",
   "python scripts/update_api_doc.py",
@@ -61,4 +61,4 @@ run = ["dotnet docfx docs/docfx.json"]
 [tasks.format]
 alias = "format"
 description = "Format files."
-run = ["dotnet format --verbosity verbose Night.sln"]
+run = ["dotnet format --verbosity verbose Night.slnx"]
