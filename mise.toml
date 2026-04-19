@@ -28,11 +28,8 @@ description = "Clean bin and obj directories."
 run = ["dotnet clean Night.slnx"]
 
 [tasks.sdl]
-description = "Update SDL bindings and sync SDL libs."
-run = [
-  "git submodule update --remote lib/SDL3-CS",
-  "python scripts/sync_sdl3.py",
-]
+description = "Sync SDL prebuilt libs from build-sdl based on lib/sdl3-manifest.json."
+run = "python scripts/sync_sdl3.py"
 
 [tasks.tools]
 description = "Update tools."

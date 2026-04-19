@@ -1,4 +1,0 @@
-sdl2_mixer=3.2.0
-sdl3-core=3.4.2
-sdl3_image=3.4.0
-sdl3_ttf=3.2.2
