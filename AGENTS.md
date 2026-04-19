@@ -30,6 +30,7 @@ Current work centers on the `Night` framework library, sample game, tests, and g
 - Prefer `mise` tasks when they exist; fall back to direct `dotnet` or `python` commands only when needed.
 - Run build and test verification serially, not in parallel, to avoid file-lock and stale-asset noise.
 - Treat generated docs and vendored binaries as separate surfaces from core engine code.
+- Use one-line Conventional Commits for commit messages.
 
 ## Spoke Index
 - [.agents/architecture.md](.agents/architecture.md) - Code layout, module boundaries, and where changes belong.
