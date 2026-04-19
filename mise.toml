@@ -22,6 +22,11 @@ alias = "game"
 description = "Run the sample game."
 run = ["dotnet run --project src/SampleGame/SampleGame.csproj"]
 
+[tasks.test]
+alias = "test"
+description = "Run tests via the helper script. Pass extra args after --."
+run = ["python scripts/run_tests.py"]
+
 [tasks.clean]
 alias = "clean"
 description = "Clean bin and obj directories."
@@ -50,7 +55,7 @@ run = [
   "dotnet clean Night.slnx",
   "dotnet format --verbosity diagnostic Night.slnx",
   "dotnet build Night.slnx",
-  "dotnet test",
+  "python scripts/run_tests.py",
   "dotnet docfx docs/docfx.json",
   "python scripts/update_api_doc.py",
 ]

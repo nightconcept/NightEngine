@@ -13,7 +13,7 @@
 - Format: `dotnet format --verbosity verbose Night.slnx`
 - Setup: `mise setup`
 - Gate: `mise gate`
-- Test: `dotnet test`
+- Test: `mise test` (headless automated), `mise test -- --headed` (real SDL), `mise test -- --all --headed` (full `dotnet test`)
 - Run sample: `dotnet run --project src/SampleGame/SampleGame.csproj`
 - Generate docs site: `dotnet docfx docs/docfx.json`
 

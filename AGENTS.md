@@ -18,7 +18,7 @@ Current work centers on the `Night` framework library, sample game, tests, and g
 - **Install toolchain**: `mise install`
 - **Build**: `mise build`
 - **Run sample**: `mise game`
-- **Test**: `dotnet test`
+- **Test**: `mise test`
 - **Format**: `mise format`
 - **Docs**: `mise docs`
 - **Pre-commit sweep**: `mise gate`
@@ -35,7 +35,15 @@ Current work centers on the `Night` framework library, sample game, tests, and g
 ## Spoke Index
 - [.agents/architecture.md](.agents/architecture.md) - Code layout, module boundaries, and where changes belong.
 - [.agents/workflows.md](.agents/workflows.md) - Build, test, docs, formatting, and maintenance workflows.
-- [.agents/context-harness.md](.agents/context-harness.md) - Repo-specific context engineering and harness engineering rules for AI agents.
+- [.agents/context-harness.md](.agents/context-harness.md) - Context engineering and harness rules for AI agents.
+- [.agents/guidelines.md](.agents/guidelines.md) - Code style, naming, organization, SDL3-CS mapping.
+- [.agents/testing.md](.agents/testing.md) - Testing framework, test types, writing tests, macOS constraints.
+- [.agents/roadmap.md](.agents/roadmap.md) - Version targets and feature roadmap.
+- [.agents/love-api.md](.agents/love-api.md) - Love2D API coverage map (what is implemented vs. pending).
+- [.agents/prd.md](.agents/prd.md) - Product vision, technical decisions, future Night.Engine plans.
+- [.agents/epics/filesystem.md](.agents/epics/filesystem.md) - Active epic: Night.Filesystem module spec.
+- [.agents/epics/keyboard.md](.agents/epics/keyboard.md) - Active epic: Night.Keyboard module spec.
+- [.agents/epics/mouse.md](.agents/epics/mouse.md) - Active epic: Night.Mouse module spec.
 - [docs/docs/introduction.md](docs/docs/introduction.md) - High-level product and architecture intent.
 - [docs/docs/getting-started.md](docs/docs/getting-started.md) - Developer setup and runtime prerequisites.
 - [README.md](README.md) - Current project status, roadmap, and top-level commands.
