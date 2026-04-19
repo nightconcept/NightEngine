@@ -45,7 +45,7 @@ namespace NightTest.Groups.Joysticks
     /// <summary>
     /// Runs the manual test case for joystick connection and disconnection events.
     /// </summary>
-    [Fact]
+    [Fact(Skip = "Manual test. Run interactively when validating joystick connection events.")]
     [Trait("TestType", "Manual")]
     public void Run_JoystickConnectionEventsTest()
     {

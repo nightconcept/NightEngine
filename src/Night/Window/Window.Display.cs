@@ -207,7 +207,7 @@ namespace Night
         }
         else
         {
-          _ = SDL.SetWindowPosition(window, (int)SDL.WindowposCenteredMask, (int)SDL.WindowposCenteredMask); // Assumes primary display (display 0)
+          _ = SDL.SetWindowPosition(window, (int)SDL.WindowPosCentered(), (int)SDL.WindowPosCentered()); // Assumes primary display (display 0)
         }
 
         _ = SDL.RaiseWindow(window);

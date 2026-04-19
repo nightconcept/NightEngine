@@ -264,7 +264,7 @@ namespace Night
     LAlt = SDL.Keycode.LAlt,
 
     /// <summary>The Left GUI symbol (Windows/Command/Meta key).</summary>
-    LGUI = SDL.Keycode.LGui,
+    LGUI = SDL.Keycode.LGUI,
 
     /// <summary>The Right Control symbol.</summary>
     RCtrl = SDL.Keycode.RCtrl,

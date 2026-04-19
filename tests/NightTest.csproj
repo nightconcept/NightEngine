@@ -15,6 +15,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Night.Tests\**\*.cs" />
+    <EmbeddedResource Remove="Night.Tests\**\*" />
+    <None Remove="Night.Tests\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="stylecop.json" />
     <ProjectReference Include="../src/Night/Night.csproj" />
   </ItemGroup>

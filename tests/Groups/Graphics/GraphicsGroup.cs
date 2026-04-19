@@ -50,7 +50,7 @@ namespace NightTest.Groups.Graphics
     /// <summary>
     /// Runs the GraphicsClearColorTest IGame instance.
     /// </summary>
-    [Fact]
+    [Fact(Skip = "Manual test. Run interactively when validating graphics clear color behavior.")]
     [Trait("TestType", "Manual")]
     public void Run_GraphicsClearColorTest()
     {

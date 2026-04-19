@@ -234,7 +234,8 @@ namespace Night
       bool isCentered = false;
       if (currentDisplayID != 0)
       {
-        isCentered = x == (int)(SDL.WindowposCenteredMask | currentDisplayID) && y == (int)(SDL.WindowposCenteredMask | currentDisplayID);
+        int centeredPosition = (int)SDL.WindowPosCenteredDisplay((int)currentDisplayID);
+        isCentered = x == centeredPosition && y == centeredPosition;
       }
 
       return new WindowMode
