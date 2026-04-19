@@ -22,7 +22,7 @@
 *   **No `.love` Archive Specifics:** Functionality explicitly tied to `.love` archives (e.g., `IsFused()`, aspects of `Mount()` related to the archive itself) will be omitted or adapted.
 *   All public APIs must reside within the `Night.Filesystem` class or related types within the `Night` namespace (e.g., `Night.File`, `Night.FileData`, `Night.FileMode`).
 *   The implementation should primarily use standard .NET `System.IO` functionalities.
-*   All functions and types must be documented with XML comments explaining their purpose, parameters, and return values, adhering to [`project/guidelines.md`](project/guidelines.md:1).
+*   All functions and types must be documented with XML comments explaining their purpose, parameters, and return values, adhering to [`.agents/guidelines.md`](.agents/guidelines.md:1).
 *   The module code will primarily reside in files within `src/Night/Filesystem/`.
 *   Associated types like `NightFile` (for `File`), `FileData`, and `DroppedFile` will be defined appropriately.
 

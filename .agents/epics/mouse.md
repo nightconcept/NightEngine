@@ -7,7 +7,7 @@
 *   Implement the `Night.Mouse` static class to provide an interface to the user's mouse.
 *   All public APIs should reside within the `Night.Mouse` class or related types within the `Night` namespace (e.g., `Night.Mouse.Cursor`, `Night.Mouse.CursorType`).
 *   The implementation should primarily use SDL3 functions via `SDL3-CS` bindings.
-*   All functions and types must be documented with XML comments explaining their purpose, parameters, and return values, adhering to [`project/guidelines.md`](project/guidelines.md:1).
+*   All functions and types must be documented with XML comments explaining their purpose, parameters, and return values, adhering to [`.agents/guidelines.md`](.agents/guidelines.md:1).
 *   The module code will primarily reside in `src/Night/Mouse/Mouse.cs`.
 *   Associated types like `Cursor` and `CursorType` will be defined appropriately (e.g., within `Mouse.cs` or `src/Night/Types.cs` if more general, though `CursorType` is specific).
 *   Mouse-related events (mouse moved, wheel moved) should be integrated into the `Night.IGame` interface or a similar event handling mechanism as established in the project (e.g., like `IGame.KeyPressed`).

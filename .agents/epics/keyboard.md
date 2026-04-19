@@ -7,7 +7,7 @@
 *   Implement or complete the `Night.Keyboard` static class to provide an interface to the user's keyboard.
 *   All public APIs should reside within the `Night.Keyboard` class or utilize existing related types within the `Night` namespace (e.g., `Night.KeyCode`, `Night.KeySymbol`).
 *   The implementation should primarily use SDL3 functions via `SDL3-CS` bindings.
-*   All functions and types must be documented with XML comments explaining their purpose, parameters, and return values, adhering to [`project/guidelines.md`](project/guidelines.md:1).
+*   All functions and types must be documented with XML comments explaining their purpose, parameters, and return values, adhering to [`.agents/guidelines.md`](.agents/guidelines.md:1).
 *   The module code will primarily reside in [`src/Night/Keyboard/Keyboard.cs`](src/Night/Keyboard/Keyboard.cs:1).
 *   Existing enums `Night.KeyCode` (from [`src/Night/Keyboard/KeyCode.cs`](src/Night/Keyboard/KeyCode.cs:1)) and `Night.KeySymbol` (from [`src/Night/Keyboard/KeySymbol.cs`](src/Night/Keyboard/KeySymbol.cs:1)) will be used for scancodes and key symbols respectively.
 *   Keyboard-related events (key pressed, key released, text input) should be integrated into the `Night.IGame` interface or a similar event handling mechanism (e.g., `IGame.KeyPressed` is already present; `IGame.KeyReleased` and `IGame.TextInput` will be added).
@@ -31,7 +31,7 @@
 *   2025-06-16: Task received. Epic drafted for `Night.Keyboard` module.
     *   `Night.Keyboard.IsDown(KeyCode key)` (physical scancode check) is already implemented in [`src/Night/Keyboard/Keyboard.cs`](src/Night/Keyboard/Keyboard.cs:45). This will be documented as `Night.Keyboard.IsScancodeDown()`.
     *   `Night.KeyCode` and `Night.KeySymbol` enums are defined in [`src/Night/Keyboard/KeyCode.cs`](src/Night/Keyboard/KeyCode.cs:1) and [`src/Night/Keyboard/KeySymbol.cs`](src/Night/Keyboard/KeySymbol.cs:1) respectively.
-    *   `IGame.KeyPressed` event is implemented as per [`project/PRD.md`](project/PRD.md:35).
+    *   `IGame.KeyPressed` event is implemented as per [`.agents/prd.md`](.agents/prd.md:35).
 
 **Dependencies:**
 
@@ -206,7 +206,7 @@ Corresponding `virtual` empty methods should be added to `Night.Game` for any ne
 *   **Love2D Equivalent:** `love.keypressed(key, scancode, isrepeat)`
 *   **Description:** Called when a key is pressed.
 *   **C# Delegate/Event Signature (in `IGame`):** `void KeyPressed(Night.KeySymbol key, Night.KeyCode scancode, bool isRepeat);`
-*   **Implementation Note:** This event is already implemented as per [`project/PRD.md`](project/PRD.md:35).
+*   **Implementation Note:** This event is already implemented as per [`.agents/prd.md`](.agents/prd.md:35).
 *   **Requirements:**
     *   Triggered when a key is pressed down.
     *   `key`: The `Night.KeySymbol` (logical key) that was pressed.
