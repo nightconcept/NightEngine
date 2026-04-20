@@ -15,6 +15,9 @@
 - Gate: `mise gate`
 - Test: `mise test` (headless automated), `mise test -- --headed` (real SDL), `mise test -- --all --headed` (full `dotnet test`)
 - Run sample: `dotnet run --project src/SampleGame/SampleGame.csproj`
+- Smoke check: `mise smoke` (headless offscreen, 60 frames, JSON verdict to stdout; Linux/CI only — see Cautions)
+- Gate verdict: `cat test-results/gate.json` (written after every `mise gate` run; `first_failure` identifies the broken stage)
+- Screenshot: `dotnet run --project src/SampleGame/SampleGame.csproj -- --frame-limit N --screenshot-at N` (writes `test-results/frame_NNNNNN.ppm`)
 - Generate docs site: `dotnet docfx docs/docfx.json`
 
 ## Expectations
@@ -32,3 +35,5 @@
 - `lib/` contains large binary assets; avoid incidental churn.
 - The worktree may contain unrelated updates to prebuilt SDL binaries or tools. Do not revert them unless explicitly asked.
 - docfx content lives under `docs/` and writes output to `docs/_site/`.
+- `mise smoke` requires `SDL_VIDEODRIVER=offscreen`, which needs an OpenGL library on macOS. On macOS developer machines without a headless GL environment, the smoke run will report `passed: false` with an OpenGL error — this is expected. Use `mise game` for local runtime verification on macOS; smoke run is designed for Linux CI.
+- `mise build` must succeed before `mise smoke` in a fresh environment (or pass `--no-build` to skip).

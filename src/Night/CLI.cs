@@ -40,6 +40,8 @@ namespace Night
     private LogLevel? parsedLogLevel = null;
     private bool isDebugMode = false;
     private bool enableSessionLog = false;
+    private int? frameLimit = null;
+    private int? screenshotAt = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CLI"/> class.
@@ -93,6 +95,30 @@ namespace Night
         {
           this.enableSessionLog = true;
         }
+        else if (string.Equals(arg, "--frame-limit", StringComparison.OrdinalIgnoreCase))
+        {
+          if (i + 1 < args.Length && int.TryParse(args[i + 1], out int limit) && limit > 0)
+          {
+            i++;
+            this.frameLimit = limit;
+          }
+          else
+          {
+            this.remainingArgs.Add(arg);
+          }
+        }
+        else if (string.Equals(arg, "--screenshot-at", StringComparison.OrdinalIgnoreCase))
+        {
+          if (i + 1 < args.Length && int.TryParse(args[i + 1], out int atFrame) && atFrame > 0)
+          {
+            i++;
+            this.screenshotAt = atFrame;
+          }
+          else
+          {
+            this.remainingArgs.Add(arg);
+          }
+        }
         else
         {
           this.remainingArgs.Add(arg);
@@ -120,6 +146,18 @@ namespace Night
     /// Gets a value indicating whether session logging was requested via command-line arguments.
     /// </summary>
     public bool EnableSessionLog => this.enableSessionLog;
+
+    /// <summary>
+    /// Gets the maximum number of game loop iterations before the engine exits cleanly.
+    /// <c>null</c> means no limit.
+    /// </summary>
+    public int? FrameLimit => this.frameLimit;
+
+    /// <summary>
+    /// Gets the loop iteration at which a screenshot should be taken.
+    /// <c>null</c> means no screenshot.
+    /// </summary>
+    public int? ScreenshotAt => this.screenshotAt;
 
     /// <summary>
     /// Gets the list of arguments that were not processed as specific CLI flags by this parser.

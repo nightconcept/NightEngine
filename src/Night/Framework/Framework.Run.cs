@@ -55,12 +55,20 @@ namespace Night
     private static List<double> deltaHistory = new List<double>();
 
     private static bool inErrorState = false;
+    private static int loopCount = 0;
 
     /// <summary>
     /// Gets a value indicating whether a flag indicating whether the core SDL systems, particularly for input,
     /// have been successfully initialized by this Framework's Run method.
     /// </summary>
     public static bool IsInputInitialized { get; internal set; } = false;
+
+    /// <summary>
+    /// Gets the total number of game loop iterations completed in the current or most recent run.
+    /// Resets to zero at the start of each <see cref="Run"/> call.
+    /// </summary>
+    /// <returns>The loop iteration count.</returns>
+    public static int GetLoopCount() => loopCount;
 
     /// <summary>
     /// Runs the game instance.
@@ -349,11 +357,18 @@ namespace Night
         frameCount = 0;
         fpsTimeAccumulator = 0.0;
         deltaHistory.Clear();
-        var loopCount = 0;
+        loopCount = 0;
 
         while (Window.IsOpen() && !inErrorState)
         {
           loopCount++;
+          if (cliArgs?.FrameLimit.HasValue == true && loopCount >= cliArgs.FrameLimit.Value)
+          {
+            Logger.Info($"Frame limit of {cliArgs.FrameLimit.Value} reached at loop {loopCount}. Exiting cleanly.");
+            Window.Close();
+            break;
+          }
+
           double deltaTime = Night.Timer.Step();
           frameCount++;
           fpsTimeAccumulator += deltaTime;
@@ -417,6 +432,14 @@ namespace Night
                 break;
               }
             }
+          }
+
+          if (!inErrorState && cliArgs?.ScreenshotAt.HasValue == true && loopCount == cliArgs.ScreenshotAt.Value)
+          {
+            _ = Directory.CreateDirectory("test-results");
+            string screenshotPath = Path.Combine("test-results", $"frame_{loopCount:D6}.ppm");
+            Logger.Info($"Taking screenshot at loop {loopCount} → {screenshotPath}");
+            _ = Night.Graphics.Screenshot(screenshotPath);
           }
         }
 

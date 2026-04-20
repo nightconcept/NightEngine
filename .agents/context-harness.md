@@ -15,8 +15,9 @@
 - Use existing task entry points first: `mise build`, `mise format`, `dotnet test`, `mise docs`.
 - Match verification depth to blast radius:
   - Single-module edit: targeted build/test for that area.
+  - SDL/native/runtime or game-loop edit: run `mise smoke` (headless frame-count check) in addition to tests. On macOS, `mise smoke` will report `passed: false` due to the OpenGL/offscreen constraint — this is expected; use `mise game` for local runtime verification instead.
   - Shared API or config edit: full `dotnet test` and, if relevant, docs regeneration.
-  - SDL/native/runtime packaging edit: sample run or equivalent runtime validation when feasible.
+- When `mise gate` fails, read `test-results/gate.json` — the `first_failure` field identifies the broken stage so you don't need to parse stdout.
 - Separate vendored-binary refreshes from source changes when possible to preserve reviewability.
 - Record blockers plainly when verification cannot run, especially for graphics/runtime paths that may depend on local native assets.
 

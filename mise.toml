@@ -49,16 +49,13 @@ run = ["python scripts/update_api_doc.py"]
 
 [tasks.gate]
 alias = "gate"
-description = "Run the repo quality gate before a commit."
-run = [
-  "dotnet tool restore",
-  "dotnet clean Night.slnx",
-  "dotnet format --verbosity diagnostic Night.slnx",
-  "dotnet build Night.slnx",
-  "python scripts/run_tests.py",
-  "dotnet docfx docs/docfx.json",
-  "python scripts/update_api_doc.py",
-]
+description = "Run the repo quality gate before a commit. Writes test-results/gate.json."
+run = ["python scripts/run_gate.py"]
+
+[tasks.smoke]
+alias = "smoke"
+description = "Run a headless smoke check: launch the engine for 60 frames and verify a clean exit."
+run = ["python scripts/smoke_run.py"]
 
 [tasks.docs]
 alias = "docs"
