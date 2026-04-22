@@ -11,7 +11,7 @@ from pathlib import Path
 LOVE_API_URL = "https://raw.githubusercontent.com/love2d-community/love-api/master/love_api.lua"
 OUTPUT_API_MD = Path("project/api.md")
 OUTPUT_COVERAGE_MD = Path(".agents/love-api.md")
-SOURCE_ROOT = Path("src/Night")
+SOURCE_ROOT = Path("src/NightFrame")
 
 MODULE_NAME_OVERRIDES = {
     "Filesystem": "filesystem",

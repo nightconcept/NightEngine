@@ -2,8 +2,8 @@
 # NightEngine
 
 ## Intent
-NightEngine is an experimental cross-platform C# game engine built on SDL3.
-Current work centers on the `Night` framework library, sample game, tests, and generated docs rather than a finished higher-level engine.
+This is a monorepo for two products: **NightFrame** (Love2D-style framework, `src/NightFrame/`) and **NightEngine** (higher-level engine, `src/NightEngine/`).
+Current work centers on the `NightFrame` library, sample game, tests, and generated docs. NightEngine is a minimal stub for future work.
 
 ## Stack
 - .NET 10 SDK

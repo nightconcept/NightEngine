@@ -6,7 +6,7 @@
         {
           "src": "../src",
           "files": [
-            "**/Night.csproj"
+            "**/NightFrame.csproj"
           ]
         }
       ],
@@ -37,8 +37,8 @@
       "modern"
     ],
     "globalMetadata": {
-      "_appName": "nightengine",
-      "_appTitle": "nightengine",
+      "_appName": "nightframe",
+      "_appTitle": "NightFrame",
       "_enableSearch": true,
       "pdf": false
     }

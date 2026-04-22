@@ -33,7 +33,7 @@ from typing import NamedTuple
 # ---------------------------------------------------------------------------
 
 ROOT = Path(__file__).resolve().parent.parent
-SOLUTION = ROOT / "Night.slnx"
+SOLUTION = ROOT / "night-mono.slnx"
 RESULTS_DIR = ROOT / "test-results"
 FAILURES_FILE = ROOT / ".last-test-failures"
 

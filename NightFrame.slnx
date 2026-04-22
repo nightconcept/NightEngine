@@ -5,10 +5,10 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/src/">
-    <Project Path="src/Night/Night.csproj" />
-    <Project Path="src/SampleGame/SampleGame.csproj" />
+    <Project Path="src/NightFrame/NightFrame.csproj" />
+    <Project Path="src/NightFrame.Sample/NightFrame.Sample.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/NightTest.csproj" />
+    <Project Path="tests/NightFrame/NightFrame.Tests.csproj" />
   </Folder>
 </Solution>

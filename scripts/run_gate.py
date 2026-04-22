@@ -28,9 +28,9 @@ VERDICT_FILE = RESULTS_DIR / "gate.json"
 
 STAGES = [
     ("setup",  "dotnet tool restore"),
-    ("clean",  "dotnet clean Night.slnx"),
-    ("format", "dotnet format --verbosity diagnostic Night.slnx"),
-    ("build",  "dotnet build Night.slnx"),
+    ("clean",  "dotnet clean night-mono.slnx"),
+    ("format", "dotnet format --verbosity diagnostic night-mono.slnx"),
+    ("build",  "dotnet build night-mono.slnx"),
     ("test",   "python scripts/run_tests.py"),
     ("docs",   "dotnet docfx docs/docfx.json"),
     ("api-doc","python scripts/update_api_doc.py"),
@@ -76,7 +76,7 @@ def run_stage(name: str, command: str) -> dict:
 
 
 def main() -> int:
-    print(CYAN("=== NightEngine Gate ==="))
+    print(CYAN("=== NightFrame Gate ==="))
     overall_start = monotonic()
     timestamp = datetime.now().astimezone().isoformat()
 

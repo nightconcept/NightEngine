@@ -15,12 +15,12 @@ run = ["dotnet tool restore"]
 [tasks.build]
 alias = "build"
 description = "Build the solution."
-run = ["dotnet build Night.slnx"]
+run = ["dotnet build night-mono.slnx"]
 
 [tasks.game]
 alias = "game"
 description = "Run the sample game."
-run = ["dotnet run --project src/SampleGame/SampleGame.csproj"]
+run = ["dotnet run --project src/NightFrame.Sample/NightFrame.Sample.csproj"]
 
 [tasks.test]
 alias = "test"
@@ -30,7 +30,7 @@ run = ["python scripts/run_tests.py"]
 [tasks.clean]
 alias = "clean"
 description = "Clean bin and obj directories."
-run = ["dotnet clean Night.slnx"]
+run = ["dotnet clean night-mono.slnx"]
 
 [tasks.sdl]
 description = "Sync SDL prebuilt libs from build-sdl based on lib/sdl3-manifest.json."
@@ -65,4 +65,4 @@ run = ["dotnet tool restore", "dotnet docfx docs/docfx.json"]
 [tasks.format]
 alias = "format"
 description = "Format files."
-run = ["dotnet format --verbosity verbose Night.slnx"]
+run = ["dotnet format --verbosity verbose night-mono.slnx"]

@@ -39,7 +39,7 @@ from time import monotonic
 # ---------------------------------------------------------------------------
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PROJECT = ROOT / "src" / "SampleGame" / "SampleGame.csproj"
+DEFAULT_PROJECT = ROOT / "src" / "NightFrame.Sample" / "NightFrame.Sample.csproj"
 LOOP_COUNT_RE = re.compile(r"Main loop ended.*LoopCount:\s*(\d+)", re.IGNORECASE)
 
 # ANSI helpers (disabled when not a tty)

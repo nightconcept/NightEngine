@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="stylecop.json" />
-    <ProjectReference Include="..\Night\Night.csproj" />
+    <ProjectReference Include="..\NightFrame\NightFrame.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,22 +7,16 @@
     <Nullable>enable</Nullable>
     <LangVersion>13.0</LangVersion>
     <RootNamespace>NightTest</RootNamespace>
-<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/NightTest.xml</DocumentationFile>
+    <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/NightFrame.Tests.xml</DocumentationFile>
     <NoWarn>$(NoWarn);SA1402</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Night.Tests\**\*.cs" />
-    <EmbeddedResource Remove="Night.Tests\**\*" />
-    <None Remove="Night.Tests\**\*" />
-  </ItemGroup>
-
-  <ItemGroup>
     <AdditionalFiles Include="stylecop.json" />
-    <ProjectReference Include="../src/Night/Night.csproj" />
+    <ProjectReference Include="../../src/NightFrame/NightFrame.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -55,53 +49,53 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="../lib/SDL3-Prebuilt/windows/SDL3.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Content Include="../../lib/SDL3-Prebuilt/windows/SDL3.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
       <Link>SDL3.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/macos/libSDL3.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="../../lib/SDL3-Prebuilt/macos/libSDL3.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <Link>libSDL3.0.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/macos/libSDL3.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="../../lib/SDL3-Prebuilt/macos/libSDL3.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <Link>libSDL3.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/macos/libSDL3.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="../../lib/SDL3-Prebuilt/macos/libSDL3.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <Link>SDL3</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
       <Link>libSDL3.so.0</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
       <Link>libSDL3.so</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
       <Link>SDL3</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
 
     <!-- SDL3_image native libraries -->
-    <Content Include="../lib/SDL3-Prebuilt/windows/SDL3_image.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Content Include="../../lib/SDL3-Prebuilt/windows/SDL3_image.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
       <Link>SDL3_image.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/macos/libSDL3_image.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="../../lib/SDL3-Prebuilt/macos/libSDL3_image.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <Link>libSDL3_image.0.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/macos/libSDL3_image.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="../../lib/SDL3-Prebuilt/macos/libSDL3_image.0.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <Link>libSDL3_image.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/linux/libSDL3_image.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3_image.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
       <Link>libSDL3_image.so.0</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../lib/SDL3-Prebuilt/linux/libSDL3_image.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="../../lib/SDL3-Prebuilt/linux/libSDL3_image.so.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
       <Link>libSDL3_image.so</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -112,10 +106,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\src\Night\Night.csproj" />
   </ItemGroup>
 
 </Project>

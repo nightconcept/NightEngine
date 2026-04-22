@@ -22,8 +22,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="Night.Tests" />
-    <InternalsVisibleTo Include="NightTest" />
+    <InternalsVisibleTo Include="NightFrame.Tests" />
   </ItemGroup>
   <!-- Include SDL3 prebuilt native libraries -->
   <ItemGroup>
