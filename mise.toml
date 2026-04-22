@@ -1,40 +1,40 @@
 [tools]
-dotnet = "9"
+"core:dotnet" = "10.0.202"
 python = "3.13"
-"pipx:gitingest" = { version = "latest" }
+uv = "latest"
 "pipx:pre-commit" = { version = "latest" }
 
 [settings]
 python.uv_venv_auto = true
 
+[tasks.setup]
+alias = "setup"
+description = "Restore repo-local tools needed for build and docs workflows."
+run = ["dotnet tool restore"]
+
 [tasks.build]
 alias = "build"
 description = "Build the solution."
-run = ["dotnet build Night.sln"]
-
-[tasks.digest]
-alias = "digest"
-description = "Run gitingest on current directory."
-run = [
-  "gitingest -o project/digest.txt -e *.toml,*.txt,.roo/*,.cursor/*,build/*,.devenv/*,.direnv/*,project/digest.txt,project/archive/*,*.lock,bin/*,obj/*,lib/*,.venv/*,.windsurf/*,src/SampleGame/bin/*,src/Night/bin/*,src/SampleGame/obj/*,src/Night/obj/*,site/_site/*,site/api/*,tests/Night.Tests/bin/*,tests/Night.Tests/obj/* .",
-]
+run = ["dotnet build night-mono.slnx"]
 
 [tasks.game]
 alias = "game"
 description = "Run the sample game."
-run = ["dotnet run --project src/SampleGame/SampleGame.csproj"]
+run = ["dotnet run --project src/NightFrame.Sample/NightFrame.Sample.csproj"]
+
+[tasks.test]
+alias = "test"
+description = "Run tests via the helper script. Pass extra args after --."
+run = ["python scripts/run_tests.py"]
 
 [tasks.clean]
 alias = "clean"
 description = "Clean bin and obj directories."
-run = ["dotnet clean Night.sln"]
+run = ["dotnet clean night-mono.slnx"]
 
 [tasks.sdl]
-description = "Update SDL bindings and sync SDL libs."
-run = [
-  "git submodule update --remote lib/SDL3-CS",
-  "python scripts/sync_sdl3.py",
-]
+description = "Sync SDL prebuilt libs from build-sdl based on lib/sdl3-manifest.json."
+run = "python scripts/sync_sdl3.py"
 
 [tasks.tools]
 description = "Update tools."
@@ -47,24 +47,22 @@ run = [
 description = "Update API docs."
 run = ["python scripts/update_api_doc.py"]
 
-[tasks.prepare]
-alias = "prepare"
-description = "Prepare everything before a commit."
-run = [
-  "dotnet clean Night.sln",
-  "dotnet format --verbosity diagnostic Night.sln",
-  "dotnet build Night.sln",
-  "dotnet test",
-  "dotnet docfx docs/docfx.json",
-  "python scripts/update_api_doc.py",
-]
+[tasks.gate]
+alias = "gate"
+description = "Run the repo quality gate before a commit. Writes test-results/gate.json."
+run = ["python scripts/run_gate.py"]
+
+[tasks.smoke]
+alias = "smoke"
+description = "Run a headless smoke check: launch the engine for 60 frames and verify a clean exit."
+run = ["python scripts/smoke_run.py"]
 
 [tasks.docs]
 alias = "docs"
 description = "Generate docs."
-run = ["dotnet docfx docs/docfx.json"]
+run = ["dotnet tool restore", "dotnet docfx docs/docfx.json"]
 
 [tasks.format]
 alias = "format"
 description = "Format files."
-run = ["dotnet format --verbosity verbose Night.sln"]
+run = ["dotnet format --verbosity verbose night-mono.slnx"]

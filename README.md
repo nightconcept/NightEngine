@@ -3,10 +3,12 @@
 ![License](https://img.shields.io/github/license/nightconcept/NightEngine)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nightconcept/NightEngine/ci.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/nightconcept/NightEngine)
+[![codecov](https://codecov.io/gh/nightconcept/NightEngine/graph/badge.svg?token=F9ERB4J3BX)](https://codecov.io/gh/nightconcept/NightEngine)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nightconcept/NightEngine/badge)](https://scorecard.dev/viewer/?uri=github.com/nightconcept/NightEngine)
 
 > [!WARNING]
->⚠️ WORK IN PROGRESS - NOT FOR PRODUCTION USE ⚠️
+>WORK IN PROGRESS - NOT FOR PRODUCTION USE
+>
 >This project is currently in active development and is considered highly experimental. APIs are subject to change, and features may be incomplete or unstable. It is not recommended for use in production environments.
 
 A cross-platform C# game engine built on top of SDL3.
@@ -85,13 +87,25 @@ The core of the project is the `Night.dll` library. This assembly contains:
     mise install
     ```
 
-4. Build the solution:
+4. Restore repo-local tools:
+
+    ```bash
+    mise setup
+    ```
+
+5. Build the solution:
 
     ```bash
     mise build
     ```
 
-5. Run the sample game:
+6. Run the local quality gate before committing:
+
+    ```bash
+    mise gate
+    ```
+
+7. Run the sample game:
 
     ```bash
     mise game
@@ -104,4 +118,4 @@ Contributions... eventually! When I feel like the code-base is in a good place, 
 ## License
 
 This project is licensed under the [zlib License](LICENSE).
-See also [NOTICE.md](docs/NOTICE.md) for details on third-party software.
+See also [NOTICE.md](project/NOTICE.md) for details on third-party software.

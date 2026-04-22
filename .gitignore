@@ -17,7 +17,6 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
-[Ll]og/
 
 # Visual Studio Code
 .vscode/*
@@ -67,3 +66,10 @@ docs/_site/
 docs/api/
 
 project/digest.txt
+
+# SDL3 prebuilt binaries (downloaded via mise sdl / sync_sdl3.py)
+lib/SDL3-Prebuilt/
+
+# Test runner artifacts
+.last-test-failures
+test-results/

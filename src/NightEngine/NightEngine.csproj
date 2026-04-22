@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>NightEngine</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/NightEngine.xml</DocumentationFile>
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NightFrame/NightFrame.csproj" />
+  </ItemGroup>
+</Project>
