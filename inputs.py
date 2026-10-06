@@ -1,0 +1,81 @@
+"""Abstract buttons. One frame of input is one small int, so runs can be recorded and replayed exactly.
+
+The bits are the same in every game. A game masks out the buttons it does not use with `Game.input_mask`.
+"""
+
+from collections.abc import Iterable
+from dataclasses import dataclass
+
+from .pointer import Pointer
+
+UP, DOWN, LEFT, RIGHT, A, B, C, MENU = 1, 2, 4, 8, 16, 32, 64, 128
+ALL = UP | DOWN | LEFT | RIGHT | A | B | C | MENU
+REPEAT_DELAY, REPEAT_RATE = 14, 5  # Menu cursor auto-repeat, in frames.
+
+DIRECTIONS = ((UP, (0, -1)), (DOWN, (0, 1)), (LEFT, (-1, 0)), (RIGHT, (1, 0)))
+
+
+@dataclass
+class Input:
+    """Buttons for one frame: `held` this frame, `pressed` on this frame, `repeat` for menu cursors.
+    `pointers` are the touch and mouse contacts this frame (see pointer.py)."""
+
+    held: int = 0
+    pressed: int = 0
+    repeat: int = 0
+    pointers: tuple[Pointer, ...] = ()
+
+    def down(self, button: int) -> bool:
+        return bool(self.held & button)
+
+    def hit(self, button: int) -> bool:
+        return bool(self.pressed & button)
+
+    def nav(self, button: int) -> bool:
+        """True on the press, and again each repeat tick while a repeating button stays held."""
+        return bool(self.repeat & button)
+
+    def axis(self) -> tuple[int, int]:
+        """The held direction as (-1..1, -1..1). Diagonals are allowed; opposite keys cancel."""
+        dx = bool(self.held & RIGHT) - bool(self.held & LEFT)
+        dy = bool(self.held & DOWN) - bool(self.held & UP)
+        return dx, dy
+
+    def direction(self) -> tuple[int, int] | None:
+        """The held direction, preferring the newest press. Diagonals are not allowed (tile movement)."""
+        for button, step in DIRECTIONS:
+            if self.pressed & button:
+                return step
+        for button, step in DIRECTIONS:
+            if self.held & button:
+                return step
+        return None
+
+
+class InputTracker:
+    """Turns raw held codes into Input objects with press edges and optional auto-repeat.
+
+    `mask` drops the buttons a game does not use. `repeat` lists the buttons that auto-repeat: after `delay`
+    frames held they tick every `rate` frames in `Input.repeat`.
+    """
+
+    def __init__(self, mask: int = ALL, repeat: Iterable[int] = (), delay: int = REPEAT_DELAY, rate: int = REPEAT_RATE):
+        self.mask = mask
+        self.delay, self.rate = delay, rate
+        self.previous = 0
+        self.held_for = {b: 0 for b in repeat}
+
+    def feed(self, code: int, pointers: tuple[Pointer, ...] = ()) -> Input:
+        code &= self.mask
+        pressed = code & ~self.previous
+        repeat = pressed
+        for button in self.held_for:
+            if code & button:
+                self.held_for[button] += 1
+                t = self.held_for[button] - self.delay
+                if t >= 0 and t % self.rate == 0:
+                    repeat |= button
+            else:
+                self.held_for[button] = 0
+        self.previous = code
+        return Input(code, pressed, repeat, tuple(pointers))

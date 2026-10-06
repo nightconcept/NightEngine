@@ -1,0 +1,201 @@
+# nightengine
+
+A small, game-agnostic engine on top of Pyxel 2.x. A game is a thin layer on the engine: its data, its rules,
+its scenes, its art, and its draw functions. Games include this repo as a git submodule at `nightengine/`.
+The same game runs on the desktop and in a phone or desktop browser: buttons, touch, and mouse are one recorded
+input stream, and `nightengine.web` builds the browser version.
+
+## Engine rules
+
+- The engine knows no game. It imports only the standard library, `pyxel` (in `host/` only), and itself.
+- Only `nightengine/host/` imports `pyxel` and the browser module `js`. The core never imports `nightengine.host`.
+- The core is deterministic. It uses no `random` module state except `Game.rng`, and no wall-clock time.
+- A difference between two games becomes a parameter. It never becomes an `if game == ...`.
+- `nightengine/tests/test_rules.py` checks these rules with `ast`.
+
+## Core interface
+
+All names below import from `nightengine`, except where a module is named.
+
+### Input (`inputs.py`)
+
+- Buttons: `UP, DOWN, LEFT, RIGHT, A, B, C, MENU = 1, 2, 4, 8, 16, 32, 64, 128`. `ALL = 255`.
+  One frame of input is one int made of these bits.
+- `Input(held, pressed, repeat, pointers=())`:
+  - `down(b)`: held now. `hit(b)`: pressed on this frame. `nav(b)`: pressed, or a repeat tick.
+  - `axis() -> (dx, dy)`: the held direction. Diagonals are allowed and opposite keys cancel.
+  - `direction() -> (dx, dy) | None`: one direction only, the newest press first. For tile movement.
+- `InputTracker(mask=ALL, repeat=(), delay=14, rate=5).feed(code, pointers=()) -> Input`.
+  A button in `repeat` ticks in `Input.repeat` after `delay` frames held, then every `rate` frames.
+
+### Pointers (`pointer.py`)
+
+Touch, pen, and mouse contacts, as game input. The host samples them once per frame and passes them to
+`Game.step` with the buttons, so they are recorded and replayed like buttons.
+
+- `Pointer(id, x, y, start_x, start_y, phase)`: whole logical pixels. The mouse is id 0. `active` is False on the
+  ending frame.
+- `PointerPhase`: `PRESSED` (one frame), then `HELD` or `MOVED` each frame, then `RELEASED` (a normal end) or
+  `CANCELLED` (the system took it). A cancelled contact is never a tap.
+- Helpers on `inp.pointers`: `primary(ps)`, `pressed(ps)`, `released(ps)` (a tap or click ended here),
+  `in_rect(ps, x, y, w, h)`. `encode(p)` and `decode(row)` are the recording format.
+- Every action a pointer can do should also work with buttons, so gamepads and keyboards are never locked out.
+
+### Scenes (`scene.py`)
+
+- `Scene`: set `overlay = True` if the scenes below must still be drawn. Override `update(game, inp)`
+  and `music(game) -> str | None`.
+- `SceneStack`: `top`, `push(s)`, `pop(s)` (removes `s` if it is there), `replace(*scenes)` (in place),
+  `find(cls)` (the topmost instance, or `None`), `visible()` (from the topmost opaque scene up through overlays),
+  and list access: `stack[-1]`, `len`, iteration, `in`, `index(s)`.
+
+### Game (`core.py`)
+
+`Game` is the base class. A game subclasses it. Class attributes configure the input tracker:
+`input_mask`, `repeat_buttons`, `repeat_delay`, `repeat_rate`.
+
+- `Game(seed=0)` sets `seed`, `rng` (`random.Random(seed)`), `frame`, `tracker`, `scenes`, `fx`, and `cues`.
+- `scene` is the top scene. `push(s)` and `pop(s)` use the stack. `music` asks the top scene for a track.
+- `cue(name)` asks for a sound effect this frame.
+- `before_scene(inp)` and `after_scene()` do nothing. A game overrides them.
+- `step(code, pointers=()) -> list[str]` runs one frame in this order: clear cues, feed input, `fx.tick()`, `before_scene`,
+  `scene.update(game, inp)`, `after_scene`, `frame += 1`. It returns the cues.
+- `ScreenFx` (`fx.py`) holds `shake`, `fade`, `fade_in`, and `fade_frames`. `tick()` counts the shake down.
+  It also counts `fade_in` down and sets `fade = fade_in / fade_frames`.
+
+### Content (`content.py`, `registry.py`)
+
+- `read_json(path)` drops the `_doc` key. `read_dir(dir, pattern="*.json")` returns `{stem: data}`.
+- `records(data, cls, convert=None, key="id", rename=None)` builds one frozen record per table entry.
+  `convert` maps a JSON field to a function for nested values. `rename` maps a JSON name to a field name.
+  A bad field raises `ContentError` that names the record.
+- `check_refs(table, field, valid, label) -> list[str]` lists each record whose `field` (a string, or a list of
+  strings) names something not in `valid`.
+- `Registry(kind)`: `register(name)` is a decorator. `reg[name]` raises a `KeyError` that names the kind and the
+  known names. Also `in`, `names()`, and `missing(names)`.
+
+### Other core modules
+
+- `replay.py`: `Recording(seed, frames, pointers={})` with `add(code, pointers)`, `at(frame)`, `save(path)`,
+  `load(path)`, `to_json()`, and `from_json(text)`. The file is `{"seed", "inputs", "pointers"}`: two hex digits
+  per frame, and a sparse `{"<frame>": [[id, x, y, start_x, start_y, "P"], ...]}` for frames with contacts
+  (absent when there were none). `play(make_game, recording, frames=None) -> Game` replays it headless.
+- `canvas.py`: `Canvas` (pixels in memory, no pyxel), `noise(x, y, seed)`, `mirror(rows)`.
+- `palette.py`: `ENDESGA32` (33 entries: transparent black, then 32 colours), `KEY`, and the colour names
+  `RUST` to `SKINSHADE`.
+- `sound.py`: `ch(...)` builds a music channel. `note_errors(sfx, music) -> list[str]` and
+  `slots_used(sfx, music) -> int` check sound tables without pyxel. Call them from a test.
+- `systems.py`: `Systems(*systems).update(scene, game, inp)` runs each `system.update(...)` in order.
+  A system that returns `True` ends the frame.
+- `autopilot.py`: `Tapper.press(b)`, `run(make_game, choose, seed, limit, done)`, `cli(play, summary, default_out, doc, options={})`.
+  `choose(game)` returns the buttons, or `(buttons, pointers)`.
+  `options` adds game flags as `{name: default}` (for example `{"battles": 1}` adds `--battles`); `play` gets them as keywords.
+- `testing.py`: `Driver(game)` has `step(code, frames, pointers=())`, `press(b)`, `tap(x, y)`, and
+  `run_until(predicate, limit, code)`.
+
+## Host interface
+
+`nightengine.host` is the only part that imports `pyxel`. Import its modules by name:
+`from nightengine.host.renderer import Renderer`. Tests may import them too. They never open a window.
+
+- `keys.read_buttons(keys) -> int`: `keys` maps an engine button to the pyxel keys and gamepad buttons that press it.
+- `assets`:
+  - `Region(bank, u, v, w, h)` is a frozen record of where a piece of art sits in an image bank.
+  - `copy(canvas, bank, u, v) -> Region` writes one canvas into a bank.
+  - `Shelf(bank, v=0, width=256).add(canvas) -> Region` packs canvases left to right, and wraps to a new row.
+  - `pack(named, shelf)` and `pack_variants(named, shelf)` pack a dictionary of canvases (or lists of canvases).
+    They return the same names with regions.
+- `ui`:
+  - `setup(font_path, color, shadow, scratch=(2, 200))` loads the font and sets the default text colours.
+    `scratch` is the `(bank, v)` of a free 14-pixel row that `big_text` draws into.
+  - `text(x, y, s, col=None, shadow=DEFAULT)`, `width(s)`, `center(y, s, col, shadow, cx=None)`, `wrap(s, max_w)`,
+    `big_text(s, cx, y, scale, col, shadow)`. A `shadow` of `None` means no shadow.
+  - Three sprite anchors, each with `flip=False` and extra `pyxel.blt` keywords:
+    `blt` draws from the top-left, `blt_center` draws centred on `(x, y)`, `blt_feet` is centred on `x` with the
+    bottom row on `y`.
+  - `solid(region, x, y, col, flip=False, alpha=1.0, anchor="center" | "feet")` draws a one-colour silhouette.
+  - `fade(alpha, col=0)` covers the screen. Games add their own widgets (panels, windows, gauges) in their own `ui`.
+- `audio.AudioManager(sfx, music, once=(), sfx_channel=3, priority=True)`: `setup()` loads the tables into pyxel;
+  `update(track, cues)` runs once per frame. The order of `sfx` is the priority order, highest first.
+  - `priority=True`: play the most important cue of the frame, unless a more important effect still plays.
+  - `priority=False`: play the first cue of the frame if it is known. Do not check what is playing.
+  - A track in `once` does not loop.
+- `renderer`:
+  - `Renderer(draw, palette, bake, font, ui_colors, shake=no_shake, fade=False, scratch=(2, 200))`.
+    `draw` is a dictionary from scene class to `draw(scene, game, t)`. The renderer keeps that dictionary,
+    so a game can add entries after it builds the renderer. `@renderer.on(SceneClass)` adds one too.
+  - `setup()` sets the palette, calls `bake()`, and sets up `ui`. `draw(game)` sets the camera from `shake`,
+    draws `game.scenes.visible()`, resets the camera, and draws `ui.fade(game.fx.fade)` last if `fade=True`.
+  - `draw_scene(scene, game, t)` draws one scene. A draw function can call it to draw the scenes below a transition.
+  - Shake functions: `shake_xy` (sideways, plus up and down for a strong shake), `shake_x` (sideways only),
+    `no_shake` (for a game that shakes inside its own draw functions).
+- `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False)`
+  and `App(config, make_game, renderer, audio, seed=None, replay=None)`. `App` opens the window, starts
+  `platform`, and runs the loop. Each frame it reads the buttons and `platform.sample()`, records both, and steps
+  the game (a replay feeds the recorded ones). `mouse=True` shows the system cursor.
+  `q` quits and saves the run to `replays/last.json`.
+- `platform`: where the game runs.
+  - `init(width, height)` (App calls it). `available()` is True in a page built by `nightengine.web`.
+  - `sample() -> tuple[Pointer, ...]`: in the browser, touch, pen, and mouse through `window.nightBridge`;
+    on the desktop, the mouse as pointer 0 (`MouseTracker`).
+  - `screen`: `width`, `height`, `viewport_width`, `viewport_height`, `orientation`, and `safe_area`
+    (`top`, `right`, `bottom`, `left` insets in logical pixels: keep text and touch targets out of them).
+  - `platform()` (`android` or `desktop`), `is_touch_device()`.
+  - `save(key, data)` and `load(key)`: browser storage. False and None on the desktop. A blocked read raises `OSError`.
+- `diagnostic`: a pointer and safe-area check for a device. The web build serves it at `?app=debug`.
+- `frames.frames_main(title, width, height, renderer, make_game, summary, modes=None, every=120)` is the
+  command line of a game's `frames.py`. It renders a recording every `--every` frames, or `--atlas` for the image banks.
+  Each entry in `modes` becomes a `--name` flag. A mode is `mode(out, scale)`, called after the window and art are set up.
+
+## Web build (`web/`)
+
+`python -m nightengine.web build --out dist` (or `serve`, with `--host 0.0.0.0` for a phone on the same
+network) runs from a game's root and reads its `pyproject.toml`:
+
+```toml
+[tool.nightengine.web]
+title = "Nightrunner"
+width = 640
+height = 360
+entry = "game.py"                          # the default
+packages = ["nightrunner", "nightengine"]  # their .py files, without tests/ and docs/
+assets = ["assets"]                        # every file under these dirs
+```
+
+It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
+`pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
+the game's environment. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
+
+## Adding content
+
+Every game grows the same way: new data, then a new named behaviour if the data needs one.
+
+1. **Add a JSON record** to the game's `data/*.json` (an enemy, an item, a room, a stage).
+   `records()` turns the table into typed records. `read_dir()` loads a folder of files.
+2. **If the record needs new behaviour, register a handler.** Write one function and decorate it with the game's
+   decorator, such as `@move("name")` or `@brain("name")`.
+   Each is `Registry.register` on the game's own `Registry`. A record names its handler as a string.
+3. **Add art by name.** Add a canvas to the game's art dictionary. `host.assets.pack` packs it into an image bank.
+   A new sound is one entry in the game's `SFX` or `MUSIC` table.
+4. **Let the content test check the references.** Use `check_refs` for each field that names another record.
+   Use `Registry.missing` for each field that names a handler. Use `note_errors` for sound tables.
+   A typo in JSON then fails with one clear message.
+
+A new scene is a `Scene` subclass plus one draw function, registered with `@renderer.on(SceneClass)`.
+
+Each game's `docs/repo/content.md` keeps its own record formats and points to this section.
+
+## Use in a game
+
+Add the engine as a submodule at `nightengine/`, so `import nightengine` works from the game's root:
+
+```sh
+git submodule add https://forge.solivan.dev/nightconcept/NightEngine.git nightengine
+git submodule update --init --recursive   # after a fresh clone of the game
+```
+
+- Add `"nightengine"`, `"nightengine.host"`, and `"nightengine.web"` to the game's setuptools `packages`, and
+  `pyxel>=2.6,<3` to its dependencies (pin an exact version to fix the web runtime too).
+- Run the engine tests from the game root: `python -m unittest discover -s nightengine/tests -t .`
+- Change the engine in this repo, then move each game to the new commit with `git -C nightengine pull` and a
+  commit of the submodule pointer in the game.

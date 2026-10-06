@@ -1,0 +1,8 @@
+line-length = 120
+target-version = "py311"  # The engine needs 3.11 (tomllib, StrEnum).
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[lint.isort]
+known-first-party = ["nightengine"]
