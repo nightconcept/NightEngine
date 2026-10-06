@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main, unicycle]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: node:24-trixie
+    steps:
+      # The engine imports itself as `nightengine`, so check it out under that name.
+      - uses: actions/checkout@v4
+        with:
+          path: nightengine
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Python tests
+        run: uv run --no-project --python 3.13 --with pyxel==2.9.9 python -m unittest discover -s nightengine/tests -t .
+
+      - name: Pointer bridge tests
+        run: node --test nightengine/web/tests/pointer.test.mjs
+
+      - name: Lint
+        working-directory: nightengine
+        run: uvx ruff check . && uvx ruff format --check .
