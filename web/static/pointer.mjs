@@ -55,6 +55,11 @@ export class PointerTracker {
   }
 }
 
+export function screenRect(element) {
+  const own = typeof Element !== 'undefined' && Element.prototype.getBoundingClientRect;
+  return own ? own.call(element) : element.getBoundingClientRect();
+}
+
 export function installBridge(canvas, width, height, env = window, enabled = () => true) {
   const tracker = new PointerTracker();
   const document = env.document;
@@ -63,7 +68,8 @@ export function installBridge(canvas, width, height, env = window, enabled = () 
     target.addEventListener(type, handler, { passive: false });
     listeners.push(() => target.removeEventListener(type, handler));
   };
-  const rect = () => canvas.getBoundingClientRect();
+  // The canvas as shown, with CSS transforms. The launcher overrides canvas.getBoundingClientRect for SDL.
+  const rect = () => screenRect(canvas);
   const release = id => {
     if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
   };
@@ -99,8 +105,20 @@ export function installBridge(canvas, width, height, env = window, enabled = () 
   const probe = document.createElement('div');
   probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
   document.body.appendChild(probe);
+  let backs = 0;  // Presses of a system Back button (an Android app), read once each by takeBack().
   const bridge = {
     sample: () => JSON.stringify(tracker.sample()),
+    back: () => { backs += 1; },
+    takeBack: () => {
+      if (!backs) return false;
+      backs -= 1;
+      return true;
+    },
+    // Close the app when a native shell offers it (window.NightAndroid in the APK). A browser tab stays open.
+    quit: () => {
+      if (env.NightAndroid?.quit) { env.NightAndroid.quit(); return true; }
+      return false;
+    },
     info: () => {
       const box = rect();
       const style = env.getComputedStyle(probe);

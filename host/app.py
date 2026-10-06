@@ -65,22 +65,31 @@ class App:
         if self.recording and self.recording.frames:
             self.recording.save(self.config.replays / "last.json")
 
+    def quit(self):
+        """Save the run and close. In a page, a native shell (the APK) closes the app; a browser tab stays open,
+        because pyxel.quit would freeze the page."""
+        self.save()
+        if platform.available():
+            platform.quit_page()
+            self.game.quit_requested = False
+        else:
+            pyxel.quit()
+
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q) or (pyxel.btn(pyxel.KEY_ALT) and pyxel.btnp(pyxel.KEY_F4)):
-            self.save()
-            pyxel.quit()
+            self.quit()
+            return
         if self.replay:
             if self.game.frame >= len(self.replay.frames):
                 return
             code, pointers = self.replay.frames[self.game.frame], self.replay.at(self.game.frame)
         else:
-            code, pointers = read_buttons(self.config.keys), platform.sample()
+            code, pointers = read_buttons(self.config.keys) | platform.buttons(), platform.sample()
             self.recording.add(code, pointers)
         cues = self.game.step(code, pointers)
         self.audio.update(self.game.music, cues)
         if self.game.quit_requested:
-            self.save()
-            pyxel.quit()
+            self.quit()
 
     def draw(self):
         self.renderer.draw(self.game)

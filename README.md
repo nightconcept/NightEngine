@@ -193,6 +193,35 @@ the running `App` (`nightengine.host.app.current`), `tap(page, x, y)` touches a 
 page coordinates, and `touch(cdp, type, points)` sends raw multitouch. On macOS, `/Applications/Chromium.app` is used
 if present. `NIGHTENGINE_BROWSER` picks another browser.
 
+## Android (`android/`)
+
+`python -m nightengine.android build --out dist/android` makes a debug-signed APK: a full-screen WebView that runs the
+game's offline web build from the APK's assets. It needs JDK 17 or later and the Android SDK (`ANDROID_HOME`, with
+`platforms;android-35`). Gradle is downloaded into the cache unless `gradle` is on the PATH. `project` writes the Gradle
+project only, to open in Android Studio. The game adds a table next to `[tool.nightengine.web]`:
+
+```toml
+[tool.nightengine.android]
+app_id = "dev.example.mygame"
+orientation = "landscape"            # landscape | portrait | any
+icon = "android/icon.png"            # optional, square PNG
+keystore = "android/debug.keystore"  # optional: `python -m nightengine.android keystore android/debug.keystore`
+```
+
+- The page is served at `https://appassets.androidplatform.net/` (`MainActivity.java`), so wasm and ES modules load.
+- The Back button is engine button B for one frame (`platform.buttons()`). `Game.quit_requested` closes the app
+  (`platform.quit_page()`); in a browser tab it does nothing.
+- Commit the keystore. Android installs an update only over an APK signed with the same key.
+- A debug build allows WebView remote debugging (`chrome://inspect`, or `adb forward` to `webview_devtools_remote_<pid>`).
+- The page's `?shell=app` layout hides the header and fills the screen. Pyxel never draws below 1x, so on a screen
+  smaller than the game, `launcher.mjs` keeps the game's pixels and shrinks them with a CSS transform.
+
+## Desktop (`desktop/`)
+
+`uv run --with pyinstaller python -m nightengine.desktop build --out dist/desktop` runs `pyxel app2exe` (PyInstaller,
+a program folder) for the system it runs on and zips it as `<slug>-<version>-<system>-<machine>.zip`. PyInstaller
+cannot cross-build: the Windows program needs a Windows machine or runner.
+
 ## Adding content
 
 Every game grows the same way: new data, then a new named behaviour if the data needs one.

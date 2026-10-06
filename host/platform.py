@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 import pyxel
 
+from ..inputs import B
 from ..pointer import Pointer, PointerPhase
 
 
@@ -103,6 +104,16 @@ def sample() -> tuple[Pointer, ...]:
             for r in rows
         )
     return _mouse.sample() if _mouse else ()
+
+
+def buttons() -> int:
+    """Buttons the page presses for the game: a system Back button (an Android app) is B for one frame."""
+    return B if available() and _bridge.takeBack() else 0
+
+
+def quit_page() -> bool:
+    """Ask a native shell to close the app. False in a browser tab or on the desktop."""
+    return bool(_bridge.quit()) if available() else False
 
 
 def _refresh_info():

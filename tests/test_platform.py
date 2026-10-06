@@ -45,6 +45,19 @@ class Bridge:
     def load(self, key):
         return self.stored.get(key)
 
+    backs = 0
+    closed = False
+
+    def takeBack(self):  # noqa: N802 (the JS name)
+        if self.backs:
+            self.backs -= 1
+            return True
+        return False
+
+    def quit(self):
+        self.closed = True
+        return True
+
 
 def in_browser(bridge):
     return mock.patch.dict(sys.modules, {"js": SimpleNamespace(window=SimpleNamespace(nightBridge=bridge))})
@@ -67,6 +80,17 @@ class BrowserTest(unittest.TestCase):
         self.assertTrue(platform.is_touch_device())
         self.assertEqual(platform.screen.safe_area.left, 4)
         self.assertEqual(platform.screen.viewport_width, 800)
+
+    def test_back_is_b_for_one_frame_and_quit_asks_the_shell(self):
+        from nightengine import B
+
+        bridge = Bridge()
+        bridge.backs = 1
+        with in_browser(bridge):
+            platform.init(64, 64)
+            self.assertEqual([platform.buttons(), platform.buttons()], [B, 0])
+            self.assertTrue(platform.quit_page())
+        self.assertTrue(bridge.closed)
 
     def test_storage_round_trip_and_denied_read(self):
         with in_browser(Bridge()):
@@ -95,6 +119,10 @@ class DesktopTest(unittest.TestCase):
             btn=lambda b: down,
             btnp=lambda b: pressed,
         )
+
+    def test_desktop_has_no_page_buttons_or_shell(self):
+        platform.init(64, 64)
+        self.assertEqual((platform.buttons(), platform.quit_page()), (0, False))
 
     def test_desktop_fallback_has_no_bridge_or_storage(self):
         platform.init(64, 64)
@@ -172,6 +200,23 @@ class AppTest(unittest.TestCase):
             app.update()
             pyxel.quit.assert_called_once()
         save.assert_called_once()
+
+    def test_a_quit_in_a_page_asks_the_shell_and_keeps_running(self):
+        app = app_for()
+        app.log.update = lambda game, inp: setattr(game, "quit_requested", True)
+        with (
+            mock.patch.object(platform, "available", return_value=True),
+            mock.patch.object(platform, "quit_page") as quit_page,
+            mock.patch.object(platform, "buttons", return_value=0),
+            mock.patch.object(platform, "sample", return_value=()),
+            mock.patch("nightengine.host.app.read_buttons", return_value=0),
+            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, quit=mock.DEFAULT),
+            mock.patch.object(App, "save"),
+        ):
+            app.update()
+            pyxel.quit.assert_not_called()
+        quit_page.assert_called_once()
+        self.assertFalse(app.game.quit_requested)
 
 
 if __name__ == "__main__":

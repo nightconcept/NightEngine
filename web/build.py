@@ -67,6 +67,16 @@ def asset_files(root: Path, directory: str) -> list[Path]:
     return sorted(p for p in base.rglob("*") if p.is_file() and not SKIP_DIRS & set(p.relative_to(root).parts))
 
 
+def game_files(root: Path, config: WebConfig) -> list[Path]:
+    """The entry script, the packages' .py files, and the assets: everything a .pyxapp of the game holds."""
+    files = [root / config.entry]
+    for package in config.packages:
+        files += package_files(root, package)
+    for directory in config.assets:
+        files += asset_files(root, directory)
+    return files
+
+
 def write_app(path: Path, root: Path, entry: str, files: list[Path], scripts: dict[str, str] | None = None):
     """A .pyxapp: a zip with everything under app/ and the startup script named in app/.pyxapp_startup_script."""
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -83,12 +93,7 @@ def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool 
         raise ValueError("The build output must be its own directory, such as dist/")
     config = config or read_config(root)
     out.mkdir(parents=True, exist_ok=True)
-    files = [root / config.entry]
-    for package in config.packages:
-        files += package_files(root, package)
-    for directory in config.assets:
-        files += asset_files(root, directory)
-    write_app(out / "game.pyxapp", root, config.entry, files)
+    write_app(out / "game.pyxapp", root, config.entry, game_files(root, config))
     engine = package_files(root, "nightengine") if (root / "nightengine").is_dir() else []
     diagnostic = "from nightengine.host.diagnostic import main\n\nmain()\n"
     write_app(out / "debug.pyxapp", root, DEBUG_ENTRY, engine, {DEBUG_ENTRY: diagnostic})

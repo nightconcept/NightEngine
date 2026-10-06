@@ -1,21 +1,39 @@
 import { installBridge } from './pointer.mjs';
 
 // The build writes the game's logical size into <body data-width data-height>.
-const debug = new URLSearchParams(location.search).get('app') === 'debug';
+const query = new URLSearchParams(location.search);
+const debug = query.get('app') === 'debug';
+// ?shell=app: the page is the whole app (the APK). No header or notes, and the game fills the screen.
+const shell = query.get('shell') === 'app';
+if (shell) document.body.classList.add('app');
 const [width, height] = debug ? [256, 144] : [Number(document.body.dataset.width), Number(document.body.dataset.height)];
 const stage = document.getElementById('stage');
 const status = document.getElementById('status');
 if (debug) document.getElementById('help').textContent =
   'Touch, drag, or click to see pointer IDs, phases, and logical coordinates. Try several fingers. Resize to clear contacts.';
+const box = document.getElementById('pyxel-screen');
+// Pyxel never draws below 1x (its scale is at least 1), so a canvas smaller than the game would crop it. When the
+// shown size is smaller, Pyxel's box gets the game's size and a CSS transform shrinks it. The pointer bridge maps
+// from the canvas's on-screen rectangle, which includes the transform.
 const fit = () => {
-  const availableHeight = Math.max(120, innerHeight - 170);
+  const availableHeight = shell ? innerHeight : Math.max(120, innerHeight - 170);
   const gameWidth = Math.min(innerWidth, availableHeight * width / height);
   const gameHeight = gameWidth * height / width;
   stage.style.width = `${gameWidth}px`;
   stage.style.height = `${gameHeight}px`;
-  const fullscreenWidth = Math.min(innerWidth, innerHeight * width / height);
-  stage.style.setProperty('--game-width', `${fullscreenWidth}px`);
-  stage.style.setProperty('--game-height', `${fullscreenWidth * height / width}px`);
+  if (shell) stage.style.marginTop = `${Math.max(0, (innerHeight - gameHeight) / 2)}px`;
+  const full = document.fullscreenElement === stage;
+  const shownWidth = full ? Math.min(innerWidth, innerHeight * width / height) : gameWidth;
+  const shownHeight = shownWidth * height / width;
+  const shrink = Math.min(1, shownWidth / width);
+  Object.assign(box.style, {
+    left: `${full ? (innerWidth - shownWidth) / 2 : 0}px`,
+    top: `${full ? (innerHeight - shownHeight) / 2 : 0}px`,
+    width: `${shownWidth / shrink}px`,
+    height: `${shownHeight / shrink}px`,
+    transform: `scale(${shrink})`,
+    transformOrigin: '0 0',
+  });
 };
 fit();
 window.addEventListener('resize', fit);
@@ -37,6 +55,13 @@ try {
   const observer = new MutationObserver(() => {
     const canvas = document.getElementById('canvas');
     if (canvas) {
+      // SDL sizes its window (Pyxel's drawing surface) from canvas.getBoundingClientRect(), which includes the
+      // shrink transform from fit(). Report the layout size instead, so Pyxel keeps the game's full pixels.
+      // The pointer bridge measures the real on-screen rectangle (pointer.mjs, screenRect).
+      canvas.getBoundingClientRect = function () {
+        const shown = Element.prototype.getBoundingClientRect.call(this);
+        return new DOMRect(shown.x, shown.y, this.offsetWidth, this.offsetHeight);
+      };
       installBridge(canvas, width, height, window, () => window.pyxelContext.initialized);
       observer.disconnect();
     }

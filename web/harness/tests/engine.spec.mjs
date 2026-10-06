@@ -22,3 +22,18 @@ test('the pointer check page runs', async ({page}) => {
   await page.waitForTimeout(500);
   expect(errors).toEqual([]);
 });
+
+test('a screen smaller than the game shows all of it', async ({page}) => {
+  await page.setViewportSize({width: 600, height: 340});  // A phone in landscape, in CSS pixels.
+  await launch(page, '?shell=app');
+  const fit = await page.evaluate(() => {
+    const canvas = document.getElementById('canvas');
+    const box = Element.prototype.getBoundingClientRect.call(canvas);  // As shown (the launcher patches the method).
+    return {
+      // Pyxel never draws below 1x, so the canvas needs at least the game's pixels or the game is cropped.
+      enoughPixels: canvas.width >= Number(document.body.dataset.width) && canvas.height >= Number(document.body.dataset.height),
+      inside: box.left >= 0 && box.top >= 0 && box.right <= innerWidth + 0.5 && box.bottom <= innerHeight + 0.5,
+    };
+  });
+  expect(fit).toEqual({enoughPixels: true, inside: true});
+});

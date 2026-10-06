@@ -1,0 +1,21 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "dev.nightengine.shell"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "{{APP_ID}}"
+        minSdk 24
+        targetSdk 35
+        versionCode {{VERSION_CODE}}
+        versionName "{{VERSION_NAME}}"
+    }
+{{SIGNING}}
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

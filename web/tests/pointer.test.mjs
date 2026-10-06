@@ -142,3 +142,17 @@ test('startup interaction gate excludes its contact from game input', () => {
   assert.equal(JSON.parse(bridge.sample())[0].phase, 'PRESSED');
   bridge.destroy();
 });
+
+test('back presses are taken once each, and quit closes only a native shell', () => {
+  const {env, canvas} = environment();
+  const bridge = installBridge(canvas, 256, 144, env);
+  bridge.back();
+  bridge.back();
+  assert.deepEqual([bridge.takeBack(), bridge.takeBack(), bridge.takeBack()], [true, true, false]);
+  assert.equal(bridge.quit(), false);
+  let closed = false;
+  env.NightAndroid = {quit: () => { closed = true; }};
+  assert.equal(bridge.quit(), true);
+  assert.equal(closed, true);
+  bridge.destroy();
+});
