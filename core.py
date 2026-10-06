@@ -10,6 +10,7 @@ from .fx import ScreenFx
 from .inputs import ALL, REPEAT_DELAY, REPEAT_RATE, Input, InputTracker
 from .pointer import Pointer
 from .scene import Scene, SceneStack
+from .target import Target
 
 
 class Game:
@@ -18,8 +19,9 @@ class Game:
     repeat_delay = REPEAT_DELAY
     repeat_rate = REPEAT_RATE
 
-    def __init__(self, seed: int = 0):
+    def __init__(self, seed: int = 0, target: Target | None = None):
         self.seed = seed
+        self.target = target or Target()  # Where the game runs (see target.py). Rules may read it.
         self.rng = Random(seed)  # The only source of randomness in game rules.
         self.frame = 0
         self.tracker = InputTracker(self.input_mask, self.repeat_buttons, self.repeat_delay, self.repeat_rate)
@@ -55,6 +57,7 @@ class Game:
     def step(self, code: int, pointers: tuple[Pointer, ...] = ()) -> list[str]:
         """Advance one frame with the held buttons in `code` and this frame's pointers. Returns sound cue names."""
         self.cues = []
+        pointers = tuple(p for p in pointers if self.target.accepts(p))
         inp = self.tracker.feed(code, pointers)
         self.fx.tick()
         self.before_scene(inp)

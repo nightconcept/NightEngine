@@ -6,7 +6,7 @@ A game's tests subclass `Driver`, build their own game in `__init__`, and add he
 from collections.abc import Callable
 
 from .core import Game
-from .pointer import Pointer, PointerPhase
+from .pointer import Pointer, PointerKind, PointerPhase
 
 
 class Driver:
@@ -17,10 +17,10 @@ class Driver:
         for _ in range(frames):
             self.game.step(code, pointers)
 
-    def tap(self, x: int, y: int, pid: int = 0):
-        """Touch (or click) one point: a PRESSED frame, then a RELEASED frame."""
-        self.step(pointers=(Pointer(pid, x, y, x, y, PointerPhase.PRESSED),))
-        self.step(pointers=(Pointer(pid, x, y, x, y, PointerPhase.RELEASED),))
+    def tap(self, x: int, y: int, pid: int = 0, kind: PointerKind = PointerKind.TOUCH):
+        """Touch (or click, with `kind=PointerKind.MOUSE`) one point: a PRESSED frame, then a RELEASED frame."""
+        self.step(pointers=(Pointer(pid, x, y, x, y, PointerPhase.PRESSED, kind),))
+        self.step(pointers=(Pointer(pid, x, y, x, y, PointerPhase.RELEASED, kind),))
 
     def press(self, button: int):
         """Hold a button for one frame, then release it, so the game sees one press edge."""

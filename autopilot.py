@@ -10,6 +10,7 @@ from typing import Any
 
 from .core import Game
 from .replay import Recording, digits_for
+from .target import Target
 
 
 class Tapper:
@@ -24,17 +25,19 @@ class Tapper:
 
 
 def run(
-    make_game: Callable[[int], Game],
+    make_game: Callable[..., Game],
     choose: Callable[[Game], int | tuple[int, tuple]],
     seed: int,
     limit: int,
     done: Callable[[Game], bool] | None = None,
+    target: Target | None = None,
 ) -> tuple[Recording, Game]:
     """Play until `done(game)`, or until `limit` frames. Returns the recording and the final game.
 
-    `choose(game)` returns the buttons, or `(buttons, pointers)` to touch or click as well."""
-    game = make_game(seed)
-    recording = Recording(seed, width=digits_for(game.input_mask))
+    `make_game(seed, target)` builds the game. `choose(game)` returns the buttons, or `(buttons, pointers)` to touch
+    or click as well."""
+    game = make_game(seed, target)
+    recording = Recording(seed, width=digits_for(game.input_mask), target=target)
     while game.frame < limit:
         choice = choose(game)
         code, pointers = choice if isinstance(choice, tuple) else (choice, ())

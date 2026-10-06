@@ -36,7 +36,7 @@ def frames_main(
     width: int,
     height: int,
     renderer: Renderer,
-    make_game: Callable[[int], Game],
+    make_game: Callable[..., Game],
     summary: Callable[[Game], str],
     modes: dict[str, Callable[[Path, int], None]] | None = None,
     every: int = 120,
@@ -64,9 +64,10 @@ def frames_main(
             mode(out, args.scale)
             return
     recording = Recording.load(args.recording)
-    pyxel.init(width, height, title=f"{title} frames")
+    target = recording.target.sized(width, height) if recording.target else None
+    pyxel.init(target.width if target else width, target.height if target else height, title=f"{title} frames")
     renderer.setup()
-    game = make_game(recording.seed)
+    game = make_game(recording.seed, target)
     for i, code in enumerate(recording.frames):
         if game.frame >= args.start and (game.frame - args.start) % args.every == 0:
             renderer.draw(game)

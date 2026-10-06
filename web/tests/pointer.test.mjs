@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { logicalPoint, PointerTracker, installBridge } from '../static/pointer.mjs';
+import { logicalPoint, PointerTracker, installBridge, pointerKind } from '../static/pointer.mjs';
 
 const box = {left: 100, top: 50, width: 800, height: 450, right: 900, bottom: 500};
 test('coordinates use displayed canvas, including edges and captured drags', () => {
@@ -154,5 +154,18 @@ test('back presses are taken once each, and quit closes only a native shell', ()
   env.NightAndroid = {quit: () => { closed = true; }};
   assert.equal(bridge.quit(), true);
   assert.equal(closed, true);
+  bridge.destroy();
+});
+
+test('each contact keeps the kind it started with: touch, pen, or mouse', () => {
+  assert.deepEqual(['mouse', 'pen', 'touch', '', undefined].map(pointerKind), ['mouse', 'pen', 'touch', 'touch', 'touch']);
+  const {env, canvas} = environment();
+  const bridge = installBridge(canvas, 256, 144, env);
+  canvas.emit('pointerdown', {pointerId: 1, pointerType: 'mouse', button: 0, clientX: 500, clientY: 275});
+  canvas.emit('pointerdown', {pointerId: 2, pointerType: 'touch', clientX: 500, clientY: 275});
+  assert.deepEqual(JSON.parse(bridge.sample()).map(t => [t.id, t.kind]), [[1, 'mouse'], [2, 'touch']]);
+  assert.deepEqual(JSON.parse(bridge.sample()).map(t => [t.phase, t.kind]), [['HELD', 'mouse'], ['HELD', 'touch']]);
+  canvas.emit('pointerup', {pointerId: 1, pointerType: 'mouse', clientX: 500, clientY: 275});
+  assert.deepEqual(JSON.parse(bridge.sample())[0], {id: 1, x: 128, y: 72, start_x: 128, start_y: 72, phase: 'RELEASED', kind: 'mouse'});
   bridge.destroy();
 });

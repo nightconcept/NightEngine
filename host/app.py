@@ -8,7 +8,10 @@ from pathlib import Path
 import pyxel
 
 from ..core import Game
+from ..pointer import PointerKind
 from ..replay import Recording, digits_for
+from ..target import Target
+from ..target import current as current_target
 from . import platform, ui
 from .audio import AudioManager
 from .keys import read_buttons
@@ -20,33 +23,44 @@ current: "App | None" = None  # The running App, for browser tests that read the
 @dataclass
 class AppConfig:
     title: str
-    width: int
+    width: int  # The game's own size. A target may set another (see target.py).
     height: int
     keys: dict[int, tuple[int, ...]]  # Engine button -> pyxel keys and gamepad buttons.
     replays: Path  # Where the last live run is saved.
     fps: int = 60
     label_xy: tuple[int, int] = (4, 4)  # Where the REPLAY label is drawn.
     integer_scale: bool = True  # Scale the screen by whole numbers only, so pixels stay square and even.
-    mouse: bool = False  # Show the system mouse cursor over the game.
+    mouse: bool = False  # Show the system mouse cursor over the game, when the target takes the mouse.
+
+
+def choose_target(config: AppConfig, replay: Recording | None = None, target: Target | None = None) -> Target:
+    """A replay runs as it was played. Otherwise: `target`, else the build's, else `NIGHTENGINE_TARGET`.
+    A target without a size gets the game's."""
+    chosen = (replay.target if replay else None) or target or current_target()
+    return chosen.sized(config.width, config.height)
 
 
 class App:
     def __init__(
         self,
         config: AppConfig,
-        make_game: Callable[[int], Game],
+        make_game: Callable[..., Game],
         renderer: Renderer,
         audio: AudioManager,
         seed: int | None = None,
         replay: Recording | None = None,
+        target: Target | None = None,
     ):
         self.config, self.renderer, self.audio = config, renderer, audio
-        pyxel.init(config.width, config.height, title=config.title, fps=config.fps, quit_key=pyxel.KEY_NONE)
-        platform.init(config.width, config.height)
+        self.target = target = choose_target(config, replay, target)
+        pyxel.init(target.width, target.height, title=config.title, fps=config.fps, quit_key=pyxel.KEY_NONE)
+        mouse = target.takes(PointerKind.MOUSE)
+        platform.init(target.width, target.height, mouse)
         # In a browser the page sizes the canvas to the game's aspect, and the pointer bridge maps the whole canvas.
         # The game must fill it, or the picture and the touch coordinates disagree.
         pyxel.integer_scale(config.integer_scale and not platform.available())
-        pyxel.mouse(config.mouse and not platform.available())  # A page has its own cursor, and fingers need none.
+        # A page has its own cursor, and fingers need none.
+        pyxel.mouse(config.mouse and mouse and not platform.available())
         renderer.setup()
         audio.setup()
         self.replay = replay
@@ -54,8 +68,8 @@ class App:
             seed = replay.seed
         elif seed is None:
             seed = pyxel.rndi(0, 2**31 - 1)
-        self.game = make_game(seed)
-        self.recording = None if replay else Recording(seed, width=digits_for(self.game.input_mask))
+        self.game = make_game(seed, target)
+        self.recording = None if replay else Recording(seed, width=digits_for(self.game.input_mask), target=target)
         global current
         current = self
         atexit.register(self.save)  # pyxel.run ends the process, so this also saves when the window closes.

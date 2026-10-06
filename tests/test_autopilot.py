@@ -13,8 +13,8 @@ class Idle(Scene):
     pass
 
 
-def make_game(seed: int) -> Game:
-    game = Game(seed)
+def make_game(seed: int, target=None) -> Game:
+    game = Game(seed, target)
     game.push(Idle())
     return game
 

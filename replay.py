@@ -3,7 +3,8 @@
 A recording is JSON: {"seed", "inputs", "pointers", "width"}. "inputs" holds `width` hex digits per frame (the
 buttons, see inputs.py). "width" is 2 unless the game reads more than 8 bits (`Game.input_mask`), and is absent
 when 2. "pointers" is optional and sparse: {"<frame>": [[id, x, y, start_x, start_y, phase letter], ...]} for the frames
-that had touch or mouse contacts (see pointer.py). Files without it load as button-only runs.
+that had touch or mouse contacts (see pointer.py). Files without it load as button-only runs. "target" is optional:
+{"name", "width", "height", "controls"} (see target.py). Files without it replay with the game's default target.
 """
 
 import json
@@ -13,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .pointer import Pointer, decode, encode
+from .target import Target
 
 if TYPE_CHECKING:
     from .core import Game
@@ -29,6 +31,7 @@ class Recording:
     frames: list[int] = field(default_factory=list)
     pointers: dict[int, tuple[Pointer, ...]] = field(default_factory=dict)  # Frame -> contacts. Sparse.
     width: int = 2  # Hex digits per frame (see digits_for).
+    target: Target | None = None  # Where the run was played, so a replay rebuilds the same layout.
 
     def at(self, frame: int) -> tuple[Pointer, ...]:
         """The pointers of one frame (empty for most frames)."""
@@ -46,6 +49,8 @@ class Recording:
             data["width"] = self.width
         if self.pointers:
             data["pointers"] = {str(f): [encode(p) for p in ps] for f, ps in sorted(self.pointers.items())}
+        if self.target:
+            data["target"] = self.target.to_dict()
         return json.dumps(data, separators=(",", ":"))
 
     @classmethod
@@ -54,7 +59,8 @@ class Recording:
         digits, width = data["inputs"], data.get("width", 2)
         frames = [int(digits[i : i + width], 16) for i in range(0, len(digits), width)]
         pointers = {int(f): tuple(decode(row) for row in rows) for f, rows in data.get("pointers", {}).items()}
-        return cls(data["seed"], frames, pointers, width)
+        target = Target.from_dict(data["target"]) if "target" in data else None
+        return cls(data["seed"], frames, pointers, width, target)
 
     def save(self, path: Path | str):
         path = Path(path)
@@ -66,9 +72,9 @@ class Recording:
         return cls.from_json(Path(path).read_text())
 
 
-def play(make_game: Callable[[int], "Game"], recording: Recording, frames: int | None = None) -> "Game":
-    """Run a recording headless and return the final state."""
-    game = make_game(recording.seed)
+def play(make_game: Callable[..., "Game"], recording: Recording, frames: int | None = None) -> "Game":
+    """Run a recording headless and return the final state. `make_game(seed, target)` builds the game."""
+    game = make_game(recording.seed, recording.target)
     for i, code in enumerate(recording.frames[:frames]):
         game.step(code, recording.at(i))
     return game

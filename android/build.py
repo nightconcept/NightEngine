@@ -9,6 +9,7 @@ The game describes the app in its pyproject.toml, next to `[tool.nightengine.web
     icon = "assets/icon.png"             # optional, a square PNG (512 px is plenty)
     keystore = "android/debug.keystore"  # optional, see below
 
+The app runs as the `android` target (`[tool.nightengine.targets.android]`, see target.py).
 The version comes from `[project] version`. `build` writes the Gradle project to `<out>/project`, puts the offline
 web build in its assets, runs Gradle, and copies the APK to `<out>/<slug>-<version>.apk`.
 
@@ -113,7 +114,7 @@ def write_project(root: Path, project: Path, config: AndroidConfig) -> Path:
             for key, value in fills.items():
                 text = text.replace("{{" + key + "}}", value)
             path.write_text(text)
-    web.build(root, project / "app" / "src" / "main" / "assets" / "web", offline=True)
+    web.build(root, project / "app" / "src" / "main" / "assets" / "web", offline=True, target="android")
     return project
 
 

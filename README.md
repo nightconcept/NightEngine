@@ -33,13 +33,41 @@ All names below import from `nightengine`, except where a module is named.
 Touch, pen, and mouse contacts, as game input. The host samples them once per frame and passes them to
 `Game.step` with the buttons, so they are recorded and replayed like buttons.
 
-- `Pointer(id, x, y, start_x, start_y, phase)`: whole logical pixels. The mouse is id 0. `active` is False on the
-  ending frame.
+- `Pointer(id, x, y, start_x, start_y, phase, kind=TOUCH)`: whole logical pixels. The mouse is id 0. `active` is
+  False on the ending frame. `PointerKind`: `TOUCH`, `PEN`, or `MOUSE`, so a game can tell a finger from a click.
 - `PointerPhase`: `PRESSED` (one frame), then `HELD` or `MOVED` each frame, then `RELEASED` (a normal end) or
   `CANCELLED` (the system took it). A cancelled contact is never a tap.
 - Helpers on `inp.pointers`: `primary(ps)`, `pressed(ps)`, `released(ps)` (a tap or click ended here),
-  `in_rect(ps, x, y, w, h)`. `encode(p)` and `decode(row)` are the recording format.
+  `in_rect(ps, x, y, w, h)`. `encode(p)` and `decode(row)` are the recording format. A row has a kind letter at the
+  end unless it is touch, so older files load as touch.
 - Every action a pointer can do should also work with buttons, so gamepads and keyboards are never locked out.
+
+### Targets (`target.py`)
+
+A target is where the game runs: `desktop`, `web`, or `android`. It sets the screen size and the controls, so a
+build for a phone and a build for a computer can differ without an `if` in the game.
+
+- `Target(name="desktop", width=0, height=0, controls={KEYBOARD, MOUSE, TOUCH})`. A size of 0 means the game's own
+  size (`sized(width, height)` fills it in). `KEYBOARD` includes gamepads, and `TOUCH` includes pens.
+- `touch_only`: touch is the only control (a phone). `accepts(p)` and `takes(kind)`: whether the game sees a contact.
+  A target without `MOUSE` drops mouse contacts, and one without `TOUCH` drops touch and pen. A touch-only target
+  takes the mouse as a finger, so a desktop can play the phone layout.
+- A game lists its targets in `pyproject.toml`. Every key is optional, and a target that is not listed takes every
+  control:
+
+  ```toml
+  [tool.nightengine.targets.desktop]
+  controls = ["keyboard", "mouse"]
+
+  [tool.nightengine.targets.android]
+  controls = ["touch"]
+  width = 854     # optional: another size than [tool.nightengine.web]
+  height = 480
+  ```
+
+- Each build writes its target into the app as the module `nightengine_build` (`build_module`). `current()` reads
+  that module. Without it (a source run), `current()` reads `NIGHTENGINE_TARGET` and the nearest `pyproject.toml`,
+  and falls back to `desktop`. `read_targets(root)` and `named(root, name)` read the tables.
 
 ### Scenes (`scene.py`)
 
@@ -54,12 +82,14 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
 `Game` is the base class. A game subclasses it. Class attributes configure the input tracker:
 `input_mask`, `repeat_buttons`, `repeat_delay`, `repeat_rate`.
 
-- `Game(seed=0)` sets `seed`, `rng` (`random.Random(seed)`), `frame`, `tracker`, `scenes`, `fx`, and `cues`.
+- `Game(seed=0, target=None)` sets `seed`, `rng` (`random.Random(seed)`), `target` (`Target()` if None), `frame`,
+  `tracker`, `scenes`, `fx`, and `cues`. Rules may read `target`, for example to start in a touch layout.
 - `scene` is the top scene. `push(s)` and `pop(s)` use the stack. `music` asks the top scene for a track.
 - `cue(name)` asks for a sound effect this frame.
 - `before_scene(inp)` and `after_scene()` do nothing. A game overrides them.
 - `quit_requested`: a scene sets it (for a Quit menu item). `App` saves the run and closes the window.
-- `step(code, pointers=()) -> list[str]` runs one frame in this order: clear cues, feed input, `fx.tick()`, `before_scene`,
+- `step(code, pointers=()) -> list[str]` runs one frame in this order: clear cues, drop the pointers the target does
+  not accept, feed input, `fx.tick()`, `before_scene`,
   `scene.update(game, inp)`, `after_scene`, `frame += 1`. It returns the cues.
 - `ScreenFx` (`fx.py`) holds `shake`, `fade`, `fade_in`, and `fade_frames`. `tick()` counts the shake down.
   It also counts `fade_in` down and sets `fade = fade_in / fade_frames`.
@@ -77,11 +107,12 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
 
 ### Other core modules
 
-- `replay.py`: `Recording(seed, frames, pointers={}, width=2)` with `add(code, pointers)`, `at(frame)`, `save(path)`,
+- `replay.py`: `Recording(seed, frames, pointers={}, width=2, target=None)` with `add(code, pointers)`, `at(frame)`, `save(path)`,
   `load(path)`, `to_json()`, and `from_json(text)`. The file is `{"seed", "inputs", "pointers", "width"}`: `width` hex
   digits per frame (2, or `digits_for(Game.input_mask)` for a game that uses bits above the 8 buttons; the key is
   absent when 2), and a sparse `{"<frame>": [[id, x, y, start_x, start_y, "P"], ...]}` for frames with contacts
-  (absent when there were none). `play(make_game, recording, frames=None) -> Game` replays it headless.
+  (absent when there were none). `"target"` holds the `Target` the run was played on (absent when None).
+  `play(make_game, recording, frames=None) -> Game` replays it headless with `make_game(seed, target)`.
 - `canvas.py`: `Canvas` (pixels in memory, no pyxel), `noise(x, y, seed)`, `mirror(rows)`.
 - `palette.py`: `ENDESGA32` (33 entries: transparent black, then 32 colours), `KEY`, and the colour names
   `RUST` to `SKINSHADE`.
@@ -89,7 +120,7 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
   `slots_used(sfx, music) -> int` check sound tables without pyxel. Call them from a test.
 - `systems.py`: `Systems(*systems).update(scene, game, inp)` runs each `system.update(...)` in order.
   A system that returns `True` ends the frame.
-- `autopilot.py`: `Tapper.press(b)`, `run(make_game, choose, seed, limit, done)`, `cli(play, summary, default_out, doc, options={})`.
+- `autopilot.py`: `Tapper.press(b)`, `run(make_game, choose, seed, limit, done, target=None)`, `cli(play, summary, default_out, doc, options={})`.
   `choose(game)` returns the buttons, or `(buttons, pointers)`.
   `options` adds game flags as `{name: default}` (for example `{"battles": 1}` adds `--battles`); `play` gets them as keywords.
 - `testing.py`: `Driver(game)` has `step(code, frames, pointers=())`, `press(b)`, `tap(x, y)`, and
@@ -135,22 +166,25 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
     `no_shake` (for a game that shakes inside its own draw functions).
 - `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False)`
   (`integer_scale` applies on the desktop only: in a browser the game fills its canvas, so touches match the picture)
-  and `App(config, make_game, renderer, audio, seed=None, replay=None)`. `App` opens the window, starts
-  `platform`, and runs the loop. Each frame it reads the buttons and `platform.sample()`, records both, and steps
-  the game (a replay feeds the recorded ones). `mouse=True` shows the system cursor.
+  and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None)`. `App` picks the target
+  (`choose_target`: a replay's own, else `target`, else `target.current()`), opens the window at the target's size,
+  starts `platform`, and calls `make_game(seed, target)`. Each frame it reads the buttons and `platform.sample()`,
+  records both, and steps the game (a replay feeds the recorded ones). The recording keeps the target.
+  `mouse=True` shows the system cursor when the target takes the mouse.
   `q` quits and saves the run to `replays/last.json`. The run is also saved when the window closes (`atexit`) and
   when the game sets `quit_requested`.
 - `platform`: where the game runs.
-  - `init(width, height)` (App calls it). `available()` is True in a page built by `nightengine.web`.
+  - `init(width, height, mouse=True)` (App calls it). With `mouse=False` the desktop mouse is not read. `available()` is True in a page built by `nightengine.web`.
   - `sample() -> tuple[Pointer, ...]`: in the browser, touch, pen, and mouse through `window.nightBridge`;
-    on the desktop, the mouse as pointer 0 (`MouseTracker`).
+    on the desktop, the mouse as pointer 0 (`MouseTracker`). Each contact has its `kind`.
   - `screen`: `width`, `height`, `viewport_width`, `viewport_height`, `orientation`, and `safe_area`
     (`top`, `right`, `bottom`, `left` insets in logical pixels: keep text and touch targets out of them).
   - `platform()` (`android` or `desktop`), `is_touch_device()`.
   - `save(key, data)` and `load(key)`: browser storage. False and None on the desktop. A blocked read raises `OSError`.
 - `diagnostic`: a pointer and safe-area check for a device. The web build serves it at `?app=debug`.
 - `frames.frames_main(title, width, height, renderer, make_game, summary, modes=None, every=120)` is the
-  command line of a game's `frames.py`. It renders a recording every `--every` frames, or `--atlas` for the image banks.
+  command line of a game's `frames.py`. It renders a recording every `--every` frames, at the recording's target
+  size, or `--atlas` for the image banks.
   Each entry in `modes` becomes a `--name` flag. A mode is `mode(out, scale)`, called after the window and art are set up.
 
 ## Web build (`web/`)
@@ -167,6 +201,9 @@ entry = "game.py"                          # the default
 packages = ["nightrunner", "nightengine"]  # their .py files, without tests/ and docs/
 assets = ["assets"]                        # every file under these dirs
 ```
+
+`--target` picks the target (default `web`; `android` shows the phone build in a browser). The build writes the
+target into `game.pyxapp`, and the page takes the target's size.
 
 It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
 `pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
@@ -208,6 +245,7 @@ icon = "android/icon.png"            # optional, square PNG
 keystore = "android/debug.keystore"  # optional: `python -m nightengine.android keystore android/debug.keystore`
 ```
 
+- The app runs as the `android` target (`[tool.nightengine.targets.android]`).
 - The page is served at `https://appassets.androidplatform.net/` (`MainActivity.java`), so wasm and ES modules load.
 - The Back button is engine button B for one frame (`platform.buttons()`). `Game.quit_requested` closes the app
   (`platform.quit_page()`); in a browser tab it does nothing.
@@ -220,7 +258,7 @@ keystore = "android/debug.keystore"  # optional: `python -m nightengine.android 
 
 `uv run --with pyinstaller python -m nightengine.desktop build --out dist/desktop` runs `pyxel app2exe` (PyInstaller,
 a program folder) for the system it runs on and zips it as `<slug>-<version>-<system>-<machine>.zip`. PyInstaller
-cannot cross-build: the Windows program needs a Windows machine or runner.
+cannot cross-build: the Windows program needs a Windows machine or runner. The program runs as the `desktop` target.
 
 ## Adding content
 
@@ -252,6 +290,8 @@ git submodule update --init --recursive   # after a fresh clone of the game
 
 - Add `"nightengine"`, `"nightengine.host"`, and `"nightengine.web"` to the game's setuptools `packages`, and
   `pyxel>=2.6,<3` to its dependencies (pin an exact version to fix the web runtime too).
+- A game's `Game` subclass takes `(seed=0, target=None)` and passes both to `super().__init__`. List the game's
+  targets in `[tool.nightengine.targets.*]` (see Targets).
 - Run the engine tests from the game root: `python -m unittest discover -s nightengine/tests -t .`
 - Change the engine in this repo, then move each game to the new commit with `git -C nightengine pull` and a
   commit of the submodule pointer in the game.

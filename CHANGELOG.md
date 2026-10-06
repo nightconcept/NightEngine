@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Targets (`target.py`): `desktop`, `web`, and `android`, each with a size and controls (keyboard, mouse, touch)
+  from `[tool.nightengine.targets.<name>]`. Builds write their target into the app (`nightengine_build`), and a
+  source run reads `NIGHTENGINE_TARGET`. `Game(seed, target)` and `Game.step` drop the pointers the target does not
+  take, so the desktop mouse no longer counts as a touch. A touch-only target takes the mouse as a finger.
+- `Pointer.kind` (`PointerKind`: touch, pen, mouse), from the browser's `pointerType` and the desktop mouse.
+  Recordings save the kind, and rows without one load as touch.
+- Recordings save the target, and `play`, `autopilot.run`, `frames`, and `App` call `make_game(seed, target)`.
+- `web build|serve --target`, and the page takes the target's size. The APK builds as `android`, the desktop
+  program as `desktop`.
+
 ## 0.0.1 (2026-10-05)
 
 The first version, made with Unicycle! as the first game to ship on every target.

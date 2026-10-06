@@ -5,6 +5,7 @@ Rules read them from `Input.pointers`. Coordinates are whole logical pixels, so 
 
 A contact goes PRESSED, then HELD or MOVED each frame, then RELEASED (a normal end) or CANCELLED (the system took
 it away). Each phase lasts one frame except HELD. The mouse is pointer id 0.
+Each contact has a kind (touch, pen, or mouse), so a game can tell a finger from a click (see target.py).
 """
 
 from collections.abc import Iterable
@@ -25,6 +26,16 @@ CODES = {phase: phase.value[0] for phase in PointerPhase}  # One letter per phas
 PHASES = {code: phase for phase, code in CODES.items()}
 
 
+class PointerKind(StrEnum):
+    TOUCH = "touch"
+    PEN = "pen"
+    MOUSE = "mouse"
+
+
+KIND_CODES = {kind: kind.value[0] for kind in PointerKind}  # One letter per kind in recordings.
+KINDS = {code: kind for kind, code in KIND_CODES.items()}
+
+
 @dataclass(frozen=True)
 class Pointer:
     id: int
@@ -33,6 +44,7 @@ class Pointer:
     start_x: int
     start_y: int
     phase: PointerPhase
+    kind: PointerKind = PointerKind.TOUCH
 
     @property
     def active(self) -> bool:
@@ -61,10 +73,12 @@ def in_rect(pointers: Iterable[Pointer], x: float, y: float, w: float, h: float)
 
 
 def encode(p: Pointer) -> list:
-    """A compact row for recordings: [id, x, y, start_x, start_y, phase letter]."""
-    return [p.id, p.x, p.y, p.start_x, p.start_y, CODES[p.phase]]
+    """A compact row for recordings: [id, x, y, start_x, start_y, phase letter], then a kind letter if not touch."""
+    row = [p.id, p.x, p.y, p.start_x, p.start_y, CODES[p.phase]]
+    return row if p.kind == PointerKind.TOUCH else [*row, KIND_CODES[p.kind]]
 
 
 def decode(row: list) -> Pointer:
-    pid, x, y, sx, sy, code = row
-    return Pointer(pid, x, y, sx, sy, PHASES[code])
+    """A row from `encode`. Rows without a kind (older files too) are touch."""
+    pid, x, y, sx, sy, code, *kind = row
+    return Pointer(pid, x, y, sx, sy, PHASES[code], KINDS[kind[0]] if kind else PointerKind.TOUCH)

@@ -16,8 +16,8 @@ def tap(x, y, phase=PointerPhase.PRESSED):
     return (Pointer(0, x, y, x, y, phase),)
 
 
-def make_game(seed):
-    game = Game(seed)
+def make_game(seed, target=None):
+    game = Game(seed, target)
     game.scenes.replace(Counter())
     return game
 
@@ -26,8 +26,8 @@ class Wide(Game):
     input_mask = 0xFFFF  # A game with 16 bits of input.
 
 
-def make_wide(seed):
-    game = Wide(seed)
+def make_wide(seed, target=None):
+    game = Wide(seed, target)
     game.scenes.replace(Counter())
     return game
 

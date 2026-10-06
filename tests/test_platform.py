@@ -9,9 +9,9 @@ from unittest import mock
 
 import pyxel
 
-from nightengine import Game, Pointer, PointerPhase, Recording, Scene
+from nightengine import Game, Pointer, PointerKind, PointerPhase, Recording, Scene, Target
 from nightengine.host import platform
-from nightengine.host.app import App, AppConfig
+from nightengine.host.app import App, AppConfig, choose_target
 
 P = PointerPhase
 
@@ -76,6 +76,7 @@ class BrowserTest(unittest.TestCase):
         self.assertEqual(bridge.calls, 0)  # init never consumes input.
         (p,) = platform.sample()
         self.assertEqual((p.id, p.x, p.y, p.start_x, p.start_y, p.phase), (3, 20, 30, 10, 15, P.MOVED))
+        self.assertEqual(p.kind, PointerKind.TOUCH)  # A row without a kind is touch.
         self.assertEqual(platform.platform(), "android")
         self.assertTrue(platform.is_touch_device())
         self.assertEqual(platform.screen.safe_area.left, 4)
@@ -145,6 +146,14 @@ class DesktopTest(unittest.TestCase):
             [[], [(0, 5, 5, 5, P.PRESSED)], [(0, 5, 5, 5, P.HELD)], [(0, 9, 6, 5, P.MOVED)],
              [(0, 63, 0, 5, P.RELEASED)], []],
         )  # fmt: skip
+
+    def test_mouse_contacts_are_mouse_kind_and_a_target_without_mouse_skips_them(self):
+        platform.init(64, 64)
+        with self.mouse(5, 5, True, True):
+            self.assertEqual([p.kind for p in platform.sample()], [PointerKind.MOUSE])
+        platform.init(64, 64, mouse=False)
+        with self.mouse(5, 5, True, True):
+            self.assertEqual(platform.sample(), ())
 
 
 class Log(Scene):
@@ -221,3 +230,18 @@ class AppTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ChooseTargetTest(unittest.TestCase):
+    config = AppConfig("T", 64, 48, {}, replays="r")
+
+    def test_a_replay_runs_as_played_and_a_target_gets_the_games_size(self):
+        phone = Target("android", controls={"touch"})
+        played = Target("web", 80, 60)
+        self.assertEqual(choose_target(self.config, Recording(1, target=played), phone), played)
+        self.assertEqual(choose_target(self.config, Recording(1), phone), Target("android", 64, 48, {"touch"}))
+        self.assertEqual(choose_target(self.config, None, phone).width, 64)
+
+    def test_without_a_target_the_environment_picks_one(self):
+        with mock.patch.dict("os.environ", {"NIGHTENGINE_TARGET": "android"}):
+            self.assertEqual(choose_target(self.config).name, "android")

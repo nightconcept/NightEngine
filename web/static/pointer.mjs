@@ -12,20 +12,25 @@ export function logicalPoint(x, y, rect, width, height) {
   };
 }
 
+// The kind of a contact, from PointerEvent.pointerType: touch, pen, or mouse. Unknown types count as touch.
+export function pointerKind(type) {
+  return type === 'mouse' || type === 'pen' ? type : 'touch';
+}
+
 export class PointerTracker {
   constructor() { this.points = new Map(); }
 
-  event(id, phase, x, y) {
+  event(id, phase, x, y, kind = 'touch') {
     let point = this.points.get(id);
     if (phase === 'PRESSED') {
       if (point && !point.ended) return;
-      point = { id, x, y, start_x: x, start_y: y, queue: point?.queue ?? [], ended: false };
+      point = { id, x, y, start_x: x, start_y: y, kind, queue: point?.queue ?? [], ended: false };
       this.points.set(id, point);
     }
     if (!point || point.ended) return;
     point.x = x;
     point.y = y;
-    const event = { id, x, y, start_x: point.start_x, start_y: point.start_y, phase };
+    const event = { id, x, y, start_x: point.start_x, start_y: point.start_y, phase, kind: point.kind };
     if (phase === 'MOVED' && point.queue.at(-1)?.phase === 'MOVED') point.queue.pop();
     point.queue.push(event);
     point.ended = TERMINAL.has(phase);
@@ -46,7 +51,7 @@ export class PointerTracker {
     for (const point of this.points.values()) {
       const event = point.queue.shift() ?? {
         id: point.id, x: point.x, y: point.y,
-        start_x: point.start_x, start_y: point.start_y, phase: 'HELD',
+        start_x: point.start_x, start_y: point.start_y, phase: 'HELD', kind: point.kind,
       };
       result.push(event);
       if (TERMINAL.has(event.phase) && !point.queue.length) this.points.delete(point.id);
@@ -94,7 +99,7 @@ export function installBridge(canvas, width, height, env = window, enabled = () 
       const point = type === 'lostpointercapture'
         ? tracker.points.get(event.pointerId)
         : logicalPoint(event.clientX, event.clientY, rect(), width, height);
-      tracker.event(event.pointerId, phase, point.x, point.y);
+      tracker.event(event.pointerId, phase, point.x, point.y, pointerKind(event.pointerType));
       if (TERMINAL.has(phase)) release(event.pointerId);
     });
   }

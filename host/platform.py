@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 import pyxel
 
 from ..inputs import B
-from ..pointer import Pointer, PointerPhase
+from ..pointer import Pointer, PointerKind, PointerPhase
 
 
 @dataclass(frozen=True)
@@ -54,16 +54,16 @@ class MouseTracker:
         if not self.down and pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
             self.down = True
             self.start = self.last = self.position()
-            return (Pointer(0, *self.start, *self.start, PointerPhase.PRESSED),)
+            return (Pointer(0, *self.start, *self.start, PointerPhase.PRESSED, PointerKind.MOUSE),)
         if not self.down:
             return ()
         pos = self.position()
         if not held:
             self.down = False
-            return (Pointer(0, *pos, *self.start, PointerPhase.RELEASED),)
+            return (Pointer(0, *pos, *self.start, PointerPhase.RELEASED, PointerKind.MOUSE),)
         phase = PointerPhase.HELD if pos == self.last else PointerPhase.MOVED
         self.last = pos
-        return (Pointer(0, *pos, *self.start, phase),)
+        return (Pointer(0, *pos, *self.start, phase, PointerKind.MOUSE),)
 
 
 screen = Screen()
@@ -72,14 +72,15 @@ _mouse: MouseTracker | None = None
 _info = {"touch": False, "platform": "desktop"}
 
 
-def init(width: int, height: int):
-    """Call after pyxel.init. Finds the browser bridge if the page installed one."""
+def init(width: int, height: int, mouse: bool = True):
+    """Call after pyxel.init. Finds the browser bridge if the page installed one. `mouse=False` leaves the desktop
+    mouse unread, for a target without mouse controls."""
     global _bridge, _mouse, _info
     if width <= 0 or height <= 0:
         raise ValueError("Logical screen dimensions must be positive")
     screen.width, screen.height = width, height
     _info = {"touch": False, "platform": "desktop"}
-    _mouse = MouseTracker(width, height)
+    _mouse = MouseTracker(width, height) if mouse else None
     try:
         from js import window
     except ImportError:
@@ -99,11 +100,14 @@ def sample() -> tuple[Pointer, ...]:
     if available():
         rows = json.loads(_bridge.sample())
         _refresh_info()
-        return tuple(
-            Pointer(r["id"], int(r["x"]), int(r["y"]), int(r["start_x"]), int(r["start_y"]), PointerPhase(r["phase"]))
-            for r in rows
-        )
+        return tuple(_pointer(r) for r in rows)
     return _mouse.sample() if _mouse else ()
+
+
+def _pointer(r: dict) -> Pointer:
+    """A bridge row as a Pointer. A row without a kind is touch."""
+    xy = (int(r["x"]), int(r["y"]), int(r["start_x"]), int(r["start_y"]))
+    return Pointer(r["id"], *xy, PointerPhase(r["phase"]), PointerKind(r.get("kind", "touch")))
 
 
 def buttons() -> int:
