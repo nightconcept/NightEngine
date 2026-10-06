@@ -9,6 +9,9 @@
 - `Pointer.kind` (`PointerKind`: touch, pen, mouse), from the browser's `pointerType` and the desktop mouse.
   Recordings save the kind, and rows without one load as touch.
 - Recordings save the target, and `play`, `autopilot.run`, `frames`, and `App` call `make_game(seed, target)`.
+- `Game.screen_size` lets a game change its screen size while it runs (a wide screen setting). `App`, the frames
+  command, and the page follow it (`platform.resize`, `bridge.resize`).
+- The page no longer claims that touch, mouse, and keyboard all work, since a target may drop some of them.
 - `web build|serve --target`, and the page takes the target's size. The APK builds as `android`, the desktop
   program as `desktop`.
 

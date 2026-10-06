@@ -168,6 +168,8 @@ def app_for(replay=None):
     """An App with its fields set by hand: __init__ would open a window."""
     app = App.__new__(App)
     app.config = AppConfig("T", 64, 64, {}, replays="r")
+    app.target = Target("desktop", 64, 64)
+    platform.init(64, 64)
     app.audio = SimpleNamespace(update=lambda track, cues: None)
     app.game = Game(1)
     app.log = Log()
@@ -230,6 +232,52 @@ class AppTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Wide(Game):
+    wide = False
+
+    @property
+    def screen_size(self):
+        return (96, 64) if self.wide else None
+
+
+class ResizeTest(unittest.TestCase):
+    def tearDown(self):
+        platform.init(64, 64)
+
+    def test_the_app_follows_the_size_the_game_asks_for(self):
+        app = app_for()
+        app.game = Wide(1)
+        app.game.push(Log())
+        with (
+            mock.patch.object(platform, "sample", return_value=()),
+            mock.patch("nightengine.host.app.read_buttons", return_value=0),
+            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, resize=mock.DEFAULT),
+        ):
+            app.update()
+            pyxel.resize.assert_not_called()
+            app.game.wide = True
+            app.update()
+            pyxel.resize.assert_called_once_with(96, 64)
+            self.assertEqual((platform.screen.width, platform.screen.height), (96, 64))
+            app.game.wide = False
+            app.update()
+            pyxel.resize.assert_called_with(64, 64)
+
+    def test_resize_moves_the_mouse_bounds_and_tells_the_page(self):
+        with mock.patch.object(pyxel, "resize", create=True):
+            platform.init(64, 64)
+            platform.resize(128, 64)
+        self.assertEqual((platform._mouse.width, platform._mouse.height), (128, 64))
+        bridge = Bridge()
+        bridge.resize = mock.Mock()
+        with in_browser(bridge), mock.patch.object(pyxel, "resize", create=True):
+            platform.init(64, 64)
+            platform.resize(96, 64)
+        bridge.resize.assert_called_once_with(96, 64)
+        with self.assertRaises(ValueError):
+            platform.resize(0, 64)
 
 
 class ChooseTargetTest(unittest.TestCase):

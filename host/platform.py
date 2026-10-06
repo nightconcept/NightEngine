@@ -90,6 +90,19 @@ def init(width: int, height: int, mouse: bool = True):
     _refresh_info()
 
 
+def resize(width: int, height: int):
+    """Change the logical screen size (`pyxel.resize`). The page refits the canvas and maps pointers to the new size."""
+    global _mouse
+    if width <= 0 or height <= 0:
+        raise ValueError("Logical screen dimensions must be positive")
+    pyxel.resize(width, height)
+    screen.width, screen.height = width, height
+    if _mouse:
+        _mouse.width, _mouse.height = width, height
+    if available():
+        _bridge.resize(width, height)
+
+
 def available() -> bool:
     """True in a browser page with the nightengine bridge."""
     return _bridge is not None

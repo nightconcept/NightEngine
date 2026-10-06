@@ -1,12 +1,13 @@
 import { installBridge } from './pointer.mjs';
 
-// The build writes the game's logical size into <body data-width data-height>.
+// The build writes the game's logical size into <body data-width data-height>. The game may change it while it runs
+// (bridge.resize), and the page then refits and updates the data attributes.
 const query = new URLSearchParams(location.search);
 const debug = query.get('app') === 'debug';
 // ?shell=app: the page is the whole app (the APK). No header or notes, and the game fills the screen.
 const shell = query.get('shell') === 'app';
 if (shell) document.body.classList.add('app');
-const [width, height] = debug ? [256, 144] : [Number(document.body.dataset.width), Number(document.body.dataset.height)];
+let [width, height] = debug ? [256, 144] : [Number(document.body.dataset.width), Number(document.body.dataset.height)];
 const stage = document.getElementById('stage');
 const status = document.getElementById('status');
 if (debug) document.getElementById('help').textContent =
@@ -62,7 +63,12 @@ try {
         const shown = Element.prototype.getBoundingClientRect.call(this);
         return new DOMRect(shown.x, shown.y, this.offsetWidth, this.offsetHeight);
       };
-      installBridge(canvas, width, height, window, () => window.pyxelContext.initialized);
+      installBridge(canvas, width, height, window, () => window.pyxelContext.initialized, (w, h) => {
+        [width, height] = [w, h];
+        Object.assign(document.body.dataset, {width: String(w), height: String(h)});
+        fit();
+        window.dispatchEvent(new Event('resize'));  // SDL reads the new canvas size on a resize event.
+      });
       observer.disconnect();
     }
   });
@@ -90,7 +96,7 @@ try {
     }
   }
   await launching;
-  status.textContent = 'Running. Touch, mouse, and keyboard input are enabled.';
+  status.textContent = 'Running.';
 } catch (error) {
   status.textContent = `Could not start: ${error.message}. Check network access and reload.`;
 }

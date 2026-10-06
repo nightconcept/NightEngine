@@ -17,6 +17,8 @@ import pyxel
 
 from ..core import Game
 from ..replay import Recording
+from ..target import Target
+from .app import screen_size
 from .renderer import Renderer
 
 
@@ -64,15 +66,22 @@ def frames_main(
             mode(out, args.scale)
             return
     recording = Recording.load(args.recording)
-    target = recording.target.sized(width, height) if recording.target else None
-    pyxel.init(target.width if target else width, target.height if target else height, title=f"{title} frames")
+    target = (recording.target or Target()).sized(width, height)
+    pyxel.init(target.width, target.height, title=f"{title} frames")
     renderer.setup()
-    game = make_game(recording.seed, target)
+    game = make_game(recording.seed, recording.target and target)
+
+    def draw():
+        size = screen_size(game, target)
+        if size != (pyxel.width, pyxel.height):
+            pyxel.resize(*size)
+        renderer.draw(game)
+
     for i, code in enumerate(recording.frames):
         if game.frame >= args.start and (game.frame - args.start) % args.every == 0:
-            renderer.draw(game)
+            draw()
             pyxel.screen.save(str(out / f"frame{game.frame:05}"), args.scale)
         game.step(code, recording.at(i))
-    renderer.draw(game)
+    draw()
     pyxel.screen.save(str(out / "final"), args.scale)
     print(summary(game))

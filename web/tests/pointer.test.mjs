@@ -169,3 +169,18 @@ test('each contact keeps the kind it started with: touch, pen, or mouse', () => 
   assert.deepEqual(JSON.parse(bridge.sample())[0], {id: 1, x: 128, y: 72, start_x: 128, start_y: 72, phase: 'RELEASED', kind: 'mouse'});
   bridge.destroy();
 });
+
+test('resize maps later contacts to the new size and tells the page', () => {
+  const {env, canvas} = environment();
+  const sizes = [];
+  const bridge = installBridge(canvas, 256, 144, env, () => true, (w, h) => sizes.push([w, h]));
+  canvas.emit('pointerdown', {pointerId: 1, pointerType: 'touch', clientX: 500, clientY: 275});
+  bridge.resize(512, 144);
+  assert.deepEqual(sizes, [[512, 144]]);
+  assert.deepEqual(JSON.parse(bridge.sample()).map(t => t.phase), ['PRESSED']);
+  assert.deepEqual(JSON.parse(bridge.sample()).map(t => t.phase), ['CANCELLED']);
+  canvas.emit('pointerdown', {pointerId: 2, pointerType: 'touch', clientX: 500, clientY: 275});
+  assert.equal(JSON.parse(bridge.sample())[0].x, 256);
+  assert.throws(() => bridge.resize(0, 144), RangeError);
+  bridge.destroy();
+});

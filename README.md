@@ -86,6 +86,9 @@ build for a phone and a build for a computer can differ without an `if` in the g
   `tracker`, `scenes`, `fx`, and `cues`. Rules may read `target`, for example to start in a touch layout.
 - `scene` is the top scene. `push(s)` and `pop(s)` use the stack. `music` asks the top scene for a track.
 - `cue(name)` asks for a sound effect this frame.
+- `screen_size` is the size the game wants now, or None (the default) for the target's. A game overrides it for a
+  setting such as a wide screen. The host resizes the screen after the frame that changes it (`pyxel.resize`), so a
+  replay changes size on the same frame.
 - `before_scene(inp)` and `after_scene()` do nothing. A game overrides them.
 - `quit_requested`: a scene sets it (for a Quit menu item). `App` saves the run and closes the window.
 - `step(code, pointers=()) -> list[str]` runs one frame in this order: clear cues, drop the pointers the target does
@@ -169,12 +172,15 @@ build for a phone and a build for a computer can differ without an `if` in the g
   and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None)`. `App` picks the target
   (`choose_target`: a replay's own, else `target`, else `target.current()`), opens the window at the target's size,
   starts `platform`, and calls `make_game(seed, target)`. Each frame it reads the buttons and `platform.sample()`,
-  records both, and steps the game (a replay feeds the recorded ones). The recording keeps the target.
+  records both, steps the game (a replay feeds the recorded ones), and resizes the screen if `game.screen_size`
+  changed (`fit`). The recording keeps the target.
   `mouse=True` shows the system cursor when the target takes the mouse.
   `q` quits and saves the run to `replays/last.json`. The run is also saved when the window closes (`atexit`) and
   when the game sets `quit_requested`.
 - `platform`: where the game runs.
-  - `init(width, height, mouse=True)` (App calls it). With `mouse=False` the desktop mouse is not read. `available()` is True in a page built by `nightengine.web`.
+  - `init(width, height, mouse=True)` (App calls it). With `mouse=False` the desktop mouse is not read.
+  - `resize(width, height)`: a new logical size. In a page, `bridge.resize` maps later contacts to it and the page
+    refits the canvas and its `data-width` and `data-height`. `available()` is True in a page built by `nightengine.web`.
   - `sample() -> tuple[Pointer, ...]`: in the browser, touch, pen, and mouse through `window.nightBridge`;
     on the desktop, the mouse as pointer 0 (`MouseTracker`). Each contact has its `kind`.
   - `screen`: `width`, `height`, `viewport_width`, `viewport_height`, `orientation`, and `safe_area`
@@ -184,7 +190,7 @@ build for a phone and a build for a computer can differ without an `if` in the g
 - `diagnostic`: a pointer and safe-area check for a device. The web build serves it at `?app=debug`.
 - `frames.frames_main(title, width, height, renderer, make_game, summary, modes=None, every=120)` is the
   command line of a game's `frames.py`. It renders a recording every `--every` frames, at the recording's target
-  size, or `--atlas` for the image banks.
+  size and then at each size the game asks for, or `--atlas` for the image banks.
   Each entry in `modes` becomes a `--name` flag. A mode is `mode(out, scale)`, called after the window and art are set up.
 
 ## Web build (`web/`)

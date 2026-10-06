@@ -65,7 +65,8 @@ export function screenRect(element) {
   return own ? own.call(element) : element.getBoundingClientRect();
 }
 
-export function installBridge(canvas, width, height, env = window, enabled = () => true) {
+// `onResize(width, height)` runs when the game changes its screen size (bridge.resize), so the page can refit.
+export function installBridge(canvas, width, height, env = window, enabled = () => true, onResize = () => {}) {
   const tracker = new PointerTracker();
   const document = env.document;
   const listeners = [];
@@ -114,6 +115,14 @@ export function installBridge(canvas, width, height, env = window, enabled = () 
   const bridge = {
     sample: () => JSON.stringify(tracker.sample()),
     back: () => { backs += 1; },
+    // The game changed its logical size (platform.resize). Map later contacts to it and let the page refit.
+    resize: (w, h) => {
+      if (!(w > 0 && h > 0)) throw new RangeError('Pointer mapping requires positive dimensions');
+      cancel();
+      width = w;
+      height = h;
+      onResize(w, h);
+    },
     takeBack: () => {
       if (!backs) return false;
       backs -= 1;

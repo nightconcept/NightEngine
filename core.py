@@ -41,6 +41,12 @@ class Game:
         self.scenes.pop(scene)
 
     @property
+    def screen_size(self) -> tuple[int, int] | None:
+        """The screen size the game wants now, or None for the target's. A game overrides it for a setting such as
+        a wide screen. The host resizes the screen after the frame that changes it, so it stays in the replay."""
+        return None
+
+    @property
     def music(self) -> str | None:
         return self.scene.music(self)
 

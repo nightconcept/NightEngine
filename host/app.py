@@ -33,6 +33,11 @@ class AppConfig:
     mouse: bool = False  # Show the system mouse cursor over the game, when the target takes the mouse.
 
 
+def screen_size(game: Game, target: Target) -> tuple[int, int]:
+    """The size the game wants (`Game.screen_size`), else the target's."""
+    return game.screen_size or (target.width, target.height)
+
+
 def choose_target(config: AppConfig, replay: Recording | None = None, target: Target | None = None) -> Target:
     """A replay runs as it was played. Otherwise: `target`, else the build's, else `NIGHTENGINE_TARGET`.
     A target without a size gets the game's."""
@@ -70,10 +75,17 @@ class App:
             seed = pyxel.rndi(0, 2**31 - 1)
         self.game = make_game(seed, target)
         self.recording = None if replay else Recording(seed, width=digits_for(self.game.input_mask), target=target)
+        self.fit()
         global current
         current = self
         atexit.register(self.save)  # pyxel.run ends the process, so this also saves when the window closes.
         pyxel.run(self.update, self.draw)
+
+    def fit(self):
+        """Resize the screen when the game asks for another size."""
+        size = screen_size(self.game, self.target)
+        if size != (platform.screen.width, platform.screen.height):
+            platform.resize(*size)
 
     def save(self):
         if self.recording and self.recording.frames:
@@ -101,6 +113,7 @@ class App:
             code, pointers = read_buttons(self.config.keys) | platform.buttons(), platform.sample()
             self.recording.add(code, pointers)
         cues = self.game.step(code, pointers)
+        self.fit()
         self.audio.update(self.game.music, cues)
         if self.game.quit_requested:
             self.quit()
