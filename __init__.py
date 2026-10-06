@@ -16,7 +16,7 @@ from .scene import Scene, SceneStack
 from .systems import System, Systems
 from .testing import Driver
 
-__version__ = "0.1.0"
+__version__ = "0.0.1"
 
 __all__ = [
     "A", "ALL", "B", "C", "DOWN", "LEFT", "MENU", "RIGHT", "UP",
