@@ -134,6 +134,7 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
   - Shake functions: `shake_xy` (sideways, plus up and down for a strong shake), `shake_x` (sideways only),
     `no_shake` (for a game that shakes inside its own draw functions).
 - `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False)`
+  (`integer_scale` applies on the desktop only: in a browser the game fills its canvas, so touches match the picture)
   and `App(config, make_game, renderer, audio, seed=None, replay=None)`. `App` opens the window, starts
   `platform`, and runs the loop. Each frame it reads the buttons and `platform.sample()`, records both, and steps
   the game (a replay feeds the recorded ones). `mouse=True` shows the system cursor.
@@ -170,6 +171,27 @@ assets = ["assets"]                        # every file under these dirs
 It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
 `pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
 the game's environment. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
+
+`--offline` copies the runtime into the build (`web/runtime.py`): `pyxel/` (pyxel.js, the Pyxel wheel, and its
+images) and `pyodide/v<version>/` (the Pyodide core), about 18 MB. The page then needs no network, which an APK
+needs. The files download once into `$NIGHTENGINE_CACHE` (default `~/.cache/nightengine`).
+
+### Browser checks (`web/harness/`)
+
+Playwright checks that run a real build in Chromium. A game adds `@playwright/test` to its `package.json` and a
+`playwright.config.mjs`:
+
+```js
+import { harnessConfig } from './nightengine/web/harness/config.mjs';
+export default harnessConfig({build: 'dist/web-offline', gameTests: 'tests/browser'});
+```
+
+`npx playwright test` serves the build, runs the engine's checks (`harness/tests/`: the game runs without errors, a
+tap is recorded as a pointer, the pointer check page runs), then the game's. A game's specs import
+`harness/harness.mjs`: `launch(page)` starts the game, `python(page, code)` runs Python in the page with `app` bound to
+the running `App` (`nightengine.host.app.current`), `tap(page, x, y)` touches a logical pixel, `point` converts one to
+page coordinates, and `touch(cdp, type, points)` sends raw multitouch. On macOS, `/Applications/Chromium.app` is used
+if present. `NIGHTENGINE_BROWSER` picks another browser.
 
 ## Adding content
 

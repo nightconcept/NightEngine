@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{TITLE}}</title>
-  <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel@{{PYXEL_VERSION}}/wasm/pyxel.js"></script>
+  <script src="{{PYXEL_JS}}"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body data-width="{{WIDTH}}" data-height="{{HEIGHT}}">
@@ -15,7 +15,7 @@
   </header>
   <main id="stage"><div id="pyxel-screen"></div></main>
   <p id="status" role="status">Loading runtime. Then click or touch the game to start.</p>
-  <p id="help">Touch, mouse, and keyboard all work. The browser runtime needs internet access.</p>
+  <p id="help">Touch, mouse, and keyboard all work. {{RUNTIME_NOTE}}</p>
   <script type="module" src="launcher.mjs"></script>
 </body>
 </html>

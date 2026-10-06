@@ -11,6 +11,7 @@ The game describes itself in its pyproject.toml:
     assets = ["assets"]                        # every file under these dirs
 
 The page loads the Pyxel runtime from a CDN, at the version installed in the game's environment.
+`build --offline` copies the runtime into the build instead (see runtime.py), so the page needs no network.
 """
 
 import argparse
@@ -24,6 +25,8 @@ import zipfile
 from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
+
+from . import runtime
 
 STATIC = Path(__file__).resolve().parent / "static"
 SKIP_DIRS = {"__pycache__", "tests", "docs", ".git"}
@@ -74,7 +77,7 @@ def write_app(path: Path, root: Path, entry: str, files: list[Path], scripts: di
             archive.write(file, "app/" + file.relative_to(root).as_posix())
 
 
-def build(root: Path, out: Path, config: WebConfig | None = None) -> Path:
+def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool = False) -> Path:
     root, out = root.resolve(), out.resolve()
     if out == root or out in root.parents or out == STATIC or STATIC in out.parents:
         raise ValueError("The build output must be its own directory, such as dist/")
@@ -92,8 +95,16 @@ def build(root: Path, out: Path, config: WebConfig | None = None) -> Path:
     for path in STATIC.iterdir():
         if path.is_file():
             shutil.copyfile(path, out / path.name)
+    pyxel_version = version("pyxel")
+    if offline:
+        runtime.vendor(out, pyxel_version)
+        pyxel_js, note = "pyxel/pyxel.js", "Everything runs from this build. No internet access is needed."
+    else:
+        pyxel_js = runtime.PYXEL_CDN.format(version=pyxel_version) + "pyxel.js"
+        note = "The browser runtime needs internet access."
     page = out / "index.html"
-    fills = {"PYXEL_VERSION": version("pyxel"), "TITLE": config.title, "WIDTH": config.width, "HEIGHT": config.height}
+    fills = {"PYXEL_JS": pyxel_js, "RUNTIME_NOTE": note, "TITLE": config.title, "WIDTH": config.width,
+             "HEIGHT": config.height}  # fmt: skip
     text = page.read_text()
     for key, value in fills.items():
         text = text.replace("{{" + key + "}}", str(value))
@@ -101,10 +112,10 @@ def build(root: Path, out: Path, config: WebConfig | None = None) -> Path:
     return out
 
 
-def serve(root: Path, host: str = "127.0.0.1", port: int = 8000, open_browser: bool = True):
+def serve(root: Path, host: str = "127.0.0.1", port: int = 8000, open_browser: bool = True, offline: bool = False):
     """Build into a temp dir and serve it. Rebuild by restarting."""
     with tempfile.TemporaryDirectory(prefix="nightengine-web-") as temporary:
-        directory = build(root, Path(temporary))
+        directory = build(root, Path(temporary), offline=offline)
         handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
         with http.server.ThreadingHTTPServer((host, port), handler) as server:
             shown = "localhost" if host in ("0.0.0.0", "127.0.0.1") else host
@@ -124,17 +135,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m nightengine.web", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)  # fmt: skip
     commands = parser.add_subparsers(dest="command", required=True)
-    b = commands.add_parser("build", help="write static files (the runtime still loads from a CDN)")
+    b = commands.add_parser("build", help="write static files (the runtime loads from a CDN unless --offline)")
     b.add_argument("--out", type=Path, default=Path("dist"))
     s = commands.add_parser("serve", help="build and serve locally")
     s.add_argument("--host", default="127.0.0.1", help="0.0.0.0 to test on a phone on the same network")
     s.add_argument("--port", type=int, default=8000)
     s.add_argument("--no-open", action="store_true")
     for p in (b, s):
+        p.add_argument("--offline", action="store_true", help="copy the Pyxel and Pyodide runtime into the build")
         p.add_argument("--root", type=Path, default=Path("."), help="the game's root (holds pyproject.toml)")
     args = parser.parse_args(argv)
     if args.command == "build":
-        print(f"Built {build(args.root, args.out)}")
+        print(f"Built {build(args.root, args.out, offline=args.offline)}")
     else:
-        serve(args.root, args.host, args.port, not args.no_open)
+        serve(args.root, args.host, args.port, not args.no_open, args.offline)
     return 0

@@ -4,8 +4,24 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
+from nightengine.web import runtime
 from nightengine.web.build import WebConfig, build, read_config
+
+PYXEL_JS = """const PYODIDE_URL = "https://cdn.example/pyodide/v1/full/pyodide.js";
+const PYXEL_WHEEL_PATH = "pyxel-9-wasm32.whl";
+const PYXEL_LOGO_PATH = "images/logo.png";
+iconLink.href = `${_scriptDir}images/icon.ico`;
+"""
+
+
+def fake_fetch(url: str, path: Path) -> Path:
+    """Write the URL as the file's text, or a small pyxel.js."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(PYXEL_JS if url.endswith("pyxel.js") else url)
+    return path
+
 
 PYPROJECT = """
 [project]
@@ -59,6 +75,31 @@ class WebBuildTest(unittest.TestCase):
             self.assertIn("<title>Toy Game</title>", page)
             self.assertNotIn("{{", page)
             self.assertTrue((out / "pointer.mjs").is_file() and (out / "launcher.mjs").is_file())
+            self.assertIn("cdn.jsdelivr.net/gh/kitao/pyxel@", page)
+            self.assertFalse((out / "pyxel").exists())
+
+    def test_offline_build_copies_the_runtime_and_loads_it_locally(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(runtime, "fetch", fake_fetch):
+            root = Path(tmp) / "game"
+            root.mkdir()
+            make_game(root)
+            with mock.patch.dict("os.environ", {"NIGHTENGINE_CACHE": str(Path(tmp) / "cache")}):
+                out = build(root, Path(tmp) / "dist", offline=True)
+            page = (out / "index.html").read_text()
+            self.assertIn('<script src="pyxel/pyxel.js">', page)
+            self.assertIn("No internet access is needed", page)
+            local = (out / "pyxel" / "pyxel.js").read_text()
+            self.assertIn('PYODIDE_URL = "pyodide/v1/pyodide.js"', local)
+            for name in ("pyxel.css", "import_hook.py", "pyxel-9-wasm32.whl", "images/logo.png", "images/icon.ico"):
+                self.assertTrue((out / "pyxel" / name).is_file(), name)
+            for name in runtime.PYODIDE_FILES:
+                self.assertEqual(
+                    (out / "pyodide" / "v1" / name).read_text(), f"https://cdn.example/pyodide/v1/full/{name}"
+                )
+
+    def test_an_unknown_pyxel_js_is_a_clear_error(self):
+        with self.assertRaisesRegex(ValueError, "not supported"):
+            runtime.pyxel_assets("const X = 1;")
 
     def test_refuses_to_write_into_the_game(self):
         with tempfile.TemporaryDirectory() as tmp:
