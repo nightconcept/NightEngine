@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .core import Game
-from .replay import Recording
+from .replay import Recording, digits_for
 
 
 class Tapper:
@@ -34,7 +34,7 @@ def run(
 
     `choose(game)` returns the buttons, or `(buttons, pointers)` to touch or click as well."""
     game = make_game(seed)
-    recording = Recording(seed)
+    recording = Recording(seed, width=digits_for(game.input_mask))
     while game.frame < limit:
         choice = choose(game)
         code, pointers = choice if isinstance(choice, tuple) else (choice, ())

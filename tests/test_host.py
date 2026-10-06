@@ -311,6 +311,15 @@ class AudioTest(unittest.TestCase):
         self.m["play_pos"].assert_not_called()
         self.assertEqual(self.played(), [(3, 2), (3, 0)])
 
+    def test_layers_play_different_cues_together_on_their_own_channels(self):
+        manager = self.make(priority=False, layers=2)
+        manager.update(None, ["shot", "nope", "shot", "boom", "hit"])
+        self.assertEqual(self.played(), [(3, 2), (2, 0)])
+        with self.assertRaises(ValueError):
+            AudioManager(SFX, MUSIC, layers=2)  # priority is on by default.
+        with self.assertRaises(ValueError):
+            AudioManager(SFX, MUSIC, priority=False, layers=5)
+
 
 class AppConfigTest(unittest.TestCase):
     def test_defaults(self):

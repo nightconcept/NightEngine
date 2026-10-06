@@ -15,7 +15,9 @@ import pyxel
 
 class AudioManager:
     """`priority=True`: of the cues in a frame play the one earliest in SFX, unless a more important effect is still
-    playing. `priority=False`: play the first cue of the frame if it is known, and never check what is playing."""
+    playing. `priority=False`: play the first cue of the frame if it is known, and never check what is playing.
+    `layers` (with `priority=False`) plays up to that many different known cues of a frame together, the first on
+    `sfx_channel` and each next one on the channel below it. Use it in a game without music."""
 
     def __init__(
         self,
@@ -24,9 +26,12 @@ class AudioManager:
         once: Collection[str] = (),
         sfx_channel: int = 3,
         priority: bool = True,
+        layers: int = 1,
     ):
+        if layers > 1 and (priority or layers > sfx_channel + 1):
+            raise ValueError("layers needs priority=False and a free channel for each layer")
         self.sfx, self.music, self.once = sfx, music, once
-        self.sfx_channel, self.priority = sfx_channel, priority
+        self.sfx_channel, self.priority, self.layers = sfx_channel, priority, layers
         self.sfx_ids: dict[str, int] = {}
         self.music_ids: dict[str, int] = {}
         self.rank = {name: i for i, name in enumerate(sfx)}
@@ -59,10 +64,14 @@ class AudioManager:
                 pyxel.playm(self.music_ids[track], loop=track not in self.once)
         if self.priority:
             self.play_by_priority(cues)
-        else:
+        elif self.layers == 1:
             for cue in cues[:1]:
                 if cue in self.sfx_ids:
                     pyxel.play(self.sfx_channel, self.sfx_ids[cue])
+        else:
+            known = [c for c in dict.fromkeys(cues) if c in self.sfx_ids]
+            for layer, cue in enumerate(known[: self.layers]):
+                pyxel.play(self.sfx_channel - layer, self.sfx_ids[cue])
 
     def play_by_priority(self, cues: list[str]):
         cues = [c for c in cues if c in self.sfx_ids]

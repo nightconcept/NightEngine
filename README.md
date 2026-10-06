@@ -58,6 +58,7 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
 - `scene` is the top scene. `push(s)` and `pop(s)` use the stack. `music` asks the top scene for a track.
 - `cue(name)` asks for a sound effect this frame.
 - `before_scene(inp)` and `after_scene()` do nothing. A game overrides them.
+- `quit_requested`: a scene sets it (for a Quit menu item). `App` saves the run and closes the window.
 - `step(code, pointers=()) -> list[str]` runs one frame in this order: clear cues, feed input, `fx.tick()`, `before_scene`,
   `scene.update(game, inp)`, `after_scene`, `frame += 1`. It returns the cues.
 - `ScreenFx` (`fx.py`) holds `shake`, `fade`, `fade_in`, and `fade_frames`. `tick()` counts the shake down.
@@ -76,9 +77,10 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
 
 ### Other core modules
 
-- `replay.py`: `Recording(seed, frames, pointers={})` with `add(code, pointers)`, `at(frame)`, `save(path)`,
-  `load(path)`, `to_json()`, and `from_json(text)`. The file is `{"seed", "inputs", "pointers"}`: two hex digits
-  per frame, and a sparse `{"<frame>": [[id, x, y, start_x, start_y, "P"], ...]}` for frames with contacts
+- `replay.py`: `Recording(seed, frames, pointers={}, width=2)` with `add(code, pointers)`, `at(frame)`, `save(path)`,
+  `load(path)`, `to_json()`, and `from_json(text)`. The file is `{"seed", "inputs", "pointers", "width"}`: `width` hex
+  digits per frame (2, or `digits_for(Game.input_mask)` for a game that uses bits above the 8 buttons; the key is
+  absent when 2), and a sparse `{"<frame>": [[id, x, y, start_x, start_y, "P"], ...]}` for frames with contacts
   (absent when there were none). `play(make_game, recording, frames=None) -> Game` replays it headless.
 - `canvas.py`: `Canvas` (pixels in memory, no pyxel), `noise(x, y, seed)`, `mirror(rows)`.
 - `palette.py`: `ENDESGA32` (33 entries: transparent black, then 32 colours), `KEY`, and the colour names
@@ -120,6 +122,8 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
   - `priority=True`: play the most important cue of the frame, unless a more important effect still plays.
   - `priority=False`: play the first cue of the frame if it is known. Do not check what is playing.
   - A track in `once` does not loop.
+  - `layers=N` (with `priority=False`) plays up to N different cues of one frame together, on `sfx_channel` and the
+    channels below it. For a game without music.
 - `renderer`:
   - `Renderer(draw, palette, bake, font, ui_colors, shake=no_shake, fade=False, scratch=(2, 200))`.
     `draw` is a dictionary from scene class to `draw(scene, game, t)`. The renderer keeps that dictionary,
@@ -133,7 +137,8 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
   and `App(config, make_game, renderer, audio, seed=None, replay=None)`. `App` opens the window, starts
   `platform`, and runs the loop. Each frame it reads the buttons and `platform.sample()`, records both, and steps
   the game (a replay feeds the recorded ones). `mouse=True` shows the system cursor.
-  `q` quits and saves the run to `replays/last.json`.
+  `q` quits and saves the run to `replays/last.json`. The run is also saved when the window closes (`atexit`) and
+  when the game sets `quit_requested`.
 - `platform`: where the game runs.
   - `init(width, height)` (App calls it). `available()` is True in a page built by `nightengine.web`.
   - `sample() -> tuple[Pointer, ...]`: in the browser, touch, pen, and mouse through `window.nightBridge`;

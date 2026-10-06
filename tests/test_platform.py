@@ -160,6 +160,19 @@ class AppTest(unittest.TestCase):
                 replayed.update()
         self.assertEqual(replayed.log.seen, script)
 
+    def test_a_quit_request_saves_and_quits(self):
+        app = app_for()
+        app.log.update = lambda game, inp: setattr(game, "quit_requested", True)
+        with (
+            mock.patch.object(platform, "sample", return_value=()),
+            mock.patch("nightengine.host.app.read_buttons", return_value=0),
+            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, quit=mock.DEFAULT),
+            mock.patch.object(App, "save") as save,
+        ):
+            app.update()
+            pyxel.quit.assert_called_once()
+        save.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

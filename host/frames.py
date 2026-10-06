@@ -67,11 +67,11 @@ def frames_main(
     pyxel.init(width, height, title=f"{title} frames")
     renderer.setup()
     game = make_game(recording.seed)
-    for code in recording.frames:
+    for i, code in enumerate(recording.frames):
         if game.frame >= args.start and (game.frame - args.start) % args.every == 0:
             renderer.draw(game)
             pyxel.screen.save(str(out / f"frame{game.frame:05}"), args.scale)
-        game.step(code)
+        game.step(code, recording.at(i))
     renderer.draw(game)
     pyxel.screen.save(str(out / "final"), args.scale)
     print(summary(game))

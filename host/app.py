@@ -1,5 +1,6 @@
 """The pyxel window: keyboard, gamepad, and pointer input, audio, recording, and replay playback."""
 
+import atexit
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,7 +8,7 @@ from pathlib import Path
 import pyxel
 
 from ..core import Game
-from ..replay import Recording
+from ..replay import Recording, digits_for
 from . import platform, ui
 from .audio import AudioManager
 from .keys import read_buttons
@@ -50,7 +51,8 @@ class App:
         elif seed is None:
             seed = pyxel.rndi(0, 2**31 - 1)
         self.game = make_game(seed)
-        self.recording = None if replay else Recording(seed)
+        self.recording = None if replay else Recording(seed, width=digits_for(self.game.input_mask))
+        atexit.register(self.save)  # pyxel.run ends the process, so this also saves when the window closes.
         pyxel.run(self.update, self.draw)
 
     def save(self):
@@ -70,6 +72,9 @@ class App:
             self.recording.add(code, pointers)
         cues = self.game.step(code, pointers)
         self.audio.update(self.game.music, cues)
+        if self.game.quit_requested:
+            self.save()
+            pyxel.quit()
 
     def draw(self):
         self.renderer.draw(self.game)

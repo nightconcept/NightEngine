@@ -26,6 +26,7 @@ class Game:
         self.scenes = SceneStack()
         self.fx = ScreenFx()
         self.cues: list[str] = []
+        self.quit_requested = False  # A scene sets it (a Quit menu item). The host saves the run and closes.
 
     @property
     def scene(self) -> Scene:

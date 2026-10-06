@@ -22,6 +22,16 @@ def make_game(seed):
     return game
 
 
+class Wide(Game):
+    input_mask = 0xFFFF  # A game with 16 bits of input.
+
+
+def make_wide(seed):
+    game = Wide(seed)
+    game.scenes.replace(Counter())
+    return game
+
+
 class RecordingTest(unittest.TestCase):
     def test_round_trip_and_format(self):
         rec = Recording(42, [0, 1, 16, 255, 128])
@@ -46,6 +56,13 @@ class RecordingTest(unittest.TestCase):
         self.assertEqual(loaded, rec)
         self.assertEqual(loaded.at(0), ())
         self.assertEqual(loaded.at(2)[0].phase, PointerPhase.RELEASED)
+
+    def test_wide_codes_store_their_width(self):
+        self.assertEqual((replay.digits_for(0xFF), replay.digits_for(0x1FF), replay.digits_for(0xFFFFFFF)), (2, 3, 7))
+        rec = Recording(1, [0, 0x1234567, 0xF], width=7)
+        data = json.loads(rec.to_json())
+        self.assertEqual((data["inputs"], data["width"]), ("00000001234567000000f", 7))
+        self.assertEqual(Recording.from_json(rec.to_json()), rec)
 
     def test_files_without_pointers_load(self):
         self.assertEqual(Recording.from_json('{"seed": 1, "inputs": "0001"}'), Recording(1, [0, 1]))
@@ -74,6 +91,8 @@ class AutopilotTest(unittest.TestCase):
     def test_run_records_and_stops(self):
         rec, game = autopilot.run(make_game, lambda g: UP, seed=1, limit=50, done=lambda g: g.frame == 7)
         self.assertEqual((game.frame, len(rec.frames), rec.seed), (7, 7, 1))
+        rec, _ = autopilot.run(make_wide, lambda g: 0x100, seed=1, limit=2)
+        self.assertEqual((rec.width, rec.frames), (4, [0x100, 0x100]))
         rec, game = autopilot.run(make_game, lambda g: 0, seed=1, limit=10)
         self.assertEqual(game.frame, 10)
         self.assertEqual(replay.play(make_game, rec).count, game.count)
