@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Controllers, Xbox first (`host/gamepad.py`): the shared `XBOX` layout, `xbox(pad, layout, shift)` key tables for
+  pads 1-4, `merge`, and the left stick as the d-pad (`AppConfig.sticks`, on for pad 1 by default). `App` loads the
+  bundled SDL_GameControllerDB (`host/gamepads/gamecontrollerdb.txt`, zlib license) through SDL's
+  `SDL_GAMECONTROLLERCONFIG_FILE` hint, so about 2,000 more pads work. `AppConfig.pad_mappings` picks another file.
+
 - Targets (`target.py`): `desktop`, `web`, and `android`, each with a size and controls (keyboard, mouse, touch)
   from `[tool.nightengine.targets.<name>]`. Builds write their target into the app (`nightengine_build`), and a
   source run reads `NIGHTENGINE_TARGET`. `Game(seed, target)` and `Game.step` drop the pointers the target does not

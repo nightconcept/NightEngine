@@ -26,7 +26,7 @@ def stub(*names, **values):
 
 class ImportTest(unittest.TestCase):
     def test_every_host_module_imports(self):
-        for name in ("keys", "assets", "ui", "audio", "renderer", "app", "frames", "platform", "diagnostic"):
+        for name in ("keys", "gamepad", "assets", "ui", "audio", "renderer", "app", "frames", "platform", "diagnostic"):
             importlib.import_module(f"nightengine.host.{name}")
 
 

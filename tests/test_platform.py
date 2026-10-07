@@ -187,14 +187,14 @@ class AppTest(unittest.TestCase):
         with (
             mock.patch.object(platform, "sample", side_effect=frames),
             mock.patch("nightengine.host.app.read_buttons", return_value=0),
-            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False),
+            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, btnv=lambda a: 0),
         ):
             for _ in frames:
                 app.update()
         self.assertEqual(sorted(app.recording.pointers), [1, 2])
         self.assertEqual(app.log.seen, script)
         replayed = app_for(Recording.from_json(app.recording.to_json()))
-        with mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False):
+        with mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, btnv=lambda a: 0):
             for _ in range(len(frames) + 2):  # Past the end: the replay stops.
                 replayed.update()
         self.assertEqual(replayed.log.seen, script)
@@ -205,7 +205,9 @@ class AppTest(unittest.TestCase):
         with (
             mock.patch.object(platform, "sample", return_value=()),
             mock.patch("nightengine.host.app.read_buttons", return_value=0),
-            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, quit=mock.DEFAULT),
+            mock.patch.multiple(
+                pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, btnv=lambda a: 0, quit=mock.DEFAULT
+            ),
             mock.patch.object(App, "save") as save,
         ):
             app.update()
@@ -221,7 +223,9 @@ class AppTest(unittest.TestCase):
             mock.patch.object(platform, "buttons", return_value=0),
             mock.patch.object(platform, "sample", return_value=()),
             mock.patch("nightengine.host.app.read_buttons", return_value=0),
-            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, quit=mock.DEFAULT),
+            mock.patch.multiple(
+                pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, btnv=lambda a: 0, quit=mock.DEFAULT
+            ),
             mock.patch.object(App, "save"),
         ):
             app.update()
@@ -253,7 +257,9 @@ class ResizeTest(unittest.TestCase):
         with (
             mock.patch.object(platform, "sample", return_value=()),
             mock.patch("nightengine.host.app.read_buttons", return_value=0),
-            mock.patch.multiple(pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, resize=mock.DEFAULT),
+            mock.patch.multiple(
+                pyxel, create=True, btnp=lambda b: False, btn=lambda b: False, btnv=lambda a: 0, resize=mock.DEFAULT
+            ),
         ):
             app.update()
             pyxel.resize.assert_not_called()

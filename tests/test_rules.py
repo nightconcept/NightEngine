@@ -6,7 +6,11 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-HOST_TESTS = {Path("tests/test_host.py"), Path("tests/test_platform.py")}  # They stub pyxel.
+HOST_TESTS = {  # They stub pyxel.
+    Path("tests/test_host.py"),
+    Path("tests/test_platform.py"),
+    Path("tests/test_gamepad.py"),
+}
 ALLOWED = set(sys.stdlib_module_names) | {"pyxel", "nightengine"}  # The engine knows no game.
 
 

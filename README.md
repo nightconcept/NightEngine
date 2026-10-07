@@ -135,6 +135,18 @@ build for a phone and a build for a computer can differ without an `if` in the g
 `from nightengine.host.renderer import Renderer`. Tests may import them too. They never open a window.
 
 - `keys.read_buttons(keys) -> int`: `keys` maps an engine button to the pyxel keys and gamepad buttons that press it.
+- `gamepad`: controllers, Xbox first. SDL names every pad's buttons after the Xbox pad, so one layout serves Xbox,
+  PlayStation, Switch Pro, and every pad in the bundled database.
+  - `XBOX`: the shared layout. D-pad to `UP`/`DOWN`/`LEFT`/`RIGHT`, A to `A` (confirm, act), B to `B` (cancel, jump),
+    X to `C`, Start to `MENU`.
+  - `xbox(pad=1, layout=None, shift=0)` builds a key table for pad 1-4. `layout` adds to or replaces `XBOX` entries
+    (`{B: ("B", "Y")}`); `shift` moves the buttons up for a second player's bits. `merge(*tables)` joins tables:
+    `keys = merge(KEYBOARD, xbox(1))`.
+  - `stick(pad, shift)` reads the left stick as d-pad buttons (`DEADZONE` 0.4), and `read_sticks(pairs)` reads
+    every `(pad, shift)`. `axis(pad, name)` gives one axis in -1..1.
+  - `use_mappings(path=DB)` points SDL's `SDL_GAMECONTROLLERCONFIG_FILE` hint at `host/gamepads/gamecontrollerdb.txt`
+    (the zlib-licensed [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB)), before `pyxel.init`.
+    A file the player set in the environment wins. See `host/gamepads/README.md` to update it.
 - `assets`:
   - `Region(bank, u, v, w, h)` is a frozen record of where a piece of art sits in an image bank.
   - `copy(canvas, bank, u, v) -> Region` writes one canvas into a bank.
@@ -167,7 +179,9 @@ build for a phone and a build for a computer can differ without an `if` in the g
   - `draw_scene(scene, game, t)` draws one scene. A draw function can call it to draw the scenes below a transition.
   - Shake functions: `shake_xy` (sideways, plus up and down for a strong shake), `shake_x` (sideways only),
     `no_shake` (for a game that shakes inside its own draw functions).
-- `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False)`
+- `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False,
+  sticks=((1, 0),), pad_mappings=gamepad.DB)`. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
+  `App` loads the controller database before `pyxel.init` (`pad_mappings=None` skips it).
   (`integer_scale` applies on the desktop only: in a browser the game fills its canvas, so touches match the picture)
   and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None)`. `App` picks the target
   (`choose_target`: a replay's own, else `target`, else `target.current()`), opens the window at the target's size,

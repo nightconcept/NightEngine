@@ -12,7 +12,7 @@ from ..pointer import PointerKind
 from ..replay import Recording, digits_for
 from ..target import Target
 from ..target import current as current_target
-from . import platform, ui
+from . import gamepad, platform, ui
 from .audio import AudioManager
 from .keys import read_buttons
 from .renderer import Renderer
@@ -31,6 +31,8 @@ class AppConfig:
     label_xy: tuple[int, int] = (4, 4)  # Where the REPLAY label is drawn.
     integer_scale: bool = True  # Scale the screen by whole numbers only, so pixels stay square and even.
     mouse: bool = False  # Show the system mouse cursor over the game, when the target takes the mouse.
+    sticks: tuple[tuple[int, int], ...] = ((1, 0),)  # (pad, bit shift): left sticks read as d-pad buttons.
+    pad_mappings: Path | None = gamepad.DB  # A controller mapping file for SDL (see host/gamepad.py), or None.
 
 
 def screen_size(game: Game, target: Target) -> tuple[int, int]:
@@ -58,6 +60,7 @@ class App:
     ):
         self.config, self.renderer, self.audio = config, renderer, audio
         self.target = target = choose_target(config, replay, target)
+        gamepad.use_mappings(config.pad_mappings)  # Before pyxel.init: SDL reads the hint when it starts.
         pyxel.init(target.width, target.height, title=config.title, fps=config.fps, quit_key=pyxel.KEY_NONE)
         mouse = target.takes(PointerKind.MOUSE)
         platform.init(target.width, target.height, mouse)
@@ -110,7 +113,8 @@ class App:
                 return
             code, pointers = self.replay.frames[self.game.frame], self.replay.at(self.game.frame)
         else:
-            code, pointers = read_buttons(self.config.keys) | platform.buttons(), platform.sample()
+            code = read_buttons(self.config.keys) | gamepad.read_sticks(self.config.sticks) | platform.buttons()
+            pointers = platform.sample()
             self.recording.add(code, pointers)
         cues = self.game.step(code, pointers)
         self.fit()
