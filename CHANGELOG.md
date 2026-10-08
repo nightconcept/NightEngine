@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Core
+
+- A game declares its own buttons above the 8 engine buttons: `Button(name, keys, pad)`, `declare(...)` for the
+  bits, and `Game.buttons`. They join `Game.input_mask`, so recordings and the tracker handle them.
+  `host.keys.bindings(buttons)` and `gamepad.xbox(..., buttons=...)` give their default keyboard and pad tables.
+
 ## 0.0.1 (2026-10-07)
 
 The first version, made with Unicycle! as the first game to ship on every target.

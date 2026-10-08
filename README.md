@@ -25,6 +25,9 @@ All names below import from `nightengine`, except where a module is named.
   - `down(b)`: held now. `hit(b)`: pressed on this frame. `nav(b)`: pressed, or a repeat tick.
   - `axis() -> (dx, dy)`: the held direction. Diagonals are allowed and opposite keys cancel.
   - `direction() -> (dx, dy) | None`: one direction only, the newest press first. For tile movement.
+- A game's own buttons: `Button(name, keys=(), pad=())` names one, with its default pyxel key names (`"SHIFT"`
+  for `KEY_SHIFT`) and Xbox pad button names (`"RIGHTSHOULDER"`). `declare(*buttons)` gives them the bits 256, 512,
+  and up, in order. List them in `Game.buttons`: they join `Game.input_mask`, so recordings widen to hold them.
 - `InputTracker(mask=ALL, repeat=(), delay=14, rate=5).feed(code, pointers=()) -> Input`.
   A button in `repeat` ticks in `Input.repeat` after `delay` frames held, then every `rate` frames.
 
@@ -80,7 +83,7 @@ build for a phone and a build for a computer can differ without an `if` in the g
 ### Game (`core.py`)
 
 `Game` is the base class. A game subclasses it. Class attributes configure the input tracker:
-`input_mask`, `repeat_buttons`, `repeat_delay`, `repeat_rate`.
+`input_mask`, `buttons`, `repeat_buttons`, `repeat_delay`, `repeat_rate`.
 
 - `Game(seed=0, target=None)` sets `seed`, `rng` (`random.Random(seed)`), `target` (`Target()` if None), `frame`,
   `tracker`, `scenes`, `fx`, and `cues`. Rules may read `target`, for example to start in a touch layout.
@@ -135,12 +138,14 @@ build for a phone and a build for a computer can differ without an `if` in the g
 `from nightengine.host.renderer import Renderer`. Tests may import them too. They never open a window.
 
 - `keys.read_buttons(keys) -> int`: `keys` maps an engine button to the pyxel keys and gamepad buttons that press it.
+  `keys.bindings(buttons)` is the keyboard table for a game's own buttons.
 - `gamepad`: controllers, Xbox first. SDL names every pad's buttons after the Xbox pad, so one layout serves Xbox,
   PlayStation, Switch Pro, and every pad in the bundled database.
   - `XBOX`: the shared layout. D-pad to `UP`/`DOWN`/`LEFT`/`RIGHT`, A to `A` (confirm, act), B to `B` (cancel, jump),
     X to `C`, Start to `MENU`.
-  - `xbox(pad=1, layout=None, shift=0)` builds a key table for pad 1-4. `layout` adds to or replaces `XBOX` entries
-    (`{B: ("B", "Y")}`); `shift` moves the buttons up for a second player's bits. `merge(*tables)` joins tables:
+  - `xbox(pad=1, layout=None, shift=0, buttons=())` builds a key table for pad 1-4. `layout` adds to or replaces
+    `XBOX` entries (`{B: ("B", "Y")}`); `shift` moves the buttons up for a second player's bits; `buttons` adds a
+    game's own buttons by their `pad` names. `merge(*tables)` joins tables:
     `keys = merge(KEYBOARD, xbox(1))`.
   - `stick(pad, shift)` reads the left stick as d-pad buttons (`DEADZONE` 0.4), and `read_sticks(pairs)` reads
     every `(pad, shift)`. `axis(pad, name)` gives one axis in -1..1.

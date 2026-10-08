@@ -6,8 +6,10 @@ from unittest import mock
 
 import pyxel
 
-from nightengine import DOWN, LEFT, MENU, RIGHT, UP, A, B, C
-from nightengine.host import gamepad
+from nightengine import DOWN, LEFT, MENU, RIGHT, UP, A, B, Button, C, declare
+from nightengine.host import gamepad, keys
+
+DASH, GUARD = declare(Button("DASH", keys=("SHIFT",), pad=("RIGHTSHOULDER",)), Button("GUARD", keys=("V",)))
 
 
 class MappingsTest(unittest.TestCase):
@@ -58,6 +60,18 @@ class LayoutTest(unittest.TestCase):
         self.assertNotIn(MENU, keys)
         merged = gamepad.merge({A: (1,)}, {A: (2, 1)}, {B: (3,)})
         self.assertEqual(merged, {A: (1, 2), B: (3,)})
+
+
+class GameButtonsTest(unittest.TestCase):
+    def test_keyboard_table(self):
+        self.assertEqual(keys.bindings((DASH, GUARD)), {DASH.bit: (pyxel.KEY_SHIFT,), GUARD.bit: (pyxel.KEY_V,)})
+
+    def test_pad_table(self):
+        table = gamepad.xbox(1, buttons=(DASH, GUARD))
+        self.assertEqual(table[DASH.bit], (pyxel.GAMEPAD1_BUTTON_RIGHTSHOULDER,))
+        self.assertNotIn(GUARD.bit, table)
+        self.assertEqual(table[A], (pyxel.GAMEPAD1_BUTTON_A,))
+        self.assertEqual(gamepad.xbox(2, buttons=(DASH,))[DASH.bit], (pyxel.GAMEPAD2_BUTTON_RIGHTSHOULDER,))
 
 
 class StickTest(unittest.TestCase):

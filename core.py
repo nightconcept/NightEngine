@@ -7,7 +7,7 @@ class attributes below, adds its own state, and starts its first scene. `step` r
 from random import Random
 
 from .fx import ScreenFx
-from .inputs import ALL, REPEAT_DELAY, REPEAT_RATE, Input, InputTracker
+from .inputs import ALL, REPEAT_DELAY, REPEAT_RATE, Button, Input, InputTracker, mask_of
 from .pointer import Pointer
 from .scene import Scene, SceneStack
 from .target import Target
@@ -15,6 +15,7 @@ from .target import Target
 
 class Game:
     input_mask = ALL  # The buttons this game reads. The rest are dropped.
+    buttons: tuple[Button, ...] = ()  # The game's own buttons (inputs.declare). They join `input_mask`.
     repeat_buttons: tuple[int, ...] = ()  # Buttons that auto-repeat in `Input.repeat` (menu cursors).
     repeat_delay = REPEAT_DELAY
     repeat_rate = REPEAT_RATE
@@ -24,6 +25,7 @@ class Game:
         self.target = target or Target()  # Where the game runs (see target.py). Rules may read it.
         self.rng = Random(seed)  # The only source of randomness in game rules.
         self.frame = 0
+        self.input_mask = type(self).input_mask | mask_of(self.buttons)
         self.tracker = InputTracker(self.input_mask, self.repeat_buttons, self.repeat_delay, self.repeat_rate)
         self.scenes = SceneStack()
         self.fx = ScreenFx()
