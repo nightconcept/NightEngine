@@ -98,8 +98,6 @@ class App:
         self.config, self.renderer, self.audio = config, renderer, audio
         self.target = target = choose_target(config, replay, target)
         gamepad.use_mappings(config.pad_mappings)  # Before pyxel.init: SDL reads the hint when it starts.
-        if config.vendor:
-            self.store = open_store(config.vendor, config.title)
         pyxel.init(
             target.width,
             target.height,
@@ -108,6 +106,8 @@ class App:
             quit_key=pyxel.KEY_NONE,
             display_scale=config.display_scale,
         )
+        if config.vendor:  # After pyxel.init: pyxel.user_data_dir panics before it.
+            self.store = open_store(config.vendor, config.title)
         mouse = target.takes(PointerKind.MOUSE)
         platform.init(target.width, target.height, mouse)
         # In a browser the page sizes the canvas to the game's aspect, and the pointer bridge maps the whole canvas.
