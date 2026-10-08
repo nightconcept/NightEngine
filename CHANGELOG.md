@@ -22,8 +22,8 @@
 
 - `App.post(event)` and `App.boot()` (events for frame 0 of a live run). While `game.listen` is True the App adds a
   `"press ..."` event for the first key or pad button pressed. Live events are recorded; a replay feeds them.
-- `AppConfig.vendor`: `App.store` (`host/storage.open_store`: the user's data folder, or browser storage in a page)
-  opens after `pyxel.init` and saves `game.writes` after each live frame. `AppConfig.display_scale` goes to
+- `AppConfig.vendor`: `App.store` (`host/storage.open_store`: the OS data folder from `storage.data_dir`, or browser
+  storage in a page and the Android WebView) saves `game.writes` after each live frame. `AppConfig.display_scale` goes to
   `pyxel.init`.
 - The key table follows `game.bindings` when the game sets them (`keys.table`).
 - `App.device`: the device used last (`"keyboard"`, `"pad"`, or `"pointer"`), for button hints.

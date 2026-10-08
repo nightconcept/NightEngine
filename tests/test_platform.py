@@ -299,3 +299,50 @@ class ChooseTargetTest(unittest.TestCase):
     def test_without_a_target_the_environment_picks_one(self):
         with mock.patch.dict("os.environ", {"NIGHTENGINE_TARGET": "android"}):
             self.assertEqual(choose_target(self.config).name, "android")
+
+
+class StorageTest(unittest.TestCase):
+    """`host.storage`: the OS data folder, and browser storage in a page. Nothing calls pyxel."""
+
+    def test_data_dir_on_each_os(self):
+        from pathlib import Path
+
+        from nightengine.host.storage import data_dir
+
+        home = Path("/home/p")
+        cases = (
+            ("win32", {"APPDATA": "C:/Users/p/AppData/Roaming"}, Path("C:/Users/p/AppData/Roaming/V Co/App")),
+            ("win32", {}, home / "AppData/Roaming/V Co/App"),
+            ("darwin", {}, home / "Library/Application Support/V Co/App"),
+            ("linux", {}, home / ".local/share/v co/app"),
+            ("linux", {"XDG_DATA_HOME": "/xdg"}, Path("/xdg/v co/app")),
+            ("linux", {"XDG_DATA_HOME": "rel"}, home / ".local/share/v co/app"),  # The spec ignores a relative path.
+        )
+        for system, env, want in cases:
+            with self.subTest(system=system, env=env):
+                self.assertEqual(data_dir("V Co", "App", system, env, home), want)
+
+    def test_open_store_needs_no_window(self):
+        from nightengine.host import storage
+        from nightengine.store import FileStore
+
+        with mock.patch.object(pyxel, "user_data_dir", side_effect=AssertionError("pyxel called"), create=True):
+            store = storage.open_store("V", "A")
+        self.assertIsInstance(store, FileStore)
+        self.assertEqual(store.folder, storage.data_dir("V", "A"))
+
+    def test_a_page_uses_browser_storage_even_before_platform_init(self):
+        from nightengine.host import storage
+
+        with mock.patch.object(sys, "platform", "emscripten"):
+            store = storage.open_store("V", "A")
+        self.assertIsInstance(store, storage.PageStore)
+        self.assertIsNone(store.read("settings"))  # No bridge yet: nothing saved, no error.
+        bridge = Bridge()
+        with in_browser(bridge):
+            platform.init(64, 64)
+        try:
+            store.write("settings", "{}")
+            self.assertEqual(store.read("settings"), "{}")
+        finally:
+            platform.init(64, 64)

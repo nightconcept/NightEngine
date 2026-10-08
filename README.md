@@ -172,8 +172,12 @@ build for a phone and a build for a computer can differ without an `if` in the g
   and `GUI` stand for their left and right keys. `keys.key_names()`, `keys.pad_names(pad)`, and `keys.is_pad(code)`.
   `keys.table(bindings, pad=1) -> dict[int, tuple[int, ...]]` turns a `Bindings` into a key table
   (`pyxel.KEY_<name>`, `pyxel.GAMEPAD<pad>_BUTTON_<name>`); an unknown name raises `ValueError` with the name.
-- `storage.open_store(vendor, app) -> Store`: in a page, browser storage (`platform.save` and `platform.load`); on the
-  desktop, a `FileStore` in `pyxel.user_data_dir(vendor, app)`.
+- `storage.open_store(vendor, app) -> Store`: in a page (web and the Android WebView), browser storage
+  (`platform.save` and `platform.load`); on the desktop, a `FileStore` in `storage.data_dir(vendor, app)`. It calls
+  no pyxel, so a game can read its settings before `pyxel.init`.
+- `storage.data_dir(vendor, app) -> Path`: the OS data folder, as SDL_GetPrefPath and Godot's custom user dir:
+  `%APPDATA%\<vendor>\<app>` (Windows), `~/Library/Application Support/<vendor>/<app>` (macOS),
+  `$XDG_DATA_HOME/<vendor>/<app>` in lower case, or `~/.local/share/...` (Linux). Made on the first write.
 - `gamepad`: controllers, Xbox first. SDL names every pad's buttons after the Xbox pad, so one layout serves Xbox,
   PlayStation, Switch Pro, and every pad in the bundled database.
   - `XBOX`: the shared layout. D-pad to `UP`/`DOWN`/`LEFT`/`RIGHT`, A to `A` (confirm, act), B to `B` (cancel, jump),
