@@ -8,11 +8,11 @@ from pathlib import Path
 import pyxel
 
 from ..core import Game
-from ..pointer import PointerKind
+from ..pointer import Pointer, PointerKind, PointerPhase
 from ..replay import Recording, digits_for
 from ..target import Target
 from ..target import current as current_target
-from . import gamepad, platform, ui
+from . import gamepad, keys, platform, ui
 from .audio import AudioManager
 from .keys import read_buttons
 from .renderer import Renderer
@@ -40,6 +40,25 @@ def screen_size(game: Game, target: Target) -> tuple[int, int]:
     return game.screen_size or (target.width, target.height)
 
 
+def split_keys(table: dict[int, tuple[int, ...]]) -> tuple[dict, dict]:
+    """A key table split in two: the keyboard keys, and the pad buttons (`keys.is_pad`)."""
+    keyboard = {b: tuple(k for k in ks if not keys.is_pad(k)) for b, ks in table.items()}
+    pad = {b: tuple(k for k in ks if keys.is_pad(k)) for b, ks in table.items()}
+    return keyboard, pad
+
+
+def device_of(last: str, key_code: int, pad_code: int, pointers: tuple[Pointer, ...]) -> str:
+    """The device in use after this frame: "pointer" on a new contact, else "pad" when a pad button or a stick
+    is held, else "keyboard" when a key is held, else the last one. For display only: rules never read it."""
+    if any(p.phase == PointerPhase.PRESSED for p in pointers):
+        return "pointer"
+    if pad_code:
+        return "pad"
+    if key_code:
+        return "keyboard"
+    return last
+
+
 def choose_target(config: AppConfig, replay: Recording | None = None, target: Target | None = None) -> Target:
     """A replay runs as it was played. Otherwise: `target`, else the build's, else `NIGHTENGINE_TARGET`.
     A target without a size gets the game's."""
@@ -48,6 +67,10 @@ def choose_target(config: AppConfig, replay: Recording | None = None, target: Ta
 
 
 class App:
+    pending: tuple[str, ...] = ()  # Host events for the next frame (`post`).
+    device = "keyboard"  # The device used last: "keyboard", "pad", or "pointer". Display only: rules never read it.
+    _split: tuple[dict, dict, dict | None] = ({}, {}, None)  # The keyboard and pad tables, and their source.
+
     def __init__(
         self,
         config: AppConfig,
@@ -78,11 +101,49 @@ class App:
             seed = pyxel.rndi(0, 2**31 - 1)
         self.game = make_game(seed, target)
         self.recording = None if replay else Recording(seed, width=digits_for(self.game.input_mask), target=target)
+        if not replay:
+            self.pending = (*self.boot(), *self.pending)  # Frame 0 gets them. A replay has them in its recording.
         self.fit()
         global current
         current = self
         atexit.register(self.save)  # pyxel.run ends the process, so this also saves when the window closes.
         pyxel.run(self.update, self.draw)
+
+    def boot(self) -> list[str]:
+        """Host events for frame 0 of a live run, such as the saved settings. A game's App subclass overrides it.
+        It runs once, after `make_game`. A replay never calls it: the recording holds what it returned."""
+        return []
+
+    def post(self, event: str):
+        """Send a host event to the game on the next frame. The recording keeps it."""
+        self.pending = (*self.pending, event)
+
+    def key_table(self) -> dict[int, tuple[int, ...]]:
+        """The key table in use: engine button -> pyxel keys and pad buttons."""
+        return self.config.keys
+
+    def key_tables(self) -> tuple[dict, dict]:
+        """The key table in use, split into keyboard keys and pad buttons. Built again only when the table changes."""
+        table = self.key_table()
+        if self._split[2] is not table:
+            self._split = (*split_keys(table), table)
+        return self._split[0], self._split[1]
+
+    def read_input(self) -> tuple[int, tuple[Pointer, ...], tuple[str, ...]]:
+        """This frame's live input: the buttons, the pointers, and the host events. It also sets `device`, and
+        adds "press key:<NAME>" or "press pad:<NAME>" while the game listens (`Game.listen`)."""
+        keyboard, pad = self.key_tables()
+        key_code = read_buttons(keyboard)
+        pad_code = read_buttons(pad) | gamepad.read_sticks(self.config.sticks)
+        code = key_code | pad_code | platform.buttons()
+        pointers = platform.sample()
+        events, self.pending = list(self.pending), ()
+        if self.game.listen:
+            pressed = keys.first_pressed()
+            if pressed:
+                events.append("press " + pressed)
+        self.device = device_of(self.device, key_code, pad_code, pointers)
+        return code, pointers, tuple(events)
 
     def fit(self):
         """Resize the screen when the game asks for another size."""
@@ -109,14 +170,14 @@ class App:
             self.quit()
             return
         if self.replay:
-            if self.game.frame >= len(self.replay.frames):
+            frame = self.game.frame
+            if frame >= len(self.replay.frames):
                 return
-            code, pointers = self.replay.frames[self.game.frame], self.replay.at(self.game.frame)
+            code, pointers, events = self.replay.frames[frame], self.replay.at(frame), self.replay.events_at(frame)
         else:
-            code = read_buttons(self.config.keys) | gamepad.read_sticks(self.config.sticks) | platform.buttons()
-            pointers = platform.sample()
-            self.recording.add(code, pointers)
-        cues = self.game.step(code, pointers)
+            code, pointers, events = self.read_input()
+            self.recording.add(code, pointers, events)
+        cues = self.game.step(code, pointers, events)
         self.fit()
         self.audio.update(self.game.music, cues)
         if self.game.quit_requested:

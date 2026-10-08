@@ -43,12 +43,14 @@ def mask_of(buttons: Iterable[Button]) -> int:
 @dataclass
 class Input:
     """Buttons for one frame: `held` this frame, `pressed` on this frame, `repeat` for menu cursors.
-    `pointers` are the touch and mouse contacts this frame (see pointer.py)."""
+    `pointers` are the touch and mouse contacts this frame (see pointer.py). `events` are the host events of this
+    frame: text the host sends from outside the buttons (saved settings at the start, a key pressed to rebind)."""
 
     held: int = 0
     pressed: int = 0
     repeat: int = 0
     pointers: tuple[Pointer, ...] = ()
+    events: tuple[str, ...] = ()
 
     def down(self, button: int) -> bool:
         return bool(self.held & button)
@@ -90,7 +92,7 @@ class InputTracker:
         self.previous = 0
         self.held_for = {b: 0 for b in repeat}
 
-    def feed(self, code: int, pointers: tuple[Pointer, ...] = ()) -> Input:
+    def feed(self, code: int, pointers: tuple[Pointer, ...] = (), events: tuple[str, ...] = ()) -> Input:
         code &= self.mask
         pressed = code & ~self.previous
         repeat = pressed
@@ -103,4 +105,4 @@ class InputTracker:
             else:
                 self.held_for[button] = 0
         self.previous = code
-        return Input(code, pressed, repeat, tuple(pointers))
+        return Input(code, pressed, repeat, tuple(pointers), tuple(events))

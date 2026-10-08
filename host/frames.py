@@ -1,4 +1,6 @@
-"""Render frames of a recording, or a sheet of all baked art, to PNG files without a game loop.
+"""Render frames of a recording, or a sheet of all baked art, to PNG files without a game loop or a window.
+
+Pyxel runs headless here, so it never opens a window. The recorded host events are fed with the buttons.
 
 A game's frames.py calls `frames_main(...)`. Its command line:
 
@@ -24,7 +26,7 @@ from .renderer import Renderer
 
 def atlas(title: str, renderer: Renderer, out: Path):
     """Save each image bank, scaled up, so the generated art can be reviewed."""
-    pyxel.init(256, 256, title=f"{title} atlas")
+    pyxel.init(256, 256, title=f"{title} atlas", headless=True)
     renderer.setup()
     for bank in range(3):
         pyxel.cls(0)
@@ -61,13 +63,13 @@ def frames_main(
         return
     for name, mode in modes.items():
         if getattr(args, name):
-            pyxel.init(width, height, title=f"{title} {name}")
+            pyxel.init(width, height, title=f"{title} {name}", headless=True)
             renderer.setup()
             mode(out, args.scale)
             return
     recording = Recording.load(args.recording)
     target = (recording.target or Target()).sized(width, height)
-    pyxel.init(target.width, target.height, title=f"{title} frames")
+    pyxel.init(target.width, target.height, title=f"{title} frames", headless=True)
     renderer.setup()
     game = make_game(recording.seed, recording.target and target)
 
@@ -81,7 +83,7 @@ def frames_main(
         if game.frame >= args.start and (game.frame - args.start) % args.every == 0:
             draw()
             pyxel.screen.save(str(out / f"frame{game.frame:05}"), args.scale)
-        game.step(code, recording.at(i))
+        game.step(code, recording.at(i), recording.events_at(i))
     draw()
     pyxel.screen.save(str(out / "final"), args.scale)
     print(summary(game))

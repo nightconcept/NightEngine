@@ -37,9 +37,11 @@ class AudioManager:
         self.rank = {name: i for i, name in enumerate(sfx)}
         self.track: str | None = None
         self.playing: str | None = None  # The effect last started on the effect channel.
+        self.gains: list[float] | None = None  # Each channel's gain after setup: what volume 1 means.
 
     def setup(self):
         """Write every effect and music channel into pyxel's sound slots."""
+        self.gains = [c.gain for c in pyxel.channels]
         index = 0
         for name, (notes, tone, vol, fx, speed) in self.sfx.items():
             pyxel.sounds[index].set(notes, tone, vol, fx, speed)
@@ -53,6 +55,20 @@ class AudioManager:
                 index += 1
             pyxel.musics[m].set(*[[i] for i in ids])
             self.music_ids[name] = m
+
+    def effect_channels(self) -> range:
+        """The channels that play effects: `sfx_channel`, and the ones below it that `layers` uses."""
+        return range(self.sfx_channel - self.layers + 1, self.sfx_channel + 1)
+
+    def set_volume(self, music: float, sfx: float):
+        """Set the music and effect volumes, each 0 to 1. 1 is the gain each channel had after `setup()` (pyxel's
+        default is 0.125). The effect channels take `sfx`; every other channel takes `music`."""
+        if self.gains is None:
+            self.gains = [c.gain for c in pyxel.channels]
+        effects = self.effect_channels()
+        for i, channel in enumerate(pyxel.channels):
+            if i < len(self.gains):
+                channel.gain = self.gains[i] * max(0.0, min(1.0, sfx if i in effects else music))
 
     def update(self, track: str | None, cues: list[str]):
         """Call once per frame with the current track and the cues the game returned."""

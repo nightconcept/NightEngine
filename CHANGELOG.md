@@ -7,6 +7,21 @@
 - A game declares its own buttons above the 8 engine buttons: `Button(name, keys, pad)`, `declare(...)` for the
   bits, and `Game.buttons`. They join `Game.input_mask`, so recordings and the tracker handle them.
   `host.keys.bindings(buttons)` and `gamepad.xbox(..., buttons=...)` give their default keyboard and pad tables.
+- Host events: text that reaches the game from outside the buttons (saved settings, a key pressed to rebind).
+  `Input.events`, `Game.step(code, pointers, events)`, `InputTracker.feed(..., events)`, and `Recording.events` with
+  `add(..., events)` and `events_at(frame)`. The JSON key `"events"` is sparse and absent when empty, so older files
+  load. `play()` feeds them. `Driver.step(..., events=())` and `Driver.event(*events)`.
+- `Game.listen`: while True, the host reports the next key or pad button pressed as `"press key:<NAME>"` or
+  `"press pad:<NAME>"`.
+
+### Host (pyxel)
+
+- `App.post(event)` and `App.boot()` (events for frame 0 of a live run). While `game.listen` is True the App adds a
+  `"press ..."` event for the first key or pad button pressed. Live events are recorded; a replay feeds them.
+- `App.device`: the device used last (`"keyboard"`, `"pad"`, or `"pointer"`), for button hints.
+- `keys.first_pressed(pads)`, `keys.key_names()`, `keys.pad_names(pad)`, and `keys.is_pad(code)`.
+- `AudioManager.set_volume(music, sfx)` scales the music and effect channel gains from their values after `setup()`.
+- `frames` runs Pyxel headless (no window) and feeds the recorded host events.
 
 ## 0.0.1 (2026-10-07)
 

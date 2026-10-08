@@ -31,6 +31,7 @@ class Game:
         self.fx = ScreenFx()
         self.cues: list[str] = []
         self.quit_requested = False  # A scene sets it (a Quit menu item). The host saves the run and closes.
+        self.listen = False  # While True, the host reports the next key or pad button pressed as a "press" event.
 
     @property
     def scene(self) -> Scene:
@@ -62,11 +63,12 @@ class Game:
     def after_scene(self):
         """Runs each frame after the top scene updates. Games override it."""
 
-    def step(self, code: int, pointers: tuple[Pointer, ...] = ()) -> list[str]:
-        """Advance one frame with the held buttons in `code` and this frame's pointers. Returns sound cue names."""
+    def step(self, code: int, pointers: tuple[Pointer, ...] = (), events: tuple[str, ...] = ()) -> list[str]:
+        """Advance one frame with the held buttons in `code`, this frame's pointers, and its host events (text the
+        recording keeps, see `Input.events`). Returns sound cue names."""
         self.cues = []
         pointers = tuple(p for p in pointers if self.target.accepts(p))
-        inp = self.tracker.feed(code, pointers)
+        inp = self.tracker.feed(code, pointers, events)
         self.fx.tick()
         self.before_scene(inp)
         self.scene.update(self, inp)

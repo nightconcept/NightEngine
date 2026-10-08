@@ -13,9 +13,15 @@ class Driver:
     def __init__(self, game: Game):
         self.game = game
 
-    def step(self, code: int = 0, frames: int = 1, pointers: tuple[Pointer, ...] = ()):
-        for _ in range(frames):
-            self.game.step(code, pointers)
+    def step(self, code: int = 0, frames: int = 1, pointers: tuple[Pointer, ...] = (), events: tuple[str, ...] = ()):
+        """Hold `code` for `frames` frames with these pointers on each. Host `events` arrive on the first frame only:
+        an event happens once."""
+        for i in range(frames):
+            self.game.step(code, pointers, events if i == 0 else ())
+
+    def event(self, *events: str, code: int = 0):
+        """One frame with these host events (see `Input.events`), as the host would send them."""
+        self.step(code, events=events)
 
     def tap(self, x: int, y: int, pid: int = 0, kind: PointerKind = PointerKind.TOUCH):
         """Touch (or click, with `kind=PointerKind.MOUSE`) one point: a PRESSED frame, then a RELEASED frame."""

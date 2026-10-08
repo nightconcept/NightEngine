@@ -10,6 +10,7 @@ HOST_TESTS = {  # They stub pyxel.
     Path("tests/test_host.py"),
     Path("tests/test_platform.py"),
     Path("tests/test_gamepad.py"),
+    Path("tests/test_events.py"),
 }
 ALLOWED = set(sys.stdlib_module_names) | {"pyxel", "nightengine"}  # The engine knows no game.
 
