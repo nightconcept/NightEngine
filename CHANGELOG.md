@@ -11,6 +11,10 @@
   `Input.events`, `Game.step(code, pointers, events)`, `InputTracker.feed(..., events)`, and `Recording.events` with
   `add(..., events)` and `events_at(frame)`. The JSON key `"events"` is sparse and absent when empty, so older files
   load. `play()` feeds them. `Driver.step(..., events=())` and `Driver.event(*events)`.
+- `store.py`: `Store`, `FileStore` (one `<key>.json` per key, written atomically), `MemoryStore`, and `load_json`
+  (a bad file gives the default and is moved aside to `<key>.bad.json`). `Game.write(key, text)` and `Game.writes`.
+- `bindings.py`: `Binding` and `Bindings` for runtime rebinding: primaries and fixed aliases by name, `assign` with the
+  trade rule, locked entries, reserved names, and `to_json` and `from_json` over the defaults. `Game.bindings`.
 - `Game.listen`: while True, the host reports the next key or pad button pressed as `"press key:<NAME>"` or
   `"press pad:<NAME>"`.
 
@@ -18,6 +22,9 @@
 
 - `App.post(event)` and `App.boot()` (events for frame 0 of a live run). While `game.listen` is True the App adds a
   `"press ..."` event for the first key or pad button pressed. Live events are recorded; a replay feeds them.
+- `AppConfig.vendor`: `App.store` (`host/storage.open_store`: the user's data folder, or browser storage in a page)
+  saves `game.writes` after each live frame. `AppConfig.display_scale` goes to `pyxel.init`.
+- The key table follows `game.bindings` when the game sets them (`keys.table`).
 - `App.device`: the device used last (`"keyboard"`, `"pad"`, or `"pointer"`), for button hints.
 - `keys.first_pressed(pads)`, `keys.key_names()`, `keys.pad_names(pad)`, and `keys.is_pad(code)`.
 - `AudioManager.set_volume(music, sfx)` scales the music and effect channel gains from their values after `setup()`.

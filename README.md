@@ -98,6 +98,11 @@ build for a phone and a build for a computer can differ without an `if` in the g
 - `quit_requested`: a scene sets it (for a Quit menu item). `App` saves the run and closes the window.
 - `listen`: False. While a scene sets it True, the host sends the next key or pad button pressed as the event
   `"press key:<NAME>"` or `"press pad:<NAME>"` (for a rebind screen). The names are pyxel's without the prefix.
+- `write(key, text)` asks the host to save a small file (settings, a save) after this frame: it joins `writes`, a
+  list of `(key, text)`. A live `App` saves them to `App.store` and clears the list; a replay saves nothing.
+- `bindings`: None, or a `Bindings` (below). While it is set, the host builds its key table from it, and builds it
+  again when the game replaces it with a new object. Recordings keep the button bits, not the bindings, so a replay
+  plays the same after a rebind.
 - `step(code, pointers=(), events=()) -> list[str]` runs one frame in this order: clear cues, drop the pointers the
   target does not accept, feed input (with the events), `fx.tick()`, `before_scene`,
   `scene.update(game, inp)`, `after_scene`, `frame += 1`. It returns the cues.
@@ -125,6 +130,22 @@ build for a phone and a build for a computer can differ without an `if` in the g
   (absent when there were none). `"events"` is a sparse `{"<frame>": ["text", ...]}` of the host events (absent when
   there were none, so older files load). `"target"` holds the `Target` the run was played on (absent when None).
   `play(make_game, recording, frames=None) -> Game` replays it headless with `make_game(seed, target)`, events too.
+- `store.py`: small saved files, no pyxel. `Store` keeps text by key: `read(key) -> str | None`, `write(key, text)`,
+  and `move_aside(key)`. `FileStore(folder)` writes one file `<key>.json`, atomically (a temp file, then
+  `os.replace`), and makes the folder on the first write. `MemoryStore(data)` is for tests.
+  `load_json(store, key, default)` never fails: a missing key, JSON null, or an unreadable store gives `default`, and a
+  file that is not JSON gives `default` and is moved aside to `<key>.bad.json`, so the player's data is never lost.
+- `bindings.py`: bindings that change while the game runs, no pyxel. `Binding(keys=(), pad=())` holds key names
+  (`KEY_<name>` without the prefix) and pad button names (`GAMEPADn_BUTTON_<name>` without the prefix). The first name
+  of each kind is the primary, the one a player rebinds; the rest are fixed aliases.
+  `Bindings(table, locked=frozenset(), reserved=frozenset())`: `table` maps a button bit to its `Binding`; `locked`
+  holds `(bit, kind, name)` entries that never move; `reserved` holds `(kind, name)` names no action may take. `kind`
+  is `"key"` or `"pad"`. Frozen: every change returns a new object.
+  - `assign(bit, kind, name) -> Bindings | None`: `name` becomes the primary of `bit`. None when the name is reserved
+    or an alias, or a locked entry would move. If another action has `name` as its primary, the two trade.
+  - `primary(bit, kind)`, `owner(kind, name)`, `with_binding(bit, binding)`, `with_reserved(names)`, `valid()`.
+  - `to_json()` keeps the primaries only. `from_json(data, defaults)` puts them over the defaults: unknown bits and
+    bad names are dropped, missing ones come from the defaults, and a kind that breaks a rule falls back whole.
 - `canvas.py`: `Canvas` (pixels in memory, no pyxel), `noise(x, y, seed)`, `mirror(rows)`.
 - `palette.py`: `ENDESGA32` (33 entries: transparent black, then 32 colours), `KEY`, and the colour names
   `RUST` to `SKINSHADE`.
@@ -149,6 +170,10 @@ build for a phone and a build for a computer can differ without an `if` in the g
   `keys.first_pressed(pads=(1,)) -> str | None`: the first key or pad button pressed on this frame, as `"key:<NAME>"`
   or `"pad:<NAME>"` (`KEY_SPACE` is `key:SPACE`, `GAMEPAD1_BUTTON_X` is `pad:X`). The virtual `SHIFT`, `CTRL`, `ALT`,
   and `GUI` stand for their left and right keys. `keys.key_names()`, `keys.pad_names(pad)`, and `keys.is_pad(code)`.
+  `keys.table(bindings, pad=1) -> dict[int, tuple[int, ...]]` turns a `Bindings` into a key table
+  (`pyxel.KEY_<name>`, `pyxel.GAMEPAD<pad>_BUTTON_<name>`); an unknown name raises `ValueError` with the name.
+- `storage.open_store(vendor, app) -> Store`: in a page, browser storage (`platform.save` and `platform.load`); on the
+  desktop, a `FileStore` in `pyxel.user_data_dir(vendor, app)`.
 - `gamepad`: controllers, Xbox first. SDL names every pad's buttons after the Xbox pad, so one layout serves Xbox,
   PlayStation, Switch Pro, and every pad in the bundled database.
   - `XBOX`: the shared layout. D-pad to `UP`/`DOWN`/`LEFT`/`RIGHT`, A to `A` (confirm, act), B to `B` (cancel, jump),
@@ -198,7 +223,9 @@ build for a phone and a build for a computer can differ without an `if` in the g
   - Shake functions: `shake_xy` (sideways, plus up and down for a strong shake), `shake_x` (sideways only),
     `no_shake` (for a game that shakes inside its own draw functions).
 - `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False,
-  sticks=((1, 0),), pad_mappings=gamepad.DB)`. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
+  sticks=((1, 0),), pad_mappings=gamepad.DB, vendor=None, display_scale=None)`. With a `vendor`, `App.store` is
+  `open_store(vendor, title)`, and the game's `writes` are saved there after each live frame. `display_scale` is the
+  window's scale at the start (passed to `pyxel.init`). The key table is `config.keys` while `game.bindings` is None. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
   `App` loads the controller database before `pyxel.init` (`pad_mappings=None` skips it).
   (`integer_scale` applies on the desktop only: in a browser the game fills its canvas, so touches match the picture)
   and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None)`. `App` picks the target

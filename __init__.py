@@ -4,6 +4,7 @@ This file re-exports the pure core. It never imports `nightengine.host`, so impo
 """
 
 from .autopilot import Tapper
+from .bindings import Binding, Bindings
 from .canvas import Canvas, mirror, noise
 from .content import ContentError, check_refs, read_dir, read_json, records
 from .core import Game
@@ -13,6 +14,7 @@ from .pointer import Pointer, PointerKind, PointerPhase
 from .registry import Registry
 from .replay import Recording
 from .scene import Scene, SceneStack
+from .store import FileStore, MemoryStore, Store, load_json
 from .systems import System, Systems
 from .target import KEYBOARD, MOUSE, TOUCH, Target
 from .testing import Driver
@@ -21,9 +23,9 @@ __version__ = "0.0.1"
 
 __all__ = [
     "A", "ALL", "B", "C", "DOWN", "KEYBOARD", "LEFT", "MENU", "MOUSE", "RIGHT", "TOUCH", "UP",
-    "Button", "Canvas", "ContentError", "Driver", "Game", "Input", "InputTracker",
-    "Pointer", "PointerKind", "PointerPhase",
+    "Binding", "Bindings", "Button", "Canvas", "ContentError", "Driver", "FileStore", "Game", "Input", "InputTracker",
+    "MemoryStore", "Pointer", "PointerKind", "PointerPhase",
     "Recording", "Registry",
-    "Scene", "SceneStack", "ScreenFx", "System", "Systems", "Tapper", "Target",
-    "check_refs", "declare", "mirror", "noise", "read_dir", "read_json", "records",
+    "Scene", "SceneStack", "ScreenFx", "Store", "System", "Systems", "Tapper", "Target",
+    "check_refs", "declare", "load_json", "mirror", "noise", "read_dir", "read_json", "records",
 ]  # fmt: skip

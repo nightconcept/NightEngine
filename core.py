@@ -32,6 +32,8 @@ class Game:
         self.cues: list[str] = []
         self.quit_requested = False  # A scene sets it (a Quit menu item). The host saves the run and closes.
         self.listen = False  # While True, the host reports the next key or pad button pressed as a "press" event.
+        self.writes: list[tuple[str, str]] = []  # Files to save (`write`). The host saves them after the frame.
+        self.bindings = None  # A `Bindings` the host builds its key table from, or None for the host's own table.
 
     @property
     def scene(self) -> Scene:
@@ -56,6 +58,11 @@ class Game:
     def cue(self, name: str):
         """Ask the audio layer to play a sound effect this frame."""
         self.cues.append(name)
+
+    def write(self, key: str, text: str):
+        """Ask the host to save `text` under `key` (a settings or save file) after this frame.
+        A replay saves nothing."""
+        self.writes.append((key, text))
 
     def before_scene(self, inp: Input):
         """Runs each frame before the top scene updates. Games override it."""

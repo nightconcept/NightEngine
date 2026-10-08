@@ -10,12 +10,14 @@ import pyxel
 from ..core import Game
 from ..pointer import Pointer, PointerKind, PointerPhase
 from ..replay import Recording, digits_for
+from ..store import Store
 from ..target import Target
 from ..target import current as current_target
 from . import gamepad, keys, platform, ui
 from .audio import AudioManager
 from .keys import read_buttons
 from .renderer import Renderer
+from .storage import open_store
 
 current: "App | None" = None  # The running App, for browser tests that read the game through Pyodide.
 
@@ -33,6 +35,8 @@ class AppConfig:
     mouse: bool = False  # Show the system mouse cursor over the game, when the target takes the mouse.
     sticks: tuple[tuple[int, int], ...] = ((1, 0),)  # (pad, bit shift): left sticks read as d-pad buttons.
     pad_mappings: Path | None = gamepad.DB  # A controller mapping file for SDL (see host/gamepad.py), or None.
+    vendor: str | None = None  # With a vendor, `App.store` keeps the game's files in the user's data folder.
+    display_scale: int | None = None  # The window's scale at the start (pyxel.init). None lets pyxel choose.
 
 
 def screen_size(game: Game, target: Target) -> tuple[int, int]:
@@ -59,6 +63,14 @@ def device_of(last: str, key_code: int, pad_code: int, pointers: tuple[Pointer, 
     return last
 
 
+def drain_writes(game: Game, store: Store | None, live: bool):
+    """Save the files the game asked for this frame (`Game.write`), then clear them. A replay saves nothing."""
+    if live and store is not None:
+        for key, text in game.writes:
+            store.write(key, text)
+    game.writes.clear()
+
+
 def choose_target(config: AppConfig, replay: Recording | None = None, target: Target | None = None) -> Target:
     """A replay runs as it was played. Otherwise: `target`, else the build's, else `NIGHTENGINE_TARGET`.
     A target without a size gets the game's."""
@@ -70,6 +82,8 @@ class App:
     pending: tuple[str, ...] = ()  # Host events for the next frame (`post`).
     device = "keyboard"  # The device used last: "keyboard", "pad", or "pointer". Display only: rules never read it.
     _split: tuple[dict, dict, dict | None] = ({}, {}, None)  # The keyboard and pad tables, and their source.
+    _bound: tuple = (None, None)  # The game's last `Bindings` and the key table made from it.
+    store: Store | None = None  # The game's files (`AppConfig.vendor`). None: nothing is saved.
 
     def __init__(
         self,
@@ -84,7 +98,16 @@ class App:
         self.config, self.renderer, self.audio = config, renderer, audio
         self.target = target = choose_target(config, replay, target)
         gamepad.use_mappings(config.pad_mappings)  # Before pyxel.init: SDL reads the hint when it starts.
-        pyxel.init(target.width, target.height, title=config.title, fps=config.fps, quit_key=pyxel.KEY_NONE)
+        if config.vendor:
+            self.store = open_store(config.vendor, config.title)
+        pyxel.init(
+            target.width,
+            target.height,
+            title=config.title,
+            fps=config.fps,
+            quit_key=pyxel.KEY_NONE,
+            display_scale=config.display_scale,
+        )
         mouse = target.takes(PointerKind.MOUSE)
         platform.init(target.width, target.height, mouse)
         # In a browser the page sizes the canvas to the game's aspect, and the pointer bridge maps the whole canvas.
@@ -119,8 +142,14 @@ class App:
         self.pending = (*self.pending, event)
 
     def key_table(self) -> dict[int, tuple[int, ...]]:
-        """The key table in use: engine button -> pyxel keys and pad buttons."""
-        return self.config.keys
+        """The key table in use: engine button -> pyxel keys and pad buttons. It comes from `game.bindings` when the
+        game sets them (built again only when they are a new object), else from `config.keys`."""
+        bindings = self.game.bindings
+        if bindings is None:
+            return self.config.keys
+        if self._bound[0] is not bindings:
+            self._bound = (bindings, keys.table(bindings))
+        return self._bound[1]
 
     def key_tables(self) -> tuple[dict, dict]:
         """The key table in use, split into keyboard keys and pad buttons. Built again only when the table changes."""
@@ -178,6 +207,7 @@ class App:
             code, pointers, events = self.read_input()
             self.recording.add(code, pointers, events)
         cues = self.game.step(code, pointers, events)
+        drain_writes(self.game, self.store, live=not self.replay)
         self.fit()
         self.audio.update(self.game.music, cues)
         if self.game.quit_requested:

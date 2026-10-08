@@ -4,6 +4,7 @@ from collections.abc import Iterable
 
 import pyxel
 
+from ..bindings import Bindings
 from ..inputs import Button
 
 
@@ -60,3 +61,19 @@ def is_pad(code: int) -> bool:
     if _pad_codes is None:
         _pad_codes = {getattr(pyxel, n) for n in dir(pyxel) if n.startswith("GAMEPAD") and "_BUTTON_" in n}
     return code in _pad_codes
+
+
+def code(kind: str, name: str, pad: int = 1) -> int:
+    """The pyxel constant for a key name ("SPACE") or a pad button name ("X"). An unknown name raises ValueError."""
+    attr = f"KEY_{name}" if kind == "key" else f"GAMEPAD{pad}_BUTTON_{name}"
+    if not hasattr(pyxel, attr):
+        raise ValueError(f"unknown {kind} name {name!r} (pyxel has no {attr})")
+    return getattr(pyxel, attr)
+
+
+def table(bindings: Bindings, pad: int = 1) -> dict[int, tuple[int, ...]]:
+    """The host's key table from a game's bindings: every key and pad name becomes its pyxel constant."""
+    return {
+        bit: tuple(code("key", n) for n in b.keys) + tuple(code("pad", n, pad) for n in b.pad)
+        for bit, b in bindings.table.items()
+    }

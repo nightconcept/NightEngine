@@ -215,3 +215,57 @@ class VolumeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class KeyTableTest(unittest.TestCase):
+    def test_table_maps_names_to_pyxel_codes(self):
+        from nightengine.bindings import Binding, Bindings
+
+        b = Bindings({A: Binding(("Z", "RETURN"), ("A",))})
+        self.assertEqual(keys.table(b), {A: (pyxel.KEY_Z, pyxel.KEY_RETURN, pyxel.GAMEPAD1_BUTTON_A)})
+        self.assertEqual(keys.table(b, pad=2)[A][-1], pyxel.GAMEPAD2_BUTTON_A)
+        with self.assertRaisesRegex(ValueError, "NOPE"):
+            keys.table(Bindings({A: Binding(("NOPE",))}))
+
+    def test_the_app_follows_the_game_bindings(self):
+        from nightengine.bindings import Binding, Bindings
+
+        app = app_for()
+        self.assertIs(app.key_table(), app.config.keys)
+        app.game.bindings = Bindings({A: Binding(("SPACE",), ("B",))})
+        table = app.key_table()
+        self.assertEqual(table, {A: (pyxel.KEY_SPACE, pyxel.GAMEPAD1_BUTTON_B)})
+        self.assertIs(app.key_table(), table)  # Built once for one Bindings object.
+        a, b = live(down=(pyxel.KEY_SPACE,))
+        with a, b:
+            app.update()
+        self.assertEqual(app.recording.frames, [A])
+
+
+class WritesTest(unittest.TestCase):
+    def test_a_live_run_saves_the_writes_and_a_replay_does_not(self):
+        from nightengine.host.app import drain_writes
+        from nightengine.store import MemoryStore
+
+        game, store = Game(), MemoryStore()
+        game.write("save", "1")
+        drain_writes(game, store, live=False)
+        self.assertEqual((store.data, game.writes), ({}, []))
+        game.write("save", "2")
+        game.write("settings", "3")
+        drain_writes(game, store, live=True)
+        self.assertEqual((store.data, game.writes), ({"save": "2", "settings": "3"}, []))
+        game.write("save", "4")
+        drain_writes(game, None, live=True)
+        self.assertEqual(game.writes, [])
+
+    def test_the_app_drains_after_each_frame(self):
+        from nightengine.store import MemoryStore
+
+        app = app_for()
+        app.store = MemoryStore()
+        app.game.scene.update = lambda game, inp: game.write("save", str(game.frame))
+        a, b = live()
+        with a, b:
+            app.update()
+        self.assertEqual(app.store.data, {"save": "0"})
