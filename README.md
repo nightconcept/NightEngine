@@ -301,7 +301,8 @@ target into `game.pyxapp`, and the page takes the target's size.
 
 It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
 `pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
-the game's environment. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
+the game's environment. A fork's local label is dropped (`2.9.9+ne.2` loads `2.9.9`), so the page loads the
+stock runtime. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
 
 `--offline` copies the runtime into the build (`web/runtime.py`): `pyxel/` (pyxel.js, the Pyxel wheel, and its
 images) and `pyodide/v<version>/` (the Pyodide core), about 18 MB. The page then needs no network, which an APK

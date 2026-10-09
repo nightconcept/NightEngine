@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from nightengine.web import runtime
-from nightengine.web.build import WebConfig, build, read_config
+from nightengine.web.build import WebConfig, build, read_config, runtime_version
 
 PYXEL_JS = """const PYODIDE_URL = "https://cdn.example/pyodide/v1/full/pyodide.js";
 const PYXEL_WHEEL_PATH = "pyxel-9-wasm32.whl";
@@ -77,6 +77,20 @@ class WebBuildTest(unittest.TestCase):
             self.assertTrue((out / "pointer.mjs").is_file() and (out / "launcher.mjs").is_file())
             self.assertIn("cdn.jsdelivr.net/gh/kitao/pyxel@", page)
             self.assertFalse((out / "pyxel").exists())
+
+    def test_a_fork_label_is_dropped_so_the_page_loads_the_stock_runtime(self):
+        self.assertEqual(runtime_version("2.9.9+ne.2"), "2.9.9")
+        self.assertEqual(runtime_version("2.9.9"), "2.9.9")
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            mock.patch("nightengine.web.build.version", return_value="2.9.9+ne.2"),
+        ):
+            root = Path(tmp) / "game"
+            root.mkdir()
+            make_game(root)
+            page = (build(root, Path(tmp) / "dist") / "index.html").read_text()
+            self.assertIn("kitao/pyxel@2.9.9/", page)
+            self.assertNotIn("+ne", page)
 
     def test_offline_build_copies_the_runtime_and_loads_it_locally(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(runtime, "fetch", fake_fetch):

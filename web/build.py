@@ -97,6 +97,12 @@ def write_app(path: Path, root: Path, entry: str, files: list[Path], scripts: di
             archive.write(file, "app/" + file.relative_to(root).as_posix())
 
 
+def runtime_version(installed: str) -> str:
+    """The Pyxel version the page loads: the installed one without a local label. A fork such as pyxel-ne
+    (`2.9.9+ne.2`) has no runtime on the CDN, so the page loads stock Pyxel at the same base version."""
+    return installed.split("+", 1)[0]
+
+
 def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool = False, target: str = "web") -> Path:
     root, out = root.resolve(), out.resolve()
     if out == root or out in root.parents or out == STATIC or STATIC in out.parents:
@@ -111,7 +117,7 @@ def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool 
     for path in STATIC.iterdir():
         if path.is_file():
             shutil.copyfile(path, out / path.name)
-    pyxel_version = version("pyxel")
+    pyxel_version = runtime_version(version("pyxel"))
     if offline:
         runtime.vendor(out, pyxel_version)
         pyxel_js, note = "pyxel/pyxel.js", "Everything runs from this build. No internet access is needed."

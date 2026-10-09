@@ -15,6 +15,8 @@
   (a bad file gives the default and is moved aside to `<key>.bad.json`). `Game.write(key, text)` and `Game.writes`.
 - `bindings.py`: `Binding` and `Bindings` for runtime rebinding: primaries and fixed aliases by name, `assign` with the
   trade rule, locked entries, reserved names, and `to_json` and `from_json` over the defaults. `Game.bindings`.
+- The web build drops a local version label (`2.9.9+ne.2` loads `2.9.9`), so a game on a Pyxel fork still loads
+  the stock runtime from the CDN.
 - `pacing.py`: `Pacer` (steps and a blend value for each display frame, locked at 60, 120, 180, and 240 Hz, an
   accumulator otherwise) and `InputLatch` (input merged across display frames that run no step).
 - `Game.listen`: while True, the host reports the next key or pad button pressed as `"press key:<NAME>"` or
