@@ -109,7 +109,8 @@ def available() -> bool:
 
 
 def sample() -> tuple[Pointer, ...]:
-    """This frame's contacts. Call once per frame; every later read of the frame uses the returned tuple."""
+    """This frame's contacts. Call once per display frame; every later read of the frame uses the returned tuple.
+    In display mode (`App.set_vsync`) a display frame can run no step, and `pacing.InputLatch` merges the samples."""
     if available():
         rows = json.loads(_bridge.sample())
         _refresh_info()

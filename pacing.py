@@ -9,7 +9,7 @@ Pure: no pyxel, so tests drive it with a fake clock.
 import math
 import statistics
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from .pointer import ENDED, Pointer, PointerPhase
 
@@ -139,3 +139,11 @@ class InputLatch:
         merged = (self._code, tuple(pointers), tuple(self._events))
         self._code, self._samples, self._events = 0, {}, []
         return merged
+
+
+def carry(pointers: tuple[Pointer, ...]) -> tuple[Pointer, ...]:
+    """The pointers for a later step in the same display frame: no new phases. Active contacts are HELD, and a
+    contact that ended is gone."""
+    ended = {p.id for p in pointers if p.phase in ENDED}
+    out = {p.id: replace(p, phase=PointerPhase.HELD) for p in pointers if p.id not in ended}
+    return tuple(out.values())

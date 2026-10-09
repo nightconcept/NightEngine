@@ -242,8 +242,11 @@ build for a phone and a build for a computer can differ without an `if` in the g
   - `draw_scene(scene, game, t)` draws one scene. A draw function can call it to draw the scenes below a transition.
   - Shake functions: `shake_xy` (sideways, plus up and down for a strong shake), `shake_x` (sideways only),
     `no_shake` (for a game that shakes inside its own draw functions).
+  - `alpha` (0 to 1, default 1): in display mode, where the picture is between the step before the newest one and
+    the newest one. Draw functions read it; `draw` does not. `smooth` (default False): a game sets it when its draw
+    functions blend, so the App draws every display frame and not only those that ran a step.
 - `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False,
-  sticks=((1, 0),), pad_mappings=gamepad.DB, vendor=None, display_scale=None)`. With a `vendor`, `App.store` is
+  sticks=((1, 0),), pad_mappings=gamepad.DB, vendor=None, display_scale=None, vsync=False)`. With a `vendor`, `App.store` is
   `open_store(vendor, title)`, and the game's `writes` are saved there after each live frame. `display_scale` is the
   window's scale at the start (passed to `pyxel.init`). The key table is `config.keys` while `game.bindings` is None. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
   `App` loads the controller database before `pyxel.init` (`pad_mappings=None` skips it).
@@ -254,6 +257,14 @@ build for a phone and a build for a computer can differ without an `if` in the g
   records both, steps the game (a replay feeds the recorded ones), and resizes the screen if `game.screen_size`
   changed (`fit`). The recording keeps the target.
   `mouse=True` shows the system cursor when the target takes the mouse.
+  - Display mode: `App.set_vsync(on)` (and `AppConfig.vsync` at the start) lets the monitor pace the window, at
+    once. It needs a Pyxel with `vsync` (`pyxel.NE_PACING`, the pyxel-ne fork); with stock Pyxel, or when the driver
+    refuses vsync, it does nothing and the window keeps its timer. In display mode each display frame asks the
+    `Pacer` how many steps to run (often 0 or 1) and sets `renderer.alpha`. The input of every display frame goes
+    into an `InputLatch`, and the first step of a frame takes it, so a tap in a frame with no step is not lost. Later
+    steps in the same frame get the same buttons, the pointers as `HELD` (`pacing.carry`), and no events. Each step
+    records one input, so a recording has the same format in both modes and plays the same. A replay uses the pacer
+    too, so it plays at the right speed. A frame that ran no step skips the draw unless `renderer.smooth` is set.
   - Host events: `App.post(event)` queues an event for the next frame. `App.boot() -> list[str]` (default `[]`) runs
     once after `make_game` in a live run, and its events go into frame 0; a game's `App` subclass overrides it (to
     send the saved settings). While `game.listen` is True, each frame adds `"press " + keys.first_pressed()` when a key

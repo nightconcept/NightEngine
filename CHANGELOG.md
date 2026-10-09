@@ -17,6 +17,8 @@
   trade rule, locked entries, reserved names, and `to_json` and `from_json` over the defaults. `Game.bindings`.
 - The web build drops a local version label (`2.9.9+ne.2` loads `2.9.9`), so a game on a Pyxel fork still loads
   the stock runtime from the CDN.
+- Display mode: `AppConfig.vsync`, `App.set_vsync(on)` (pyxel-ne's `pyxel.vsync`; nothing with stock Pyxel),
+  `Renderer.alpha` and `Renderer.smooth`. The rules step at `fps`, one recorded input for each step.
 - `pacing.py`: `Pacer` (steps and a blend value for each display frame, locked at 60, 120, 180, and 240 Hz, an
   accumulator otherwise) and `InputLatch` (input merged across display frames that run no step).
 - `Game.listen`: while True, the host reports the next key or pad button pressed as `"press key:<NAME>"` or

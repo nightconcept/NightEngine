@@ -37,7 +37,14 @@ def no_shake(game: Game, t: int) -> tuple[int, int]:
 class Renderer:
     """`draw` is the table of draw functions. It is kept, not copied, so a game can add to it after this call.
     `bake` fills the image banks. `ui_colors` is (text colour, shadow colour). `scratch` is for `ui.big_text`.
-    `shake` returns the camera offset. `fade=True` draws `game.fx.fade` over everything."""
+    `shake` returns the camera offset. `fade=True` draws `game.fx.fade` over everything.
+
+    In display mode (`App.set_vsync`) `alpha` (0 to 1) is where the picture is between the step before the newest
+    one and the newest one; draw functions read it, `draw` does not. It is 1 in fixed mode. A game sets `smooth`
+    when its draw functions blend: then the App draws every display frame, not only those that ran a step."""
+
+    alpha: float = 1.0
+    smooth: bool = False
 
     def __init__(
         self,

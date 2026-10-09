@@ -9,10 +9,13 @@ import pyxel
 
 from nightengine import DOWN, UP, A, Canvas, Game, Scene
 from nightengine.host import assets, ui
-from nightengine.host.app import AppConfig
+from nightengine.host.app import App, AppConfig
 from nightengine.host.audio import AudioManager
 from nightengine.host.keys import read_buttons
 from nightengine.host.renderer import Renderer, no_shake, shake_x, shake_xy
+from nightengine.pacing import InputLatch, Pacer
+from nightengine.pointer import Pointer, PointerPhase
+from nightengine.replay import Recording
 
 
 def stub(*names, **values):
@@ -325,6 +328,113 @@ class AppConfigTest(unittest.TestCase):
     def test_defaults(self):
         config = AppConfig("T", 192, 256, {}, replays="r")
         self.assertEqual((config.fps, config.label_xy, config.integer_scale), (60, (4, 4), True))
+
+    def test_vsync_is_off_by_default(self):
+        self.assertFalse(AppConfig("T", 192, 256, {}, replays="r").vsync)
+
+
+class FakeClock:
+    def __init__(self, hz: float):
+        self.dt, self.now = 1 / hz, -1 / hz
+
+    def __call__(self) -> float:
+        self.now += self.dt
+        return self.now
+
+
+def display_app(hz: float = 120, replay: Recording | None = None) -> App:
+    """An App in display mode with no window: the game, the renderer, the audio, and the input are fakes."""
+    app = App.__new__(App)
+    app.config = AppConfig("T", 192, 256, {}, replays="r")
+    app.game = mock.MagicMock(writes=[], quit_requested=False, frame=0)
+    app.renderer, app.audio, app.replay = mock.MagicMock(alpha=1.0, smooth=False), mock.MagicMock(), replay
+    app.recording = None if replay else Recording(1)
+    app.pacer, app.latch, app.clock, app.vsync = Pacer(), InputLatch(), FakeClock(hz), True
+    app.fit = mock.MagicMock()
+    app.inputs = []  # What read_input gives on each display frame.
+    app.read_input = lambda: app.inputs.pop(0) if app.inputs else (0, (), ())
+    return app
+
+
+def touch(phase: PointerPhase) -> Pointer:
+    return Pointer(1, 5, 6, 5, 6, phase)
+
+
+class DisplayModeTest(unittest.TestCase):
+    def setUp(self):
+        self.stack, _ = stub(btnp=lambda *a: False, btn=lambda *a: False)
+        self.stack.__enter__()
+
+    def tearDown(self):
+        self.stack.__exit__(None, None, None)
+
+    def frames(self, app: App, n: int) -> list[float]:
+        alphas = []
+        for _ in range(n):
+            app.update()
+            alphas.append(app.renderer.alpha)
+        return alphas
+
+    def test_120_hz_steps_every_second_frame_and_records_one_input_for_each_step(self):
+        app = display_app(120)
+        alphas = self.frames(app, 5)
+        self.assertEqual(alphas, [1.0, 0.5, 1.0, 0.5, 1.0])
+        self.assertEqual(app.game.step.call_count, 3)
+        self.assertEqual(len(app.recording.frames), 3)
+
+    def test_a_key_held_only_in_a_frame_with_no_step_is_recorded(self):
+        app = display_app(120)
+        app.inputs = [(0, (), ()), (0, (), ()), (A, (), ("press key:Z",)), (0, (), ())]
+        self.frames(app, 4)  # Steps on frames 1, 2, and 4; frame 3 runs none.
+        self.assertEqual(app.recording.frames, [0, 0, A])
+        self.assertEqual(app.recording.events_at(2), ("press key:Z",))
+
+    def test_later_steps_in_one_frame_get_the_same_buttons_held_pointers_and_no_events(self):
+        app = display_app(30)  # Two steps in each display frame.
+        app.inputs = [(0, (), ()), (A, (touch(PointerPhase.PRESSED),), ("e",))]
+        self.frames(app, 2)
+        first, second = app.game.step.call_args_list[-2:]
+        self.assertEqual(first.args, (A, (touch(PointerPhase.PRESSED),), ("e",)))
+        self.assertEqual(second.args, (A, (touch(PointerPhase.HELD),), ()))
+
+    def test_a_replay_plays_one_recorded_frame_for_each_step(self):
+        replay = Recording(1)
+        for code in (1, 2, 4):
+            replay.add(code)
+        app = display_app(120, replay)
+        app.game.frame = 0
+
+        def step(code, pointers, events):
+            app.game.frame += 1
+
+        app.game.step.side_effect = step
+        self.frames(app, 5)
+        self.assertEqual([c.args[0] for c in app.game.step.call_args_list], [1, 2, 4])
+
+    def test_a_frame_with_no_step_skips_the_draw_unless_the_renderer_blends(self):
+        app = display_app(120)
+        self.frames(app, 3)  # The third frame runs no step.
+        app.draw()
+        app.renderer.draw.assert_not_called()
+        app.renderer.smooth = True
+        app.draw()
+        app.renderer.draw.assert_called_once()
+
+    def test_set_vsync_does_nothing_without_the_fork(self):
+        app = display_app()
+        app.vsync = False
+        with mock.patch.object(pyxel, "NE_PACING", False, create=True):
+            app.set_vsync(True)
+        self.assertFalse(app.vsync)
+
+    def test_set_vsync_stays_off_when_the_driver_refuses(self):
+        app = display_app()
+        with stub(NE_PACING=True, vsync=lambda on: 0)[0]:
+            app.set_vsync(True)
+        self.assertFalse(app.vsync)
+        with stub(NE_PACING=True, vsync=lambda on: -1)[0]:
+            app.set_vsync(True)
+        self.assertTrue(app.vsync)
 
 
 if __name__ == "__main__":

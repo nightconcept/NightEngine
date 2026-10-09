@@ -1,6 +1,7 @@
 """The pyxel window: keyboard, gamepad, and pointer input, audio, recording, and replay playback."""
 
 import atexit
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 import pyxel
 
 from ..core import Game
+from ..pacing import InputLatch, Pacer, carry
 from ..pointer import Pointer, PointerKind, PointerPhase
 from ..replay import Recording, digits_for
 from ..store import Store
@@ -37,6 +39,7 @@ class AppConfig:
     pad_mappings: Path | None = gamepad.DB  # A controller mapping file for SDL (see host/gamepad.py), or None.
     vendor: str | None = None  # With a vendor, `App.store` keeps the game's files in the user's data folder.
     display_scale: int | None = None  # The window's scale at the start (pyxel.init). None lets pyxel choose.
+    vsync: bool = False  # Display mode at the start: the monitor paces the window (`App.set_vsync`).
 
 
 def screen_size(game: Game, target: Target) -> tuple[int, int]:
@@ -84,6 +87,9 @@ class App:
     _split: tuple[dict, dict, dict | None] = ({}, {}, None)  # The keyboard and pad tables, and their source.
     _bound: tuple = (None, None)  # The game's last `Bindings` and the key table made from it.
     store: Store | None = None  # The game's files (`AppConfig.vendor`). None: nothing is saved.
+    vsync = False  # Display mode: the monitor paces the window, and `pacer` decides the steps (`set_vsync`).
+    stepped = True  # Whether the last display frame ran a step.
+    clock: Callable[[], float] = staticmethod(time.perf_counter)
 
     def __init__(
         self,
@@ -96,6 +102,7 @@ class App:
         target: Target | None = None,
     ):
         self.config, self.renderer, self.audio = config, renderer, audio
+        self.pacer, self.latch = Pacer(step_hz=config.fps), InputLatch()
         self.target = target = choose_target(config, replay, target)
         gamepad.use_mappings(config.pad_mappings)  # Before pyxel.init: SDL reads the hint when it starts.
         pyxel.init(
@@ -127,6 +134,7 @@ class App:
         if not replay:
             self.pending = (*self.boot(), *self.pending)  # Frame 0 gets them. A replay has them in its recording.
         self.fit()
+        self.set_vsync(config.vsync)
         global current
         current = self
         atexit.register(self.save)  # pyxel.run ends the process, so this also saves when the window closes.
@@ -194,17 +202,56 @@ class App:
         else:
             pyxel.quit()
 
+    def set_vsync(self, on: bool):
+        """Display mode on or off, at once. On: the monitor paces the window, the rules still step at `fps`, and
+        `renderer.alpha` says where the picture is between two steps. It needs a Pyxel with `vsync` (the pyxel-ne
+        fork): with stock Pyxel, or when the driver refuses vsync, the window keeps its timer."""
+        if not getattr(pyxel, "NE_PACING", False):
+            return
+        self.vsync = on and pyxel.vsync(on) != 0
+        self.pacer.reset()
+        self.renderer.alpha = 1.0
+
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q) or (pyxel.btn(pyxel.KEY_ALT) and pyxel.btnp(pyxel.KEY_F4)):
             self.quit()
             return
+        if not self.vsync:  # Fixed mode: one step for each frame, and alpha stays 1 (set_vsync).
+            self.stepped = self.step_once(self.next_input())
+            return
+        steps, alpha = self.pacer.frame(self.clock())
+        if not self.replay:
+            self.latch.add(*self.read_input())
+        self.stepped = False
+        for i in range(steps):
+            if self.replay:
+                taken = self.next_input()
+            elif i == 0:
+                taken = self.latch.take()
+            else:  # A later step in this frame: the same buttons, no new pointer phases, no events.
+                taken = (taken[0], carry(taken[1]), ())
+            if not self.step_once(taken):
+                break
+            self.stepped = True
+            if self.game.quit_requested:
+                break
+        self.renderer.alpha = alpha
+
+    def next_input(self) -> tuple[int, tuple[Pointer, ...], tuple[str, ...]] | None:
+        """The input for the next step: the recorded frame in a replay (None after its end), else the live input."""
         if self.replay:
             frame = self.game.frame
             if frame >= len(self.replay.frames):
-                return
-            code, pointers, events = self.replay.frames[frame], self.replay.at(frame), self.replay.events_at(frame)
-        else:
-            code, pointers, events = self.read_input()
+                return None
+            return self.replay.frames[frame], self.replay.at(frame), self.replay.events_at(frame)
+        return self.read_input()
+
+    def step_once(self, taken: tuple[int, tuple[Pointer, ...], tuple[str, ...]] | None) -> bool:
+        """Run one rule step with this input, and record it. False when there is none (a replay's end)."""
+        if taken is None:
+            return False
+        code, pointers, events = taken
+        if self.recording is not None:
             self.recording.add(code, pointers, events)
         cues = self.game.step(code, pointers, events)
         drain_writes(self.game, self.store, live=not self.replay)
@@ -212,8 +259,13 @@ class App:
         self.audio.update(self.game.music, cues)
         if self.game.quit_requested:
             self.quit()
+        return True
 
     def draw(self):
+        # A display frame with no step shows the same picture, unless the renderer blends between steps. Pyxel keeps
+        # the screen, so it is shown again at no cost.
+        if self.vsync and not self.stepped and not self.renderer.smooth:
+            return
         self.renderer.draw(self.game)
         if self.replay:
             over = self.game.frame >= len(self.replay.frames)
