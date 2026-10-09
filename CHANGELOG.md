@@ -15,6 +15,8 @@
   (a bad file gives the default and is moved aside to `<key>.bad.json`). `Game.write(key, text)` and `Game.writes`.
 - `bindings.py`: `Binding` and `Bindings` for runtime rebinding: primaries and fixed aliases by name, `assign` with the
   trade rule, locked entries, reserved names, and `to_json` and `from_json` over the defaults. `Game.bindings`.
+- `pacing.py`: `Pacer` (steps and a blend value for each display frame, locked at 60, 120, 180, and 240 Hz, an
+  accumulator otherwise) and `InputLatch` (input merged across display frames that run no step).
 - `Game.listen`: while True, the host reports the next key or pad button pressed as `"press key:<NAME>"` or
   `"press pad:<NAME>"`.
 

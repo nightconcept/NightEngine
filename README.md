@@ -47,6 +47,22 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
   end unless it is touch, so older files load as touch.
 - Every action a pointer can do should also work with buttons, so gamepads and keyboards are never locked out.
 
+### Display pacing (`pacing.py`)
+
+The rules step at a fixed rate (`step_hz`, 60) whatever the monitor's refresh. No pyxel, so tests use a fake clock.
+
+- `Pacer(step_hz=60, max_steps=4, lock_tolerance=0.01, window=120)`: `frame(now) -> (steps, alpha)` once for each
+  display frame with `time.perf_counter()`. The first frame gives `(1, 1.0)`. When the median refresh of the last
+  `window` frames is within 1% of 60, 120, 180, or 240 Hz it locks: one step every `refresh / 60` frames, and
+  `alpha` goes `1/k, 2/k, ... 1`. Otherwise (144 Hz, 165 Hz, variable refresh) an accumulator gives the steps, with
+  a frame within 1% of a whole fraction of a step counted as exactly that. A step runs as soon as it is due before
+  the next refresh, so `alpha` (0 to 1) is how far the picture is from the step before the newest one to the
+  newest one. At most `max_steps` a frame; a frame over 0.25 s gives `(1, 1.0)` and resets. `reset()`,
+  `refresh_hz` (None until `window` frames), `locked`.
+- `InputLatch`: `add(code, pointers, events)` for each display frame and `take()` for each frame that steps. It
+  ORs the codes, keeps every event in order, and merges the pointers: the last sample of each id, but a `PRESSED`
+  sample wins at its own position, and a press that ended in the same window gives both entries, `PRESSED` first.
+
 ### Targets (`target.py`)
 
 A target is where the game runs: `desktop`, `web`, or `android`. It sets the screen size and the controls, so a
