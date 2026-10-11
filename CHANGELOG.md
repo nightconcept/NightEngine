@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Two languages: `rng.py` (`Rng`, xoshiro128** with splitmix32 seeding and FNV-1a string seeds) replaces
+  `random.Random` in `Game.rng`, and gives the same numbers in Lua. `trace.py` hashes a game's snapshot each frame
+  (CRC-32 of a canonical text), so a port can prove it plays the same. `contract/rng.json` holds the test vectors.
+- `lua/nightengine/`: a small Lua core for LÖVE ports (input bits, pointers, scenes, `Game`, targets, replays in the
+  same JSON, the rng, traces, and `test.lua`, a test runner for plain LuaJIT). Unicycle's LÖVE build uses it.
+
 - Controllers, Xbox first (`host/gamepad.py`): the shared `XBOX` layout, `xbox(pad, layout, shift)` key tables for
   pads 1-4, `merge`, and the left stick as the d-pad (`AppConfig.sticks`, on for pad 1 by default). `App` loads the
   bundled SDL_GameControllerDB (`host/gamepads/gamecontrollerdb.txt`, zlib license) through SDL's
