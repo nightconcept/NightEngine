@@ -4,11 +4,10 @@ No pyxel here: the renderer reads a Game, and tests drive one headless. A game s
 class attributes below, adds its own state, and starts its first scene. `step` runs one frame.
 """
 
-from random import Random
-
 from .fx import ScreenFx
 from .inputs import ALL, REPEAT_DELAY, REPEAT_RATE, Input, InputTracker
 from .pointer import Pointer
+from .rng import Rng
 from .scene import Scene, SceneStack
 from .target import Target
 
@@ -22,7 +21,7 @@ class Game:
     def __init__(self, seed: int = 0, target: Target | None = None):
         self.seed = seed
         self.target = target or Target()  # Where the game runs (see target.py). Rules may read it.
-        self.rng = Random(seed)  # The only source of randomness in game rules.
+        self.rng = Rng(seed)  # The only source of randomness in game rules. Lua gives the same numbers.
         self.frame = 0
         self.tracker = InputTracker(self.input_mask, self.repeat_buttons, self.repeat_delay, self.repeat_rate)
         self.scenes = SceneStack()
