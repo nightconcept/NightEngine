@@ -6,7 +6,7 @@ python -m nightengine.love build [love] [windows] [macos] [linux] [android] [--o
 - windows: <slug>-<version>-windows.zip, love.exe with the game fused in, and its DLLs. Builds on any system.
 - macos:   <slug>-<version>-macos.zip, <title>.app. Builds on macOS (it signs the app ad hoc).
 - linux:   <slug>-<version>-linux.AppImage, LÖVE's AppImage with the game fused in. Builds on Linux x64 (it runs
-           LÖVE's AppImage and appimagetool to unpack and pack it).
+           LÖVE's AppImage and appimagetool to unpack and pack it, with the static AppImage runtime).
 - android: <slug>-<version>-love.apk, the LÖVE APK with the game inside, unpacked and packed again with apktool
            and signed with android/debug.keystore. Needs Java 17+ and the Android SDK build-tools.
 
@@ -30,6 +30,8 @@ ROOT = Path.cwd()
 LOVE = "11.5"
 RELEASES = f"https://github.com/love2d/love/releases/download/{LOVE}"
 APPIMAGETOOL = "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage"
+# The static AppImage runtime: it reads appimagetool's zstd images and needs no libfuse2 on the player's system.
+APPIMAGE_RUNTIME = "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64"
 # apktool 2: version 3 dropped renameManifestPackage.
 APKTOOL = "https://github.com/iBotPeaches/Apktool/releases/download/v2.12.1/apktool_2.12.1.jar"
 # Not shipped: tests and the dev bridge, including games' legacy lovepilot/ folder.
@@ -156,23 +158,18 @@ def build_linux(out: Path, version: str) -> Path:
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
     env = {**os.environ, "APPIMAGE_EXTRACT_AND_RUN": "1"}  # No FUSE needed.
-    love, tool = fetch(f"{RELEASES}/love-{LOVE}-x86_64.AppImage"), fetch(APPIMAGETOOL)
+    love, tool, runtime = fetch(f"{RELEASES}/love-{LOVE}-x86_64.AppImage"), fetch(APPIMAGETOOL), fetch(APPIMAGE_RUNTIME)
     for path in (love, tool):
         path.chmod(0o755)
     subprocess.run([str(love), "--appimage-extract"], cwd=work, env=env, check=True, stdout=subprocess.DEVNULL)
-    # LÖVE's own AppImage runtime, so appimagetool downloads nothing.
-    offset = int(subprocess.run([str(love), "--appimage-offset"], env=env, check=True, capture_output=True,
-                                text=True).stdout)  # fmt: skip
-    runtime = work / "runtime"
-    runtime.write_bytes(love.read_bytes()[:offset])
     app = work / "squashfs-root"
     binary = app / "bin" / "love"
     binary.write_bytes(binary.read_bytes() + game.read_bytes())
     binary.chmod(0o755)
     path = out / f"{slug()}-{version}-linux.AppImage"
     path.unlink(missing_ok=True)
-    # LÖVE's runtime reads xz and zlib squashfs images, not appimagetool's default zstd.
-    command = [str(tool), "--no-appstream", "--comp", "xz", "--runtime-file", str(runtime), str(app), str(path)]
+    # A pinned runtime file, so appimagetool downloads nothing.
+    command = [str(tool), "--no-appstream", "--runtime-file", str(runtime), str(app), str(path)]
     subprocess.run(command, cwd=work, env={**env, "ARCH": "x86_64"}, check=True)
     return path
 

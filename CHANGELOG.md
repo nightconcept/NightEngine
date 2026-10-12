@@ -13,7 +13,7 @@
   sends `key=value` arguments as frame-0 host events: Python `App(dev=...)`, Lua `--dev key=value`,
   C# `Host.Post` and `Host.PostDev`. Lua `--dev` also opens the LovePilot bridge.
 - `python -m nightengine.love build linux`: a Linux x64 AppImage, LÖVE's AppImage with the game fused in.
-  It builds on Linux and uses appimagetool 1.9.1 with LÖVE's own AppImage runtime.
+  It builds on Linux with appimagetool 1.9.1 and the static AppImage runtime (type2-runtime 20251108).
 - Fix: the LÖVE builder reads the engine's Lua files from the `nightengine/` submodule, so it builds on a
   Windows checkout where the `love/nightengine` link is a plain file.
 - Fix: the Python and Lua trace helpers (`trace.recording_steps`, Lua `trace.trace`) feed recorded host events.
