@@ -8,6 +8,8 @@ java = "temurin-17"
 luajit = "2.1"
 stylua = "2"
 just = "1"
+node = "24.18.0"
+pnpm = "12.6.0"
 
 # LÖVE 11.5 runs the Lua port. The releases have no installer, so mise takes them as they are.
 [tools."http:love"]
