@@ -25,3 +25,9 @@ build:
     mise x -- dotnet pack csharp/NightEngine.Core -c Release -o dist/csharp
     uv run --project python python -m nightengine.web build --root examples/python-pyxel --out dist/python-example
     uv run --project python python -m nightengine.love build love --root examples/lua-love --out dist/lua-example
+
+docs:
+    mise x -- pnpm --dir site build
+
+docs-dev:
+    mise x -- pnpm --dir site dev

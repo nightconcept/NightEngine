@@ -34,6 +34,7 @@ All implementations share deterministic frame, input, RNG, replay and trace cont
 - **Format**: `just format`
 - **Type check**: `just typecheck`
 - **Build**: `just build`
+- **Docs**: `just docs`
 
 ## Hard Rules
 
@@ -57,6 +58,7 @@ Agent workflow:
 
 Reference:
 
+- [Documentation Map](docs/index.md) — Engine portal, documentation index and contracts
 - [Architecture](docs/architecture.md) — Cores, hosts, layout and game checkout
 - [Compatibility](docs/compatibility.md) — Shared contract and fixtures
 - [Python/Pyxel](docs/python-pyxel.md) — Python API, host, web, Android and desktop builds

@@ -31,6 +31,7 @@ mirrors it to [Forgejo](https://forge.solivan.dev/nightconcept/NightEngine). CI 
 and builds the Python distribution and both example archives. Engine version:
 0.2.0. Games pin the engine commit or release deliberately.
 
+- [Documentation Map](docs/index.md)
 - [Architecture](docs/architecture.md)
 - [Compatibility](docs/compatibility.md)
 - [Python/Pyxel](docs/python-pyxel.md)
