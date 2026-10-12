@@ -1,6 +1,7 @@
 # Lua / LÖVE
 
-Use LÖVE 11.5 and mount `lua/` as the package directory `nightengine`:
+Use LÖVE 11.5. In this repository, `mise install` supplies it on Linux x64,
+macOS arm64 and Windows x64. Mount `lua/` as the package directory `nightengine`:
 
 ```sh
 ln -s ../nightengine/lua love/nightengine

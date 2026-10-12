@@ -24,7 +24,10 @@ just check
 just lint
 ```
 
-Lua checks need LuaJIT; formatting needs StyLua. CI checks both implementations
+`mise install` supplies Python, uv, ruff, ty, LuaJIT, StyLua, LÖVE, Java and just
+on Linux x64, macOS arm64 and Windows x64. Use `just format` and `just typecheck`
+for formatting and ty type checks. GitHub is the primary repository; a workflow
+mirrors it to [Forgejo](https://forge.solivan.dev/nightconcept/NightEngine). CI checks both implementations on all three platforms
 and builds the Python distribution and both example archives. Engine version:
 0.1.2. Games pin the engine commit or release deliberately.
 
