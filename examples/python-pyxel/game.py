@@ -31,7 +31,9 @@ def draw(game):
 if __name__ == "__main__":
     renderer = SimpleNamespace(setup=lambda: None, draw=draw)
     App(
-        AppConfig("NightEngine Example", 320, 180, {A: (pyxel.KEY_SPACE,)}, Path("replays")),
+        AppConfig(
+            "NightEngine Example", 320, 180, {A: (pyxel.KEY_SPACE,)}, Path(__file__).resolve().parent / "replays"
+        ),
         Example,
         renderer,
         AudioManager({}, {}),

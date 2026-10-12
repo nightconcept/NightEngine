@@ -9,3 +9,4 @@ dist/
 .tools/
 node_modules/
 test-results/
+replays/
