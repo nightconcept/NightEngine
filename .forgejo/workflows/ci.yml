@@ -1,0 +1,30 @@
+name: CI
+
+# Forgejo has one Linux runner. This file replaces .github/workflows/ on Forgejo,
+# so the macOS and Windows jobs never queue there. GitHub runs the full matrix.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: node:24-trixie
+    env:
+      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install only the tools that check and lint use. Skip Java, LÖVE and ty.
+      - name: Install tools
+        run: |
+          curl -fsSL https://mise.run | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/share/mise/shims" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/mise" install python uv ruff luajit stylua just
+
+      - run: just check
+      - run: just lint
+      - run: node --test python/src/nightengine/web/tests/pointer.test.mjs

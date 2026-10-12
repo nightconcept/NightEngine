@@ -36,6 +36,10 @@ It installs tools with `jdx/mise-action`, so CI and local runs use the same vers
 - `build` runs `just build` on Linux and uploads the archives.
 - `devtools` runs the love2d-mcp install and smoke check on Linux.
 
+Forgejo has one Linux runner. `.forgejo/workflows/ci.yml` replaces `.github/workflows/` on Forgejo.
+It runs `just check`, `just lint` and the pointer bridge test on Linux only.
+It runs on push to `main` and on `v*` tags. Keep it in agreement with the GitHub `lint` and `check` jobs.
+
 The Lua spec runner fails when it finds no specs. A broken spec search cannot pass with zero tests.
 
 ## Type checks
