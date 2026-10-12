@@ -1,30 +1,62 @@
 name: CI
 
 # Forgejo has one Linux runner. This file replaces .github/workflows/ on Forgejo,
-# so the macOS and Windows jobs never queue there. GitHub runs the full matrix.
+# so the macOS and Windows jobs never queue there. The jobs match the Linux jobs
+# in .github/workflows/ci.yml. GitHub runs the full matrix and keeps the archives.
 on:
   push:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
 
+env:
+  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
     container: node:24-trixie
-    env:
-      MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
-
-      # Install only the tools that check and lint use. Skip Java, LÖVE and ty.
+      # Install only the tools that the jobs use. Skip Java, LÖVE and ty.
       - name: Install tools
         run: |
           curl -fsSL https://mise.run | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           echo "$HOME/.local/share/mise/shims" >> "$GITHUB_PATH"
-          "$HOME/.local/bin/mise" install python uv ruff luajit stylua just
-
+          "$HOME/.local/bin/mise" install python uv luajit just
       - run: just check
+  lint:
+    runs-on: ubuntu-latest
+    container: node:24-trixie
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          curl -fsSL https://mise.run | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/share/mise/shims" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/mise" install ruff stylua just
       - run: just lint
       - run: node --test python/src/nightengine/web/tests/pointer.test.mjs
+  build:
+    runs-on: ubuntu-latest
+    container: node:24-trixie
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          curl -fsSL https://mise.run | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/share/mise/shims" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/mise" install python uv just
+      - run: just build
+  devtools:
+    runs-on: ubuntu-latest
+    container: node:24-trixie
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pinned love2d-mcp install and build
+        run: python3 tools/love2d-mcp/setup.py --out .tools/love2d-mcp
+      - name: MCP protocol smoke check
+        run: node tools/love2d-mcp/check.mjs
