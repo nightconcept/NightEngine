@@ -1,0 +1,11 @@
+# Type checks for the Python engine, tools and examples. Run `just typecheck`.
+[environment]
+python = "python/.venv"
+python-version = "3.11"
+
+[src]
+include = ["python/src", "python/tests", "tools", "examples"]
+
+# `js` exists only in the Pyodide browser runtime.
+[analysis]
+allowed-unresolved-imports = ["js"]

@@ -1,13 +1,19 @@
+# Supported development platforms: linux-x64, macos-arm64 and windows-x64.
 [tools]
 python = "3.14"
+uv = "0.13"
+ruff = "0.17"
+ty = "0.0.86"
 java = "temurin-17"
 luajit = "2.1"
 stylua = "2"
+just = "1"
 
-# LÖVE 11.5 runs the Lua port (`just love`). The release zips have no installer, so mise takes them as they are.
+# LÖVE 11.5 runs the Lua port. The releases have no installer, so mise takes them as they are.
 [tools."http:love"]
 version = "11.5"
 
 [tools."http:love".platforms]
+linux-x64 = { url = "https://github.com/love2d/love/releases/download/11.5/love-11.5-x86_64.AppImage", bin = "love" }
 macos-arm64 = { url = "https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip", bin_path = "love.app/Contents/MacOS" }
-macos-x64 = { url = "https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip", bin_path = "love.app/Contents/MacOS" }
+windows-x64 = { url = "https://github.com/love2d/love/releases/download/11.5/love-11.5-win64.zip" }

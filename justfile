@@ -1,11 +1,22 @@
+# Recipes are single commands, so PowerShell runs them on Windows.
+set windows-shell := ["pwsh", "-NoLogo", "-NoProfile", "-Command"]
+
 check:
     uv run --project python python -m unittest discover -s python/tests -t python
     mise x -- luajit tests/lua.lua
 
 lint:
-    uvx ruff check python tools examples
-    uvx ruff format --check python tools examples
+    mise x -- ruff check python tools examples
+    mise x -- ruff format --check python tools examples
     mise x -- stylua --check lua tests/lua tests/lua.lua examples/lua-love
+
+format:
+    mise x -- ruff check --fix python tools examples
+    mise x -- ruff format python tools examples
+    mise x -- stylua lua tests/lua tests/lua.lua examples/lua-love
+
+typecheck:
+    mise x -- ty check
 
 build:
     uv build python --out-dir dist
