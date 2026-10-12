@@ -14,6 +14,8 @@
   C# `Host.Post` and `Host.PostDev`. Lua `--dev` also opens the LovePilot bridge.
 - `python -m nightengine.love build linux`: a Linux x64 AppImage, LÖVE's AppImage with the game fused in.
   It builds on Linux and uses appimagetool 1.9.1 with LÖVE's own AppImage runtime.
+- Fix: the LÖVE builder reads the engine's Lua files from the `nightengine/` submodule, so it builds on a
+  Windows checkout where the `love/nightengine` link is a plain file.
 - Fix: the Python and Lua trace helpers (`trace.recording_steps`, Lua `trace.trace`) feed recorded host events.
 
 ## 0.2.0 (2026-10-12)

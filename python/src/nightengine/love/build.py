@@ -80,12 +80,20 @@ def target_lua(name: str) -> str:
 def game_zip(out: Path, target: str) -> Path:
     """The .love file: love/ with its links followed, plus the build's target."""
     path = out / f"{slug()}-{target}.love"
+    # love/nightengine links to the engine's lua/. A Windows checkout can leave the link as a plain file,
+    # so the engine files come from the submodule when it is there.
+    engine = ROOT / "nightengine" / "lua"
+    if not engine.is_dir():
+        engine = ROOT / "love" / "nightengine"
+    files = []
+    for base, prefix in ((ROOT / "love", Path()), (engine, Path("nightengine"))):
+        for folder, dirs, names in os.walk(base, followlinks=True):
+            if Path(folder) == ROOT / "love":
+                dirs[:] = [d for d in dirs if d != "nightengine"]
+                names = [n for n in names if n != "nightengine"]
+            files += [(Path(folder) / name, prefix / (Path(folder) / name).relative_to(base)) for name in names]
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
-        files = []
-        for folder, _, names in os.walk(ROOT / "love", followlinks=True):  # love/nightengine is a link.
-            files += [Path(folder) / name for name in names]
-        for file in sorted(files):
-            rel = file.relative_to(ROOT / "love")
+        for file, rel in sorted(files, key=lambda f: f[1]):
             if not SKIP & set(rel.parts):
                 zf.write(file, rel.as_posix())
         zf.writestr("nightengine_build.lua", target_lua(target))
@@ -163,8 +171,9 @@ def build_linux(out: Path, version: str) -> Path:
     binary.chmod(0o755)
     path = out / f"{slug()}-{version}-linux.AppImage"
     path.unlink(missing_ok=True)
-    subprocess.run([str(tool), "--no-appstream", "--runtime-file", str(runtime), str(app), str(path)],
-                   cwd=work, env={**env, "ARCH": "x86_64"}, check=True)  # fmt: skip
+    # LÖVE's runtime reads xz and zlib squashfs images, not appimagetool's default zstd.
+    command = [str(tool), "--no-appstream", "--comp", "xz", "--runtime-file", str(runtime), str(app), str(path)]
+    subprocess.run(command, cwd=work, env={**env, "ARCH": "x86_64"}, check=True)
     return path
 
 
