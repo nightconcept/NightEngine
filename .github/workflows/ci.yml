@@ -72,4 +72,5 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet run --project csharp/NightEngine.Tests
+      - run: dotnet build examples/csharp-monogame -c Release
       - run: dotnet format csharp/NightEngine.Tests/NightEngine.Tests.csproj --verify-no-changes

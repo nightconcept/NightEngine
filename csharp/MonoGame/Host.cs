@@ -23,7 +23,13 @@ public abstract class Host : Microsoft.Xna.Framework.Game
     protected Host(NightEngine.Game simulation)
     {
         Simulation = simulation; Recording = new(simulation.Seed, 7, simulation.Target);
-        _ = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = simulation.ScreenSize.Width, PreferredBackBufferHeight = simulation.ScreenSize.Height, SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight };
+        var graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = simulation.ScreenSize.Width, PreferredBackBufferHeight = simulation.ScreenSize.Height, SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight };
+#if ANDROID
+        // MonoGame's Android aspect hack conflicts with our own render-target letterbox.
+        graphics.IsFullScreen = true;
+        graphics.PreferredBackBufferWidth = Math.Max(Window.ClientBounds.Width, Window.ClientBounds.Height);
+        graphics.PreferredBackBufferHeight = Math.Min(Window.ClientBounds.Width, Window.ClientBounds.Height);
+#endif
         TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 30); IsMouseVisible = true; Window.AllowUserResizing = true;
 #if DEBUG
         Window.Title = "NightEngine MonoGame";
