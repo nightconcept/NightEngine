@@ -1,4 +1,4 @@
-"""nightengine: a small, game-agnostic engine on top of Pyxel.
+"""nightengine: Nightcircle's deterministic Python core and Pyxel runtime.
 
 This file re-exports the pure core. It never imports `nightengine.host`, so importing the package never imports pyxel.
 """
@@ -17,7 +17,7 @@ from .systems import System, Systems
 from .target import KEYBOARD, MOUSE, TOUCH, Target
 from .testing import Driver
 
-__version__ = "0.0.1"
+__version__ = "0.1.1"
 
 __all__ = [
     "A", "ALL", "B", "C", "DOWN", "KEYBOARD", "LEFT", "MENU", "MOUSE", "RIGHT", "TOUCH", "UP",

@@ -7,8 +7,8 @@ from unittest import mock
 
 from nightengine.android import build as android
 from nightengine.desktop import build as desktop
-from nightengine.tests.test_web import fake_fetch, make_game
 from nightengine.web import runtime
+from tests.test_web import fake_fetch, make_game
 
 ANDROID = """
 [tool.nightengine.android]

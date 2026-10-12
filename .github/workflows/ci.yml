@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, unicycle]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - run: uv run --project python python -m unittest discover -s python/tests -t python
+      - run: uvx ruff check python tools examples && uvx ruff format --check python tools examples
+      - name: Python distribution and Pyxel example
+        run: |
+          uv build python --out-dir dist
+          uv run --project python python -m nightengine.web build --root examples/python-pyxel --out dist/python-example
+          node --test python/src/nightengine/web/tests/pointer.test.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: python-pyxel
+          path: dist/
+  lua:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - run: sudo apt-get update -q && sudo apt-get install -y -q luajit
+      - run: luajit tests/lua.lua
+      - run: npx --yes @johnnymorganz/stylua-bin@2.6.0 --check lua tests/lua tests/lua.lua examples/lua-love
+      - name: LÖVE example archive
+        run: uv run --project python python -m nightengine.love build love --root examples/lua-love --out dist/lua-example
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lua-love
+          path: dist/lua-example/*.love

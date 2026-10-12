@@ -7,11 +7,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HOST_TESTS = {  # They stub pyxel.
+    Path("tests/test_dev.py"),
     Path("tests/test_host.py"),
     Path("tests/test_platform.py"),
     Path("tests/test_gamepad.py"),
 }
-ALLOWED = set(sys.stdlib_module_names) | {"pyxel", "nightengine"}  # The engine knows no game.
+ALLOWED = set(sys.stdlib_module_names) | {"pyxel", "nightengine", "tests"}  # The engine knows no game.
 
 
 def imports(path: Path) -> set[str]:
@@ -27,7 +28,12 @@ def imports(path: Path) -> set[str]:
 
 class RulesTest(unittest.TestCase):
     def sources(self):
-        return [p for p in ROOT.rglob("*.py") if "__pycache__" not in p.parts]
+        return [
+            p
+            for folder in (ROOT / "src" / "nightengine", ROOT / "tests")
+            for p in folder.rglob("*.py")
+            if "__pycache__" not in p.parts
+        ]
 
     def test_pyxel_only_in_host(self):
         """Host code and the host tests (which stub pyxel) may import it. Nothing else may."""

@@ -1,0 +1,13 @@
+[tools]
+python = "3.14"
+java = "temurin-17"
+luajit = "2.1"
+stylua = "2"
+
+# LÖVE 11.5 runs the Lua port (`just love`). The release zips have no installer, so mise takes them as they are.
+[tools."http:love"]
+version = "11.5"
+
+[tools."http:love".platforms]
+macos-arm64 = { url = "https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip", bin_path = "love.app/Contents/MacOS" }
+macos-x64 = { url = "https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip", bin_path = "love.app/Contents/MacOS" }

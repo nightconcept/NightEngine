@@ -20,6 +20,7 @@ The page loads the Pyxel runtime from a CDN, at the version installed in the gam
 import argparse
 import functools
 import http.server
+import importlib.util
 import shutil
 import tempfile
 import tomllib
@@ -57,11 +58,17 @@ def read_config(root: Path) -> WebConfig:
 
 
 def package_files(root: Path, package: str) -> list[Path]:
-    """The .py files of a package directory, recursively, without caches, tests, or docs."""
+    """Package sources and the engine's controller mappings, without caches, tests, or docs."""
     base = root / package
-    if not base.is_dir():
-        raise FileNotFoundError(f"package directory {base} not found")
-    return sorted(p for p in base.rglob("*.py") if not SKIP_DIRS & set(p.relative_to(root).parts))
+    if not (base / "__init__.py").is_file():
+        spec = importlib.util.find_spec(package)
+        if spec is None or not spec.submodule_search_locations:
+            raise FileNotFoundError(f"package directory {base} not found")
+        base = Path(next(iter(spec.submodule_search_locations)))
+    files = [p for p in base.rglob("*.py") if not SKIP_DIRS & set(p.relative_to(base).parts)]
+    if package == "nightengine":
+        files += [p for p in (base / "host" / "gamepads").glob("*") if p.is_file()]
+    return sorted(files)
 
 
 def asset_files(root: Path, directory: str) -> list[Path]:
@@ -93,8 +100,14 @@ def write_app(path: Path, root: Path, entry: str, files: list[Path], scripts: di
         archive.writestr("app/.pyxapp_startup_script", entry)
         for name, text in (scripts or {}).items():
             archive.writestr(f"app/{name}", text)
+        engine = Path(__file__).resolve().parent.parent
         for file in files:
-            archive.write(file, "app/" + file.relative_to(root).as_posix())
+            base = root
+            if not file.is_relative_to(root) or file.resolve().is_relative_to(engine):
+                package_parents = [parent for parent in file.parents if (parent / "__init__.py").is_file()]
+                if package_parents:
+                    base = package_parents[-1].parent
+            archive.write(file, "app/" + file.relative_to(base).as_posix())
 
 
 def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool = False, target: str = "web") -> Path:
@@ -105,7 +118,7 @@ def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool 
     chosen = targets.named(root, target).sized(config.width, config.height)
     out.mkdir(parents=True, exist_ok=True)
     write_app(out / "game.pyxapp", root, config.entry, game_files(root, config), target_script(config, chosen))
-    engine = package_files(root, "nightengine") if (root / "nightengine").is_dir() else []
+    engine = package_files(root, "nightengine")
     diagnostic = "from nightengine.host.diagnostic import main\n\nmain()\n"
     write_app(out / "debug.pyxapp", root, DEBUG_ENTRY, engine, {DEBUG_ENTRY: diagnostic})
     for path in STATIC.iterdir():

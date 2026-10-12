@@ -79,10 +79,9 @@ function M.from_dict(data)
     return M.new(data.name or "desktop", data.width or 0, data.height or 0, data.controls or M.CONTROLS)
 end
 
---- One target of the game by name, from the staged `nightengine_targets` module.
-function M.named(name)
-    local ok, tables = pcall(require, "nightengine_targets")
-    local table_ = ok and tables[name]
+--- One named target from the game-provided definitions.
+function M.named(name, tables)
+    local table_ = tables and tables[name]
     if table_ then
         local data = { name = name }
         for k, v in pairs(table_) do
@@ -94,12 +93,12 @@ function M.named(name)
 end
 
 --- The target this run is: the build's, else `name` (from --target), else NIGHTENGINE_TARGET, else desktop.
-function M.current(name)
+function M.current(name, tables)
     local ok, built = pcall(require, "nightengine_build")
     if ok and type(built) == "table" and built.target then
         return M.from_dict(built.target)
     end
-    return M.named(name or os.getenv("NIGHTENGINE_TARGET") or "desktop")
+    return M.named(name or os.getenv("NIGHTENGINE_TARGET") or "desktop", tables)
 end
 
 return M

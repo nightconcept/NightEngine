@@ -1,5 +1,6 @@
 """The web build packages any game: its entry, packages, and assets, the pointer check, and the page."""
 
+import shutil
 import tempfile
 import unittest
 import zipfile
@@ -77,6 +78,35 @@ class WebBuildTest(unittest.TestCase):
             self.assertTrue((out / "pointer.mjs").is_file() and (out / "launcher.mjs").is_file())
             self.assertIn("cdn.jsdelivr.net/gh/kitao/pyxel@", page)
             self.assertFalse((out / "pyxel").exists())
+
+    def test_local_package_and_entry_keep_paths_relative_to_game_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "game"
+            (root / "src" / "toy").mkdir(parents=True)
+            (root / "pyproject.toml").write_text(PYPROJECT)
+            (root / "src" / "toy" / "__init__.py").write_text("")
+            (root / "src" / "game.py").write_text("import toy\n")
+            config = WebConfig("Toy", 320, 180, "src/game.py", ("src/toy",))
+            out = build(root, Path(tmp) / "dist", config)
+            with zipfile.ZipFile(out / "game.pyxapp") as app:
+                self.assertIn("app/src/toy/__init__.py", app.namelist())
+                self.assertEqual(app.read("app/.pyxapp_startup_script"), b"src/game.py")
+                self.assertIn("app/src/nightengine_build.py", app.namelist())
+
+    def test_build_uses_engine_installed_outside_the_game(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "game"
+            root.mkdir()
+            make_game(root)
+            shutil.rmtree(root / "nightengine")
+            out = build(root, Path(tmp) / "dist")
+            for name in ("game.pyxapp", "debug.pyxapp"):
+                with zipfile.ZipFile(out / name) as app:
+                    names = app.namelist()
+                    self.assertIn("app/nightengine/core.py", names)
+                    self.assertIn("app/nightengine/host/gamepads/gamecontrollerdb.txt", names)
+                    self.assertIn("app/nightengine/host/diagnostic.py", names)
+                    self.assertFalse(any("/src/" in path or "/tests/" in path for path in names))
 
     def test_offline_build_copies_the_runtime_and_loads_it_locally(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(runtime, "fetch", fake_fetch):

@@ -12,8 +12,8 @@ from nightengine import KEYBOARD, MOUSE, TOUCH, Game, Pointer, PointerKind, Poin
 from nightengine import target as targets
 from nightengine.pointer import decode, encode
 from nightengine.replay import play
-from nightengine.tests.test_web import make_game
 from nightengine.web.build import build
+from tests.test_web import make_game
 
 PRESS = PointerPhase.PRESSED
 

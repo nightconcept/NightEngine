@@ -14,6 +14,7 @@ from ..target import Target
 from ..target import current as current_target
 from . import gamepad, platform, ui
 from .audio import AudioManager
+from .dev import Controls
 from .keys import read_buttons
 from .renderer import Renderer
 
@@ -57,8 +58,11 @@ class App:
         seed: int | None = None,
         replay: Recording | None = None,
         target: Target | None = None,
+        inspect: Callable[[Game], dict] | None = None,
+        snapshot: Callable[[Game], object] | None = None,
     ):
         self.config, self.renderer, self.audio = config, renderer, audio
+        self._dev = Controls(self, inspect, snapshot)
         self.target = target = choose_target(config, replay, target)
         gamepad.use_mappings(config.pad_mappings)  # Before pyxel.init: SDL reads the hint when it starts.
         pyxel.init(target.width, target.height, title=config.title, fps=config.fps, quit_key=pyxel.KEY_NONE)
@@ -90,9 +94,17 @@ class App:
         if size != (platform.screen.width, platform.screen.height):
             platform.resize(*size)
 
-    def save(self):
+    @property
+    def dev(self):
+        if not hasattr(self, "_dev"):
+            self._dev = Controls(self)
+        return self._dev
+
+    def save(self, path: Path | str | None = None):
         if self.recording and self.recording.frames:
-            self.recording.save(self.config.replays / "last.json")
+            path = Path(path) if path is not None else Path(self.config.replays) / "last.json"
+            self.recording.save(path)
+            return str(path)
 
     def quit(self):
         """Save the run and close. In a page, a native shell (the APK) closes the app; a browser tab stays open,
@@ -108,12 +120,15 @@ class App:
         if pyxel.btnp(pyxel.KEY_Q) or (pyxel.btn(pyxel.KEY_ALT) and pyxel.btnp(pyxel.KEY_F4)):
             self.quit()
             return
+        if not self.dev.advance():
+            return
         if self.replay:
             if self.game.frame >= len(self.replay.frames):
                 return
             code, pointers = self.replay.frames[self.game.frame], self.replay.at(self.game.frame)
         else:
             code = read_buttons(self.config.keys) | gamepad.read_sticks(self.config.sticks) | platform.buttons()
+            code |= self.dev.buttons()
             pointers = platform.sample()
             self.recording.add(code, pointers)
         cues = self.game.step(code, pointers)

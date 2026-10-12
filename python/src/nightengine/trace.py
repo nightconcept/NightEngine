@@ -1,7 +1,7 @@
 """Per-frame state traces: the check that the Python and Lua versions of a game run the same.
 
 A game writes `snapshot(game)`: its state as nested lists of numbers, strings, booleans, and None. `canon` turns
-it into one line of text, the same in both languages (`lua/nightengine/trace.lua`): numbers as `%.17g`, so 3 and
+it into one line of text, the same in both languages (`lua/trace.lua`): numbers as `%.17g`, so 3 and
 3.0 are the same, and -0.0 is 0. A trace is one CRC-32 of that text per frame, before each step and after the
 last.
 
@@ -81,7 +81,7 @@ def vectors() -> dict:
 
 
 if __name__ == "__main__":
-    path = Path(__file__).resolve().parent / "contract" / "rng.json"
+    path = Path(__file__).resolve().parents[3] / "contract" / "rng.json"
     path.parent.mkdir(exist_ok=True)
     path.write_text(json.dumps(vectors(), indent=1) + "\n")
     print(path)

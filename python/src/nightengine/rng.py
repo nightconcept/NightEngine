@@ -1,4 +1,4 @@
-"""The engine's random numbers: the same numbers in Python and in Lua (`lua/nightengine/rng.lua`).
+"""The engine's random numbers: the same numbers in Python and in Lua (`lua/rng.lua`).
 
 xoshiro128** (Blackman and Vigna), seeded with splitmix32. A string seed is hashed with FNV-1a first. Every step
 is a 32-bit operation, so the Lua port gives the same numbers exactly. `contract/rng.json` holds test vectors that
