@@ -21,11 +21,16 @@ All names below import from `nightengine`, except where a module is named.
 
 - Buttons: `UP, DOWN, LEFT, RIGHT, A, B, C, MENU = 1, 2, 4, 8, 16, 32, 64, 128`. `ALL = 255`.
   One frame of input is one int made of these bits.
-- `Input(held, pressed, repeat, pointers=())`:
+- `Input(held, pressed, repeat, pointers=(), events=())`:
   - `down(b)`: held now. `hit(b)`: pressed on this frame. `nav(b)`: pressed, or a repeat tick.
+  - `events`: the host events of this frame, as text. A host event is what reaches the game from outside the buttons
+    (the saved settings at the start, a key pressed to rebind). The recording keeps them, so a replay plays the same.
   - `axis() -> (dx, dy)`: the held direction. Diagonals are allowed and opposite keys cancel.
   - `direction() -> (dx, dy) | None`: one direction only, the newest press first. For tile movement.
-- `InputTracker(mask=ALL, repeat=(), delay=14, rate=5).feed(code, pointers=()) -> Input`.
+- A game's own buttons: `Button(name, keys=(), pad=())` names one, with its default pyxel key names (`"SHIFT"`
+  for `KEY_SHIFT`) and Xbox pad button names (`"RIGHTSHOULDER"`). `declare(*buttons)` gives them the bits 256, 512,
+  and up, in order. List them in `Game.buttons`: they join `Game.input_mask`, so recordings widen to hold them.
+- `InputTracker(mask=ALL, repeat=(), delay=14, rate=5).feed(code, pointers=(), events=()) -> Input`.
   A button in `repeat` ticks in `Input.repeat` after `delay` frames held, then every `rate` frames.
 
 ### Pointers (`pointer.py`)
@@ -41,6 +46,22 @@ Touch, pen, and mouse contacts, as game input. The host samples them once per fr
   `in_rect(ps, x, y, w, h)`. `encode(p)` and `decode(row)` are the recording format. A row has a kind letter at the
   end unless it is touch, so older files load as touch.
 - Every action a pointer can do should also work with buttons, so gamepads and keyboards are never locked out.
+
+### Display pacing (`pacing.py`)
+
+The rules step at a fixed rate (`step_hz`, 60) whatever the monitor's refresh. No pyxel, so tests use a fake clock.
+
+- `Pacer(step_hz=60, max_steps=4, lock_tolerance=0.01, window=120)`: `frame(now) -> (steps, alpha)` once for each
+  display frame with `time.perf_counter()`. The first frame gives `(1, 1.0)`. When the median refresh of the last
+  `window` frames is within 1% of 60, 120, 180, or 240 Hz it locks: one step every `refresh / 60` frames, and
+  `alpha` goes `1/k, 2/k, ... 1`. Otherwise (144 Hz, 165 Hz, variable refresh) an accumulator gives the steps, with
+  a frame within 1% of a whole fraction of a step counted as exactly that. A step runs as soon as it is due before
+  the next refresh, so `alpha` (0 to 1) is how far the picture is from the step before the newest one to the
+  newest one. At most `max_steps` a frame; a frame over 0.25 s gives `(1, 1.0)` and resets. `reset()`,
+  `refresh_hz` (None until `window` frames), `locked`.
+- `InputLatch`: `add(code, pointers, events)` for each display frame and `take()` for each frame that steps. It
+  ORs the codes, keeps every event in order, and merges the pointers: the last sample of each id, but a `PRESSED`
+  sample wins at its own position, and a press that ended in the same window gives both entries, `PRESSED` first.
 
 ### Targets (`target.py`)
 
@@ -80,7 +101,7 @@ build for a phone and a build for a computer can differ without an `if` in the g
 ### Game (`core.py`)
 
 `Game` is the base class. A game subclasses it. Class attributes configure the input tracker:
-`input_mask`, `repeat_buttons`, `repeat_delay`, `repeat_rate`.
+`input_mask`, `buttons`, `repeat_buttons`, `repeat_delay`, `repeat_rate`.
 
 - `Game(seed=0, target=None)` sets `seed`, `rng` (`random.Random(seed)`), `target` (`Target()` if None), `frame`,
   `tracker`, `scenes`, `fx`, and `cues`. Rules may read `target`, for example to start in a touch layout.
@@ -91,8 +112,15 @@ build for a phone and a build for a computer can differ without an `if` in the g
   replay changes size on the same frame.
 - `before_scene(inp)` and `after_scene()` do nothing. A game overrides them.
 - `quit_requested`: a scene sets it (for a Quit menu item). `App` saves the run and closes the window.
-- `step(code, pointers=()) -> list[str]` runs one frame in this order: clear cues, drop the pointers the target does
-  not accept, feed input, `fx.tick()`, `before_scene`,
+- `listen`: False. While a scene sets it True, the host sends the next key or pad button pressed as the event
+  `"press key:<NAME>"` or `"press pad:<NAME>"` (for a rebind screen). The names are pyxel's without the prefix.
+- `write(key, text)` asks the host to save a small file (settings, a save) after this frame: it joins `writes`, a
+  list of `(key, text)`. A live `App` saves them to `App.store` and clears the list; a replay saves nothing.
+- `bindings`: None, or a `Bindings` (below). While it is set, the host builds its key table from it, and builds it
+  again when the game replaces it with a new object. Recordings keep the button bits, not the bindings, so a replay
+  plays the same after a rebind.
+- `step(code, pointers=(), events=()) -> list[str]` runs one frame in this order: clear cues, drop the pointers the
+  target does not accept, feed input (with the events), `fx.tick()`, `before_scene`,
   `scene.update(game, inp)`, `after_scene`, `frame += 1`. It returns the cues.
 - `ScreenFx` (`fx.py`) holds `shake`, `fade`, `fade_in`, and `fade_frames`. `tick()` counts the shake down.
   It also counts `fade_in` down and sets `fade = fade_in / fade_frames`.
@@ -110,12 +138,30 @@ build for a phone and a build for a computer can differ without an `if` in the g
 
 ### Other core modules
 
-- `replay.py`: `Recording(seed, frames, pointers={}, width=2, target=None)` with `add(code, pointers)`, `at(frame)`, `save(path)`,
-  `load(path)`, `to_json()`, and `from_json(text)`. The file is `{"seed", "inputs", "pointers", "width"}`: `width` hex
+- `replay.py`: `Recording(seed, frames, pointers={}, width=2, target=None, events={})` with
+  `add(code, pointers=(), events=())`, `at(frame)`, `events_at(frame)`, `save(path)`, `load(path)`, `to_json()`, and
+  `from_json(text)`. The file is `{"seed", "inputs", "pointers", "width"}`: `width` hex
   digits per frame (2, or `digits_for(Game.input_mask)` for a game that uses bits above the 8 buttons; the key is
   absent when 2), and a sparse `{"<frame>": [[id, x, y, start_x, start_y, "P"], ...]}` for frames with contacts
-  (absent when there were none). `"target"` holds the `Target` the run was played on (absent when None).
-  `play(make_game, recording, frames=None) -> Game` replays it headless with `make_game(seed, target)`.
+  (absent when there were none). `"events"` is a sparse `{"<frame>": ["text", ...]}` of the host events (absent when
+  there were none, so older files load). `"target"` holds the `Target` the run was played on (absent when None).
+  `play(make_game, recording, frames=None) -> Game` replays it headless with `make_game(seed, target)`, events too.
+- `store.py`: small saved files, no pyxel. `Store` keeps text by key: `read(key) -> str | None`, `write(key, text)`,
+  and `move_aside(key)`. `FileStore(folder)` writes one file `<key>.json`, atomically (a temp file, then
+  `os.replace`), and makes the folder on the first write. `MemoryStore(data)` is for tests.
+  `load_json(store, key, default)` never fails: a missing key, JSON null, or an unreadable store gives `default`, and a
+  file that is not JSON gives `default` and is moved aside to `<key>.bad.json`, so the player's data is never lost.
+- `bindings.py`: bindings that change while the game runs, no pyxel. `Binding(keys=(), pad=())` holds key names
+  (`KEY_<name>` without the prefix) and pad button names (`GAMEPADn_BUTTON_<name>` without the prefix). The first name
+  of each kind is the primary, the one a player rebinds; the rest are fixed aliases.
+  `Bindings(table, locked=frozenset(), reserved=frozenset())`: `table` maps a button bit to its `Binding`; `locked`
+  holds `(bit, kind, name)` entries that never move; `reserved` holds `(kind, name)` names no action may take. `kind`
+  is `"key"` or `"pad"`. Frozen: every change returns a new object.
+  - `assign(bit, kind, name) -> Bindings | None`: `name` becomes the primary of `bit`. None when the name is reserved
+    or an alias, or a locked entry would move. If another action has `name` as its primary, the two trade.
+  - `primary(bit, kind)`, `owner(kind, name)`, `with_binding(bit, binding)`, `with_reserved(names)`, `valid()`.
+  - `to_json()` keeps the primaries only. `from_json(data, defaults)` puts them over the defaults: unknown bits and
+    bad names are dropped, missing ones come from the defaults, and a kind that breaks a rule falls back whole.
 - `canvas.py`: `Canvas` (pixels in memory, no pyxel), `noise(x, y, seed)`, `mirror(rows)`.
 - `palette.py`: `ENDESGA32` (33 entries: transparent black, then 32 colours), `KEY`, and the colour names
   `RUST` to `SKINSHADE`.
@@ -126,7 +172,8 @@ build for a phone and a build for a computer can differ without an `if` in the g
 - `autopilot.py`: `Tapper.press(b)`, `run(make_game, choose, seed, limit, done, target=None)`, `cli(play, summary, default_out, doc, options={})`.
   `choose(game)` returns the buttons, or `(buttons, pointers)`.
   `options` adds game flags as `{name: default}` (for example `{"battles": 1}` adds `--battles`); `play` gets them as keywords.
-- `testing.py`: `Driver(game)` has `step(code, frames, pointers=())`, `press(b)`, `tap(x, y)`, and
+- `testing.py`: `Driver(game)` has `step(code, frames, pointers=(), events=())` (the events arrive on the first frame
+  only), `event(*events, code=0)` (one frame with host events), `press(b)`, `tap(x, y)`, and
   `run_until(predicate, limit, code)`.
 
 ## Host interface
@@ -135,12 +182,25 @@ build for a phone and a build for a computer can differ without an `if` in the g
 `from nightengine.host.renderer import Renderer`. Tests may import them too. They never open a window.
 
 - `keys.read_buttons(keys) -> int`: `keys` maps an engine button to the pyxel keys and gamepad buttons that press it.
+  `keys.bindings(buttons)` is the keyboard table for a game's own buttons.
+  `keys.first_pressed(pads=(1,)) -> str | None`: the first key or pad button pressed on this frame, as `"key:<NAME>"`
+  or `"pad:<NAME>"` (`KEY_SPACE` is `key:SPACE`, `GAMEPAD1_BUTTON_X` is `pad:X`). The virtual `SHIFT`, `CTRL`, `ALT`,
+  and `GUI` stand for their left and right keys. `keys.key_names()`, `keys.pad_names(pad)`, and `keys.is_pad(code)`.
+  `keys.table(bindings, pad=1) -> dict[int, tuple[int, ...]]` turns a `Bindings` into a key table
+  (`pyxel.KEY_<name>`, `pyxel.GAMEPAD<pad>_BUTTON_<name>`); an unknown name raises `ValueError` with the name.
+- `storage.open_store(vendor, app) -> Store`: in a page (web and the Android WebView), browser storage
+  (`platform.save` and `platform.load`); on the desktop, a `FileStore` in `storage.data_dir(vendor, app)`. It calls
+  no pyxel, so a game can read its settings before `pyxel.init`.
+- `storage.data_dir(vendor, app) -> Path`: the OS data folder, as SDL_GetPrefPath and Godot's custom user dir:
+  `%APPDATA%\<vendor>\<app>` (Windows), `~/Library/Application Support/<vendor>/<app>` (macOS),
+  `$XDG_DATA_HOME/<vendor>/<app>` in lower case, or `~/.local/share/...` (Linux). Made on the first write.
 - `gamepad`: controllers, Xbox first. SDL names every pad's buttons after the Xbox pad, so one layout serves Xbox,
   PlayStation, Switch Pro, and every pad in the bundled database.
   - `XBOX`: the shared layout. D-pad to `UP`/`DOWN`/`LEFT`/`RIGHT`, A to `A` (confirm, act), B to `B` (cancel, jump),
     X to `C`, Start to `MENU`.
-  - `xbox(pad=1, layout=None, shift=0)` builds a key table for pad 1-4. `layout` adds to or replaces `XBOX` entries
-    (`{B: ("B", "Y")}`); `shift` moves the buttons up for a second player's bits. `merge(*tables)` joins tables:
+  - `xbox(pad=1, layout=None, shift=0, buttons=())` builds a key table for pad 1-4. `layout` adds to or replaces
+    `XBOX` entries (`{B: ("B", "Y")}`); `shift` moves the buttons up for a second player's bits; `buttons` adds a
+    game's own buttons by their `pad` names. `merge(*tables)` joins tables:
     `keys = merge(KEYBOARD, xbox(1))`.
   - `stick(pad, shift)` reads the left stick as d-pad buttons (`DEADZONE` 0.4), and `read_sticks(pairs)` reads
     every `(pad, shift)`. `axis(pad, name)` gives one axis in -1..1.
@@ -168,6 +228,9 @@ build for a phone and a build for a computer can differ without an `if` in the g
   - `priority=True`: play the most important cue of the frame, unless a more important effect still plays.
   - `priority=False`: play the first cue of the frame if it is known. Do not check what is playing.
   - A track in `once` does not loop.
+  - `set_volume(music, sfx)`, each 0 to 1: each channel's gain becomes the gain it had after `setup()` (pyxel's
+    default is 0.125) times the value. The effect channels (`sfx_channel`, and the `layers` below it) take `sfx`, the
+    rest take `music`.
   - `layers=N` (with `priority=False`) plays up to N different cues of one frame together, on `sfx_channel` and the
     channels below it. For a game without music.
 - `renderer`:
@@ -179,8 +242,13 @@ build for a phone and a build for a computer can differ without an `if` in the g
   - `draw_scene(scene, game, t)` draws one scene. A draw function can call it to draw the scenes below a transition.
   - Shake functions: `shake_xy` (sideways, plus up and down for a strong shake), `shake_x` (sideways only),
     `no_shake` (for a game that shakes inside its own draw functions).
+  - `alpha` (0 to 1, default 1): in display mode, where the picture is between the step before the newest one and
+    the newest one. Draw functions read it; `draw` does not. `smooth` (default False): a game sets it when its draw
+    functions blend, so the App draws every display frame and not only those that ran a step.
 - `app`: `AppConfig(title, width, height, keys, replays, fps=60, label_xy=(4, 4), integer_scale=True, mouse=False,
-  sticks=((1, 0),), pad_mappings=gamepad.DB)`. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
+  sticks=((1, 0),), pad_mappings=gamepad.DB, vendor=None, display_scale=None, vsync=False)`. With a `vendor`, `App.store` is
+  `open_store(vendor, title)`, and the game's `writes` are saved there after each live frame. `display_scale` is the
+  window's scale at the start (passed to `pyxel.init`). The key table is `config.keys` while `game.bindings` is None. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
   `App` loads the controller database before `pyxel.init` (`pad_mappings=None` skips it).
   (`integer_scale` applies on the desktop only: in a browser the game fills its canvas, so touches match the picture)
   and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None)`. `App` picks the target
@@ -189,6 +257,22 @@ build for a phone and a build for a computer can differ without an `if` in the g
   records both, steps the game (a replay feeds the recorded ones), and resizes the screen if `game.screen_size`
   changed (`fit`). The recording keeps the target.
   `mouse=True` shows the system cursor when the target takes the mouse.
+  - Display mode: `App.set_vsync(on)` (and `AppConfig.vsync` at the start) lets the monitor pace the window, at
+    once. It needs a Pyxel with `vsync` (`pyxel.NE_PACING`, the pyxel-ne fork); with stock Pyxel, or when the driver
+    refuses vsync, it does nothing and the window keeps its timer. In display mode each display frame asks the
+    `Pacer` how many steps to run (often 0 or 1) and sets `renderer.alpha`. The input of every display frame goes
+    into an `InputLatch`, and the first step of a frame takes it, so a tap in a frame with no step is not lost. Later
+    steps in the same frame get the same buttons, the pointers as `HELD` (`pacing.carry`), and no events. Each step
+    records one input, so a recording has the same format in both modes and plays the same. A replay uses the pacer
+    too, so it plays at the right speed. A frame that ran no step skips the draw unless `renderer.smooth` is set.
+  - Host events: `App.post(event)` queues an event for the next frame. `App.boot() -> list[str]` (default `[]`) runs
+    once after `make_game` in a live run, and its events go into frame 0; a game's `App` subclass overrides it (to
+    send the saved settings). While `game.listen` is True, each frame adds `"press " + keys.first_pressed()` when a key
+    or pad button was pressed. The events go to `game.step` and into the recording. A replay feeds the recorded
+    events and never calls `boot`.
+  - `App.device`: `"keyboard"`, `"pad"`, or `"pointer"`, the device used last (a pad button or a stick sets `"pad"`,
+    a new pointer contact sets `"pointer"`). It starts as `"keyboard"`. For the renderer's button hints only: game
+    rules never read it.
   `q` quits and saves the run to `replays/last.json`. The run is also saved when the window closes (`atexit`) and
   when the game sets `quit_requested`.
 - `platform`: where the game runs.
@@ -203,7 +287,8 @@ build for a phone and a build for a computer can differ without an `if` in the g
   - `save(key, data)` and `load(key)`: browser storage. False and None on the desktop. A blocked read raises `OSError`.
 - `diagnostic`: a pointer and safe-area check for a device. The web build serves it at `?app=debug`.
 - `frames.frames_main(title, width, height, renderer, make_game, summary, modes=None, every=120)` is the
-  command line of a game's `frames.py`. It renders a recording every `--every` frames, at the recording's target
+  command line of a game's `frames.py`. Pyxel runs headless there: it never opens a window. It feeds the recorded
+  host events with the buttons. It renders a recording every `--every` frames, at the recording's target
   size and then at each size the game asks for, or `--atlas` for the image banks.
   Each entry in `modes` becomes a `--name` flag. A mode is `mode(out, scale)`, called after the window and art are set up.
 
@@ -227,7 +312,8 @@ target into `game.pyxapp`, and the page takes the target's size.
 
 It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
 `pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
-the game's environment. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
+the game's environment. A fork's local label is dropped (`2.9.9+ne.2` loads `2.9.9`), so the page loads the
+stock runtime. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
 
 `--offline` copies the runtime into the build (`web/runtime.py`): `pyxel/` (pyxel.js, the Pyxel wheel, and its
 images) and `pyodide/v<version>/` (the Pyodide core), about 18 MB. The page then needs no network, which an APK

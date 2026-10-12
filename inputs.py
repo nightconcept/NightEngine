@@ -1,10 +1,11 @@
 """Abstract buttons. One frame of input is one small int, so runs can be recorded and replayed exactly.
 
 The bits are the same in every game. A game masks out the buttons it does not use with `Game.input_mask`.
+A game can declare its own buttons above the 8 engine bits with `declare` and `Game.buttons`.
 """
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .pointer import Pointer
 
@@ -13,17 +14,43 @@ ALL = UP | DOWN | LEFT | RIGHT | A | B | C | MENU
 REPEAT_DELAY, REPEAT_RATE = 14, 5  # Menu cursor auto-repeat, in frames.
 
 DIRECTIONS = ((UP, (0, -1)), (DOWN, (0, 1)), (LEFT, (-1, 0)), (RIGHT, (1, 0)))
+EXTRA = 256  # The first bit a game may declare.
+
+
+@dataclass(frozen=True)
+class Button:
+    """A game's own button. `keys` are pyxel key names (`KEY_<name>`, such as "SHIFT"), and `pad` Xbox button names
+    (`GAMEPADn_BUTTON_<name>`, such as "RIGHTSHOULDER"). `declare` gives it a bit."""
+
+    name: str
+    keys: tuple[str, ...] = ()
+    pad: tuple[str, ...] = ()
+    bit: int = 0
+
+
+def declare(*buttons: Button) -> tuple[Button, ...]:
+    """Give each button the next bit above the engine buttons, in order: 256, 512, and so on."""
+    return tuple(replace(b, bit=EXTRA << i) for i, b in enumerate(buttons))
+
+
+def mask_of(buttons: Iterable[Button]) -> int:
+    code = 0
+    for b in buttons:
+        code |= b.bit
+    return code
 
 
 @dataclass
 class Input:
     """Buttons for one frame: `held` this frame, `pressed` on this frame, `repeat` for menu cursors.
-    `pointers` are the touch and mouse contacts this frame (see pointer.py)."""
+    `pointers` are the touch and mouse contacts this frame (see pointer.py). `events` are the host events of this
+    frame: text the host sends from outside the buttons (saved settings at the start, a key pressed to rebind)."""
 
     held: int = 0
     pressed: int = 0
     repeat: int = 0
     pointers: tuple[Pointer, ...] = ()
+    events: tuple[str, ...] = ()
 
     def down(self, button: int) -> bool:
         return bool(self.held & button)
@@ -65,7 +92,7 @@ class InputTracker:
         self.previous = 0
         self.held_for = {b: 0 for b in repeat}
 
-    def feed(self, code: int, pointers: tuple[Pointer, ...] = ()) -> Input:
+    def feed(self, code: int, pointers: tuple[Pointer, ...] = (), events: tuple[str, ...] = ()) -> Input:
         code &= self.mask
         pressed = code & ~self.previous
         repeat = pressed
@@ -78,4 +105,4 @@ class InputTracker:
             else:
                 self.held_for[button] = 0
         self.previous = code
-        return Input(code, pressed, repeat, tuple(pointers))
+        return Input(code, pressed, repeat, tuple(pointers), tuple(events))

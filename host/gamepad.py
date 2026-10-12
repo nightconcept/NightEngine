@@ -8,11 +8,12 @@ Xbox, PlayStation (cross is A), Switch Pro (by position), and the ~2,000 more in
 """
 
 import os
+from collections.abc import Iterable
 from pathlib import Path
 
 import pyxel
 
-from ..inputs import DOWN, LEFT, MENU, RIGHT, UP, A, B, C
+from ..inputs import DOWN, LEFT, MENU, RIGHT, UP, A, B, Button, C
 
 DB = Path(__file__).with_name("gamepads") / "gamecontrollerdb.txt"
 HINT = "SDL_GAMECONTROLLERCONFIG_FILE"
@@ -50,10 +51,16 @@ def button(pad: int, name: str) -> int:
     return getattr(pyxel, f"GAMEPAD{pad}_BUTTON_{name}")
 
 
-def xbox(pad: int = 1, layout: dict[int, tuple[str, ...]] | None = None, shift: int = 0) -> dict[int, tuple[int, ...]]:
+def xbox(
+    pad: int = 1,
+    layout: dict[int, tuple[str, ...]] | None = None,
+    shift: int = 0,
+    buttons: Iterable[Button] = (),
+) -> dict[int, tuple[int, ...]]:
     """A key table (engine button -> pyxel buttons) for one pad. `layout` adds to or replaces entries of XBOX,
-    for example {B: ("B", "Y")}. `shift` moves the engine buttons up, for a second player's bits."""
-    names = {**XBOX, **(layout or {})}
+    for example {B: ("B", "Y")}. `shift` moves the engine buttons up, for a second player's bits. `buttons` adds
+    the game's own buttons (`Game.buttons`) with their `pad` names."""
+    names = {**XBOX, **{b.bit: b.pad for b in buttons}, **(layout or {})}
     return {b << shift: tuple(button(pad, n) for n in ns) for b, ns in names.items() if ns}
 
 
