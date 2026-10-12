@@ -30,7 +30,9 @@ public sealed class Recording(long seed, int width = 7, Target? target = null)
     public void Save(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-        File.WriteAllText(path, Json() + "\n");
+        string temporary = Path.GetFullPath(path) + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try { File.WriteAllText(temporary, Json() + "\n"); File.Move(temporary, path, true); }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
     public static Recording Load(string path) => Parse(File.ReadAllText(path));
     public static Recording Parse(string text)

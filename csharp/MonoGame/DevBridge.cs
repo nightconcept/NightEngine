@@ -61,7 +61,7 @@ public sealed class DevBridge : IDisposable
             }
             catch (Exception e) when (e is ArgumentException or InvalidOperationException or KeyNotFoundException or FormatException or IOException) { r.Reply.TrySetException(e); }
     }
-    private object State() => new { frame = host.Simulation.Frame, scene = host.Simulation.Scene.GetType().Name, paused = host.Paused, input = host.InjectedInput, cues = host.Simulation.Cues.ToArray(), snapshot = snapshot() };
+    private object State() => new { frame = host.Simulation.Frame, scene = host.Simulation.Scene.GetType().Name, paused = host.Paused, input = host.InjectedInput, cues = host.Simulation.Cues.ToArray(), hash = Trace.Hash(snapshot()), snapshot = snapshot() };
     private readonly Queue<Request> screenshots = new();
     public void Draw() { while (screenshots.TryDequeue(out var r)) r.Reply.TrySetResult(Convert.ToBase64String(host.Screenshot())); }
     public void Dispose() { stop.Cancel(); listener.Stop(); foreach (var r in waiting) r.Reply.TrySetCanceled(); stop.Dispose(); }

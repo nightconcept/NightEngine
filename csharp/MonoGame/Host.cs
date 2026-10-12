@@ -13,6 +13,9 @@ public abstract class Host : Microsoft.Xna.Framework.Game
     protected RenderTarget2D Screen = null!;
     private readonly Dictionary<int, (int X, int Y)> starts = [];
     private bool mouseDown;
+    private readonly GraphicsDeviceManager graphics;
+    private bool offlineFrames;
+    public string? RecordingPath;
     public string? FramesDirectory;
     public int CaptureEvery = 60;
     public int StopAfter;
@@ -23,7 +26,7 @@ public abstract class Host : Microsoft.Xna.Framework.Game
     protected Host(NightEngine.Game simulation)
     {
         Simulation = simulation; Recording = new(simulation.Seed, 7, simulation.Target);
-        var graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = simulation.ScreenSize.Width, PreferredBackBufferHeight = simulation.ScreenSize.Height, SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight };
+        graphics = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = simulation.ScreenSize.Width, PreferredBackBufferHeight = simulation.ScreenSize.Height, SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight };
 #if ANDROID
         // MonoGame's Android aspect hack conflicts with our own render-target letterbox.
         graphics.IsFullScreen = true;
@@ -34,6 +37,11 @@ public abstract class Host : Microsoft.Xna.Framework.Game
 #if DEBUG
         Window.Title = "NightEngine MonoGame";
 #endif
+    }
+    public void OfflineFrames()
+    {
+        if (Replay is null || FramesDirectory is null) throw new InvalidOperationException("Offline frames require a replay and output directory");
+        offlineFrames = true; IsFixedTimeStep = false; graphics.SynchronizeWithVerticalRetrace = false;
     }
     protected override void LoadContent() { Batch = new(GraphicsDevice); Screen = new(GraphicsDevice, Simulation.ScreenSize.Width, Simulation.ScreenSize.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); }
     protected abstract int ReadKeys(KeyboardState keys);
@@ -70,7 +78,7 @@ public abstract class Host : Microsoft.Xna.Framework.Game
         int code = Replay is null ? ReadKeys(Keyboard.GetState()) | AutomaticInput() | InjectedInput : Replay.Frames[frame];
         Pointer[] pointers = Replay is null ? ReadPointers().Concat(InjectedPointers).ToArray() : Replay.At(frame);
         string[] events = Replay?.EventsAt(frame) ?? [];
-        Recording.Add(code, pointers, events); PlayCues(Simulation.Step(code, pointers, events));
+        Recording.Add(code, pointers, events); var cues = Simulation.Step(code, pointers, events); if (!offlineFrames) PlayCues(cues);
         InjectedPointers = PendingSteps > 0 ? InjectedPointers.Where(p => p.Active).Select(p => p with { Phase = "H" }).ToArray() : [];
         if (Simulation.QuitRequested) Exit(); base.Update(time);
     }
@@ -87,8 +95,8 @@ public abstract class Host : Microsoft.Xna.Framework.Game
         base.Draw(time);
     }
     public byte[] Screenshot() { using var buffer = new MemoryStream(); Screen.SaveAsPng(buffer, Screen.Width, Screen.Height); return buffer.ToArray(); }
-    protected override void OnDeactivated(object sender, EventArgs args) { starts.Clear(); mouseDown = false; base.OnDeactivated(sender, args); }
-    protected override void UnloadContent() { Screen.Dispose(); Batch.Dispose(); base.UnloadContent(); }
+    protected override void OnDeactivated(object sender, EventArgs args) { starts.Clear(); mouseDown = false; ResetElapsedTime(); if (RecordingPath is not null) Recording.Save(RecordingPath); base.OnDeactivated(sender, args); }
+    protected override void UnloadContent() { if (RecordingPath is not null) Recording.Save(RecordingPath); Screen.Dispose(); Batch.Dispose(); base.UnloadContent(); }
 #if DEBUG
     protected virtual void UpdateBridge() { }
     protected virtual void DrawBridge() { }
