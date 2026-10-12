@@ -27,11 +27,11 @@ public static class FrameTests
         int i = 0;
         foreach (var code in doc.RootElement.GetProperty("codes").EnumerateArray()) { game.Step(code.GetInt32()); Match(++i); }
         var recording = Recording.Load("nightengine/contract/events.json");
-        if (recording.EventsAt(2).Length != 2 || Recording.Parse(recording.Json()).Frames.Count != 3)
+        if (recording.EventsAt(2).Length != 2 || Recording.FromJson(recording.ToJson()).Frames.Count != 3)
             throw new Exception("Replay event contract mismatch");
         object?[] value = [new object?[] { "abc", 1.5, 3, -0.0, true, null, new[] { "q\"x\\" } }];
         using var rng = JsonDocument.Parse(File.ReadAllText("nightengine/contract/rng.json"));
-        if (Trace.Canon(value) != rng.RootElement.GetProperty("canon").GetProperty("text").GetString() || Trace.Hash(value) != "e648789b")
+        if (Trace.Canon(value) != rng.RootElement.GetProperty("canon").GetProperty("text").GetString() || Trace.Digest(value) != "e648789b")
             throw new Exception("Canonical hash contract mismatch");
         if (Trace.Canon(new[] { 1e-5, 1e20, -0.0 }) != "[1.0000000000000001e-05,1e+20,0]")
             throw new Exception("Canonical exponent encoding mismatch");

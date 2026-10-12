@@ -2,9 +2,13 @@
 
 ## Unreleased
 
-- Add `parity.toml` and `tools/parity.py`: every core, host and dev capability, its status in
-  each runtime, and a check in `just check`. See docs/concepts/layers.md.
-- C#: add `Buttons` with the eight engine button bits.
+- Add `parity.toml` and `tools/parity.py`: the layers, every capability and its status in each
+  runtime. `just check` checks it; `just parity --release` gates `v*` tags. See docs/concepts/layers.md.
+- The contract includes API names. Python names are canonical; Lua and C# derive theirs.
+- C# (breaking): `Rng.Int` is `Randint`, `Rng.Bits` is `Getrandbits`, `Trace.Hash` is `Digest`,
+  `Recording.Parse`/`Json` are `FromJson`/`ToJson`, `Pointer.Row()` is `Pointer.Encode(p)`.
+  Add `Inputs` (button bits), `Pointer.Decode`, and `Game.Push`/`Pop`.
+- Add `python -m nightengine.recipes`: checks that a game's justfile has the standard surface.
 
 ## 0.2.0 (2026-10-12)
 

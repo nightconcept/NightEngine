@@ -27,9 +27,9 @@ build:
     uv run --project python python -m nightengine.web build --root examples/python-pyxel --out dist/python-example
     uv run --project python python -m nightengine.love build love --root examples/lua-love --out dist/lua-example
 
-# Check parity.toml against the code and rewrite docs/concepts/parity.md.
-parity:
-    uv run --project python python tools/parity.py
+# Check parity.toml against the code and rewrite docs/concepts/parity.md. `--release` fails on open decisions.
+parity *args:
+    uv run --project python python tools/parity.py {{args}}
 
 docs:
     mise x -- pnpm --dir site build

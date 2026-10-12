@@ -25,15 +25,17 @@ Start at `nightengine/docs/index.md`. Then load the runtime skill:
 
 ## Loop
 
-1. Read the game's `AGENTS.md`.
-2. Make the change.
+1. Read the game's `AGENTS.md`. Run `just --list` for the commands and the `dev` keys.
+2. Make the change. To reach a level or a state quickly, use `just dev key=value ...`.
 3. Run `just check` and `just lint`. Fix every failure.
 4. For a rules change: record a replay (`just autoplay <seed>`) and check the traces.
    Update golden fixtures (`just golden`) only when the rules change on purpose.
 5. For a visual change: run `just frames <replay>` and look at the PNG files.
    Show the user before and after frames.
 
-Recipe names are in `nightengine/docs/games/commands.md`.
+Recipe names are in `nightengine/docs/games/commands.md`. Do not add a public recipe.
+Put a new option behind `run`, `dev` or `build` arguments, or make a private `_helper`.
+`just check` runs `python -m nightengine.recipes`, which fails on any other public recipe.
 
 ## When you are blocked
 

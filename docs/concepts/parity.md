@@ -25,27 +25,33 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 | `step-order`: Game.step: filter, track, effects, before hook, top scene, after hook, frame + 1, return cues | Yes | Yes | Yes |
 | `cues`: Sound cue names returned by each step and cleared after it | Yes | Yes | Yes |
 | `scene-stack`: Push, pop, replace and the visible scenes under an overlay | Yes | Yes | Yes |
-| `rng`: Portable seeded RNG: randint and getrandbits | Yes | Yes | Yes |
-| `trace`: Canonical snapshot text and CRC-32 hash | Yes | Yes | Yes |
+| `rng`: Portable seeded RNG | Yes | Yes | Yes |
+| `trace`: Canonical snapshot text and CRC-32 digest | Yes | Yes | Yes |
 | `replay-json`: Recording JSON: seed, width, inputs, sparse pointers and events | Yes | Yes | Yes |
 | `events`: Host events: text input recorded per frame and fed on playback | Yes | Yes | Yes |
 | `pointers`: Pointer kinds, phases and their replay encoding | Yes | Yes | Yes |
-| `targets`: Named targets and the controls that each accepts | Yes | Yes | Yes |
+| `targets`: Targets and the pointer kinds that each accepts | Yes | Yes | Yes |
 
 ### Core
 
 | Capability | Python/Pyxel | Lua/LÖVE | C#/MonoGame |
 | --- | --- | --- | --- |
-| `fx`: Screen effects ticked by the step: shake and flash | Yes | Yes | Planned |
-| `scene-music`: Each scene names its music track; the host plays it | Yes | Yes | Planned |
-| `custom-buttons`: Game-declared buttons above the eight engine bits | Yes | **Undecided** | **Undecided** |
-| `bindings`: Runtime rebinding of keys and pad buttons | Yes | **Undecided** | **Undecided** |
-| `store`: Settings and save storage through Game.write | Yes | **Undecided** | **Undecided** |
-| `content`: JSON data records, reference checks and the handler registry | Yes | **Undecided** | **Undecided** |
-| `systems`: Ordered per-frame systems on a scene | Yes | **Undecided** | **Undecided** |
-| `pacing`: Fixed simulation rate decoupled from the display rate | Yes | Native | Native |
-| `test-driver`: Headless driver: step, tap, press and run_until in tests | Yes | Yes | **Undecided** |
-| `autopilot`: A bot that plays a seed and records the run | Yes | **Undecided** | **Undecided** |
+| `screen-size`: The game's logical screen size for its target | Yes | Yes | Yes |
+| `fx`: Screen effects ticked by the step: shake and fade | Yes | Yes | Planned |
+| `scene-music`: Each scene names its music track | Yes | Yes | Planned |
+| `input-axis`: Axis and direction helpers on Input | Yes | Yes | Planned |
+| `custom-buttons`: Game-declared buttons above the eight engine bits | Yes | Planned | Planned |
+| `pointer-helpers`: Primary pointer, press and release, and hit tests | Yes | Yes | Planned |
+| `target-tables`: Named targets, sizing and target JSON | Yes | Yes | Planned |
+| `replay-play`: Play a recording into a game; replay widths | Yes | Yes | Planned |
+| `trace-tools`: Trace a recording and find the first differing frame | Yes | Yes | Planned |
+| `test-driver`: Headless driver for tests: step, tap, press, run until | Yes | Yes | Planned |
+| `store`: Settings and save storage through Game.write | Yes | Planned | Planned |
+| `bindings`: Runtime rebinding of keys and pad buttons | Yes | Planned | Planned |
+| `content`: JSON data records, reference checks and the handler registry | Yes | Planned | Planned |
+| `systems`: Ordered per-frame systems on a scene | Yes | Planned | Planned |
+| `autopilot`: A bot that plays a seed and records the run | Yes | Planned | Planned |
+| `pacing`: Simulation steps paced against a vsync display | Yes | Native | Native |
 | `canvas`: Code-drawn pixel art and palettes for Pyxel image banks | Yes | None | None |
 | `sound-check`: Validation of Pyxel sound tables | Yes | None | None |
 
@@ -61,49 +67,50 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 | `audio`: Play cues and scene music | Yes | Yes | Yes |
 | `viewport`: Letterbox the game screen and map window points to game points | Yes | Yes | Yes |
 | `frames`: Render a recording to PNG files with no window | Yes | Yes | Yes |
-| `storage`: Where settings live on desktop, browser and phone | Yes | **Undecided** | **Undecided** |
-| `platform-info`: Safe area, touch device and screen size hints | Yes | **Undecided** | **Undecided** |
+| `storage`: Where settings live on desktop, browser and phone | Yes | Planned | Planned |
+| `platform-info`: Safe area, touch device and screen size hints | Yes | Planned | Planned |
 | `pyxel-helpers`: Pyxel text, sprite and image-bank helpers | Yes | None | None |
 
 ### Dev
 
 | Capability | Python/Pyxel | Lua/LÖVE | C#/MonoGame |
 | --- | --- | --- | --- |
-| `state`: Read frame, scene, pause flag and game inspection | Yes | Yes | Yes |
-| `hash`: Canonical state hash of the live game | Yes | Yes | Planned |
+| `state`: Read frame, scene, pause flag, state hash and game inspection | Yes | Yes | Yes |
 | `pause-step`: Pause, resume and step n simulation frames | Yes | Yes | Yes |
 | `hold`: Inject buttons through the normal, recorded input path | Yes | Yes | Yes |
 | `shot`: Save the rendered game pixels to PNG | Yes | Yes | Yes |
 | `save`: Save the live recording | Yes | Yes | Yes |
 | `mcp-bridge`: Live MCP bridge for agents | None | Yes | Yes |
 | `asset-reload`: List and reload built assets in a running game | None | None | Yes |
-| `trace-tools`: Trace a recording and find the first differing frame | Yes | Yes | **Undecided** |
 | `pointer-diagnostic`: Browser page that shows raw pointer input (?app=debug) | Yes | None | None |
 
-### Open decisions and catch-up work
+### Catch-up work and open decisions
 
-- `core.fx` on C#/MonoGame: planned. Ladder rule. Port ScreenFx when a MonoGame game needs it.
-- `core.scene-music` on C#/MonoGame: planned. Ladder rule.
-- `core.custom-buttons` on Lua/LÖVE: undecided. A game can pass a wider mask, but there is no declare().
-- `core.custom-buttons` on C#/MonoGame: undecided. The Game constructor takes a mask, but there is no declare().
-- `core.bindings` on Lua/LÖVE: undecided. Only Nightrunner uses rebinding.
-- `core.bindings` on C#/MonoGame: undecided. Only Nightrunner uses rebinding.
-- `core.store` on Lua/LÖVE: undecided. Games on LÖVE keep no settings yet.
-- `core.store` on C#/MonoGame: undecided. Games on MonoGame keep no settings yet.
-- `core.content` on Lua/LÖVE: undecided. Unicycle keeps its numbers in code.
-- `core.content` on C#/MonoGame: undecided. Unicycle keeps its numbers in code.
-- `core.systems` on Lua/LÖVE: undecided. Not used by a LÖVE game yet.
-- `core.systems` on C#/MonoGame: undecided. Not used by a MonoGame game yet.
-- `core.test-driver` on C#/MonoGame: undecided. C# tests drive Game.Step directly.
-- `core.autopilot` on Lua/LÖVE: undecided. Unicycle records with the Python autopilot.
-- `core.autopilot` on C#/MonoGame: undecided. Unicycle has its own C# autoplay tool.
-- `host.gamepad` on C#/MonoGame: planned. Unicycle reads the pad in its own host. Move it into Host.cs.
-- `host.storage` on Lua/LÖVE: undecided. Follows core.store.
-- `host.storage` on C#/MonoGame: undecided. Follows core.store.
-- `host.platform-info` on Lua/LÖVE: undecided. LÖVE exposes safe area natively; no engine API yet.
-- `host.platform-info` on C#/MonoGame: undecided. No engine API yet.
-- `dev.hash` on C#/MonoGame: planned. Ladder rule. Add a hash action to the bridge.
-- `dev.trace-tools` on C#/MonoGame: undecided. Unicycle.Tools traces; the engine has no first_difference.
+- `core.fx` on C#/MonoGame: planned. Not ported yet.
+- `core.scene-music` on C#/MonoGame: planned. Not ported yet.
+- `core.input-axis` on C#/MonoGame: planned. Not ported yet.
+- `core.custom-buttons` on Lua/LÖVE: planned. Games pass a wider mask by hand.
+- `core.custom-buttons` on C#/MonoGame: planned. Games pass a wider mask by hand.
+- `core.pointer-helpers` on C#/MonoGame: planned. Not ported yet.
+- `core.target-tables` on C#/MonoGame: planned. Recording.FromJson reads targets inline.
+- `core.replay-play` on C#/MonoGame: planned. Hosts and tools loop over frames by hand.
+- `core.trace-tools` on C#/MonoGame: planned. Unicycle.Tools traces by hand.
+- `core.test-driver` on C#/MonoGame: planned. C# tests drive Game.Step directly.
+- `core.store` on Lua/LÖVE: planned. Engine core helper.
+- `core.store` on C#/MonoGame: planned. Engine core helper.
+- `core.bindings` on Lua/LÖVE: planned. Engine core helper.
+- `core.bindings` on C#/MonoGame: planned. Engine core helper.
+- `core.content` on Lua/LÖVE: planned. Engine core helper.
+- `core.content` on C#/MonoGame: planned. Engine core helper.
+- `core.systems` on Lua/LÖVE: planned. Engine core helper.
+- `core.systems` on C#/MonoGame: planned. Engine core helper.
+- `core.autopilot` on Lua/LÖVE: planned. Engine core helper.
+- `core.autopilot` on C#/MonoGame: planned. Engine core helper.
+- `host.gamepad` on C#/MonoGame: planned. Unicycle reads the pad in its own host.
+- `host.storage` on Lua/LÖVE: planned. Follows core.store.
+- `host.storage` on C#/MonoGame: planned. Follows core.store.
+- `host.platform-info` on Lua/LÖVE: planned. LÖVE exposes the safe area; no engine API yet.
+- `host.platform-info` on C#/MonoGame: planned. No engine API yet.
 
 ### Contract debts
 

@@ -18,7 +18,7 @@ public static class Trace
         double number = Convert.ToDouble(value, CultureInfo.InvariantCulture);
         return number == 0 ? "0" : number.ToString("G17", CultureInfo.InvariantCulture).ToLowerInvariant();
     }
-    public static string Hash(object? value)
+    public static string Digest(object? value)
     {
         uint crc = 0xffffffff;
         foreach (byte b in Encoding.UTF8.GetBytes(Canon(value)))

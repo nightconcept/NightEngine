@@ -15,22 +15,23 @@ Load the `nightengine` skill first.
 
 ## Run and inspect
 
-- `just love` runs the game with `NIGHTENGINE_DEV=1`, which opens the bridge on `127.0.0.1:12345`.
-- `just lovepilot` installs the love2d-mcp server into `.tools/love2d-mcp`. The game's
+- `just run --runtime love` plays the LÖVE build. `just dev --runtime love key=value ...` sets
+  `NIGHTENGINE_DEV=1`, which opens the bridge on `127.0.0.1:12345`.
+- `python3 nightengine/tools/love2d-mcp/setup.py --out .tools/love2d-mcp` installs the love2d-mcp server into `.tools/love2d-mcp`. The game's
   `.mcp.json` registers it. Its `run_lua` environment has `ne`, the dev controls.
-- `just love-frames <file>` renders a recording to PNG files.
+- `just frames <file> --runtime love` renders a recording to PNG files.
 - Under a tiling window manager, float the window. Otherwise the game letterboxes and
   screenshots are not the game size.
 
 ## Code
 
 - Rules in `love/<game>/` use only plain LuaJIT and the engine core. No `love.*`.
-- The specs run on plain LuaJIT and replay the shared fixtures:
-  `just love-check`. The traces must match the Python traces.
-- Format with StyLua: `just love-fmt`, check with `just love-lint`.
+- The specs run on plain LuaJIT and replay the shared fixtures. `just check` runs them.
+  The traces must match the Python traces.
+- `just fmt` formats with StyLua, and `just lint` checks it.
 
 ## Build
 
-`just love-build [love|windows|macos|android]`. With no argument it builds all that
+`just build love windows macos android` (any of them). With no argument it builds all that
 this system can. macOS builds need a Mac. Android needs Java and the SDK build tools.
 Release archives never include `nightengine/host/dev/`, the bridge that runs Lua.

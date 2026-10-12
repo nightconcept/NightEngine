@@ -27,7 +27,8 @@ These rules apply to every change in `python/`, `lua/` and `csharp/`.
 
 ## Contract changes
 
-The contract is in [Compatibility](../concepts/contract.md). It covers button bits,
+The contract is in [Compatibility](../concepts/contract.md) and [Layers and parity](../concepts/layers.md).
+It includes the API names: Python names are canonical, and Lua and C# derive theirs. It covers button bits,
 pointer kinds and phases, scene stack order, frame hook order, targets, RNG,
 replay JSON and trace encoding.
 

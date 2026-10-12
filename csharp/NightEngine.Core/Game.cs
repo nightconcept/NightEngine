@@ -1,6 +1,6 @@
 namespace NightEngine;
 
-public static class Buttons
+public static class Inputs
 {
     public const int Up = 1, Down = 2, Left = 4, Right = 8, A = 16, B = 32, C = 64, Menu = 128, All = 255;
 }
@@ -8,7 +8,9 @@ public static class Buttons
 public record Pointer(int Id, int X, int Y, int StartX, int StartY, string Phase, string Kind = "touch")
 {
     public bool Active => Phase is not "R" and not "C";
-    public object[] Row() => Kind == "touch" ? [Id, X, Y, StartX, StartY, Phase] : [Id, X, Y, StartX, StartY, Phase, Kind[..1]];
+    public static object[] Encode(Pointer p) => p.Kind == "touch" ? [p.Id, p.X, p.Y, p.StartX, p.StartY, p.Phase] : [p.Id, p.X, p.Y, p.StartX, p.StartY, p.Phase, p.Kind[..1]];
+    public static Pointer Decode(System.Text.Json.JsonElement row) => new(row[0].GetInt32(), row[1].GetInt32(), row[2].GetInt32(), row[3].GetInt32(), row[4].GetInt32(), row[5].GetString()!,
+        row.GetArrayLength() > 6 ? row[6].GetString() switch { "m" => "mouse", "p" => "pen", _ => "touch" } : "touch");
 }
 
 public record Target(string Name = "desktop", int Width = 0, int Height = 0, string[]? Controls = null)
@@ -83,6 +85,8 @@ public class Game
         tracker = new(mask, repeat, delay, rate);
     }
     public virtual (int Width, int Height) ScreenSize => (Target.Width == 0 ? 640 : Target.Width, Target.Height == 0 ? 480 : Target.Height);
+    public void Push(Scene scene) => Scenes.Push(scene);
+    public void Pop(Scene scene) => Scenes.Pop(scene);
     public void Cue(string name) => Cues.Add(name);
     protected virtual void BeforeScene(Input input) { }
     protected virtual void AfterScene() { }

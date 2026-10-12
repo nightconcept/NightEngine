@@ -19,10 +19,10 @@ public sealed class Recording(long seed, int width = 7, Target? target = null)
         if (events is { Length: > 0 }) Events[Frames.Count] = (string[])events.Clone();
         Frames.Add(code);
     }
-    public string Json()
+    public string ToJson()
     {
         var data = new Dictionary<string, object?> { ["seed"] = Seed, ["width"] = Width, ["inputs"] = string.Concat(Frames.Select(c => c.ToString($"x{Width}"))) };
-        if (Pointers.Count > 0) data["pointers"] = Pointers.ToDictionary(p => p.Key.ToString(), p => p.Value.Select(v => v.Row()).ToArray());
+        if (Pointers.Count > 0) data["pointers"] = Pointers.ToDictionary(p => p.Key.ToString(), p => p.Value.Select(Pointer.Encode).ToArray());
         if (Events.Count > 0) data["events"] = Events.ToDictionary(p => p.Key.ToString(), p => p.Value);
         if (Target != null) data["target"] = new { name = Target.Name, width = Target.Width, height = Target.Height, controls = Target.Inputs };
         return JsonSerializer.Serialize(data);
@@ -31,11 +31,11 @@ public sealed class Recording(long seed, int width = 7, Target? target = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         string temporary = Path.GetFullPath(path) + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        try { File.WriteAllText(temporary, Json() + "\n"); File.Move(temporary, path, true); }
+        try { File.WriteAllText(temporary, ToJson() + "\n"); File.Move(temporary, path, true); }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
-    public static Recording Load(string path) => Parse(File.ReadAllText(path));
-    public static Recording Parse(string text)
+    public static Recording Load(string path) => FromJson(File.ReadAllText(path));
+    public static Recording FromJson(string text)
     {
         using var document = JsonDocument.Parse(text);
         var root = document.RootElement;
@@ -49,9 +49,7 @@ public sealed class Recording(long seed, int width = 7, Target? target = null)
         for (int i = 0; i < inputs.Length; i += width) result.Frames.Add(int.Parse(inputs.AsSpan(i, width), NumberStyles.HexNumber));
         if (root.TryGetProperty("pointers", out var ps))
             foreach (var frame in ps.EnumerateObject())
-                result.Pointers[int.Parse(frame.Name)] = frame.Value.EnumerateArray().Select(p =>
-                    new Pointer(p[0].GetInt32(), p[1].GetInt32(), p[2].GetInt32(), p[3].GetInt32(), p[4].GetInt32(), p[5].GetString()!,
-                        p.GetArrayLength() > 6 ? p[6].GetString() switch { "m" => "mouse", "p" => "pen", _ => "touch" } : "touch")).ToArray();
+                result.Pointers[int.Parse(frame.Name)] = frame.Value.EnumerateArray().Select(Pointer.Decode).ToArray();
         if (root.TryGetProperty("events", out var es))
             foreach (var frame in es.EnumerateObject()) result.Events[int.Parse(frame.Name)] = frame.Value.EnumerateArray().Select(e => e.GetString()!).ToArray();
         if (target is not null && (target.Width < 0 || target.Height < 0 || target.Inputs.Length == 0 || target.Inputs.Any(c => c is not "keyboard" and not "mouse" and not "touch"))) throw new FormatException("Invalid replay target");

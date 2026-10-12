@@ -33,12 +33,12 @@ public sealed class Rng
         s[2] ^= s[0]; s[3] ^= s[1]; s[1] ^= s[2]; s[0] ^= s[3]; s[2] ^= t; s[3] = Rotate(s[3], 11);
         return result;
     }
-    public uint Bits(int count)
+    public uint Getrandbits(int count)
     {
         if (count is < 1 or > 32) throw new ArgumentOutOfRangeException(nameof(count));
         return Next() >> (32 - count);
     }
-    public int Int(int low, int high)
+    public int Randint(int low, int high)
     {
         long n = (long)high - low + 1;
         if (n is < 1 or > 4294967296L) throw new ArgumentOutOfRangeException(nameof(high));

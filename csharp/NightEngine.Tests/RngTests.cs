@@ -11,9 +11,9 @@ public static class RngTests
             var seed = vector.GetProperty("seed");
             var rng = seed.ValueKind == JsonValueKind.String ? new Rng(seed.GetString()!) : new Rng(seed.GetInt64());
             foreach (var expected in vector.GetProperty("randint(-5,150)").EnumerateArray())
-                if (rng.Int(-5, 150) != expected.GetInt32()) throw new Exception($"RNG randint seed {seed}");
+                if (rng.Randint(-5, 150) != expected.GetInt32()) throw new Exception($"RNG randint seed {seed}");
             foreach (var expected in vector.GetProperty("getrandbits(32)").EnumerateArray())
-                if (rng.Bits(32) != expected.GetUInt32()) throw new Exception($"RNG bits seed {seed}");
+                if (rng.Getrandbits(32) != expected.GetUInt32()) throw new Exception($"RNG bits seed {seed}");
         }
     }
 }

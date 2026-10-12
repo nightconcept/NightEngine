@@ -12,15 +12,13 @@ update the page that it changes.
 
 Last reviewed: 2026-10-12.
 
-## 1. An engine-owned game toolkit
+## 1. Move games to the standard justfile surface
 
-Games copy the engine commands into their own `justfile`. Unicycle has about 45
-recipes, and most of them only call engine modules. Each game wraps them in a
-different way.
-
-Goal: the engine ships the standard recipes in [Game commands](games/commands.md).
-One option is a just module in this repository that a game imports with
-`import 'nightengine/game.just'`. The game then adds only its own recipes.
+[Game commands](games/commands.md) fixes the public recipes, and
+`python -m nightengine.recipes` checks them. No game passes yet. Unicycle has 32
+problems, mostly `web-*`, `love-*` and `mg-*` recipes that become `--runtime` and
+`build` arguments or private helpers. Move each game, then add the check to its
+`just check`. Give each game a `just dev` with its own keys.
 
 ## 2. MonoGame tooling in the engine
 
@@ -54,12 +52,21 @@ Some games still use older ways. See [Use the engine in a game](games/consume.md
 
 Move each game to the submodule on a pinned `main` commit or tag.
 
-## 6. Close the parity work
+## 6. Runtime catch-up
 
-[Runtime parity](concepts/parity.md) lists the open items. Each `undecided` status must
-be decided before the next engine release; `just check` fails after the version moves.
-Pay off the contract debts with shared fixtures for repeats, the scene stack, pointers
-and targets. The rules are in [Layers and parity](concepts/layers.md).
+Every `planned` status in `parity.toml` points here. [Runtime parity](concepts/parity.md)
+lists them. Move a group into an execution plan when work starts.
+
+- **C# core**: screen effects, scene music, input axis helpers, pointer helpers, target
+  tables, replay play, trace tools and a test driver.
+- **Lua and C# core helpers**: custom buttons, storage, rebinding, content and registry,
+  systems and the autopilot. Port each one when a game on that runtime needs it, or before.
+- **Hosts**: gamepads in the MonoGame host; settings storage and platform info in the LÖVE
+  and MonoGame hosts.
+- **Contract debts**: shared fixtures for repeats, the scene stack, pointers and targets.
+
+A release can ship with these gaps, because each is decided. `just parity --release` fails
+only on `undecided` statuses and missing plans.
 
 ## 7. Verify every platform in CI
 
