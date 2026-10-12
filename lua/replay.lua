@@ -19,17 +19,14 @@ M.Recording = Recording
 
 --- `frames` is a list of codes. `pointers` maps a frame number (from 0) to a list of contacts.
 function M.new(seed, frames, pointers, width, target_, events)
-    return setmetatable(
-        {
-            seed = seed,
-            frames = frames or {},
-            pointers = pointers or {},
-            width = width or 2,
-            target = target_,
-            events = events or {},
-        },
-        Recording
-    )
+    return setmetatable({
+        seed = seed,
+        frames = frames or {},
+        pointers = pointers or {},
+        width = width or 2,
+        target = target_,
+        events = events or {},
+    }, Recording)
 end
 
 local EMPTY = {}

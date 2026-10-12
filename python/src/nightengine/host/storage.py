@@ -50,7 +50,7 @@ def data_dir(
 
 
 def open_store(vendor: str, app: str) -> Store:
-    """In a page, browser storage. On the desktop, a `FileStore` in `data_dir(vendor, app)`. 
+    """In a page, browser storage. On the desktop, a `FileStore` in `data_dir(vendor, app)`.
     Safe before `pyxel.init`."""
     if sys.platform == "emscripten":
         return PageStore(f"{vendor}/{app}")
