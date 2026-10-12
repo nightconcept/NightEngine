@@ -5,7 +5,7 @@ it into one line of text, the same in both languages (`lua/trace.lua`): numbers 
 3.0 are the same, and -0.0 is 0. A trace is one CRC-32 of that text per frame, before each step and after the
 last.
 
-`python -m nightengine.trace` writes contract/rng.json, the rng and canon test vectors for the Lua side.
+`python -m nightengine.trace` writes tests/fixtures/rng.json, the rng and canon test vectors for the Lua side.
 """
 
 import json
@@ -66,7 +66,7 @@ def first_difference(a: list[str], b: list[str]) -> int | None:
 
 
 def vectors() -> dict:
-    """The rng test vectors in contract/rng.json."""
+    """The rng test vectors in tests/fixtures/rng.json."""
     from .rng import Rng
 
     seeds: list[int | str] = [0, 1, 7, 1997, 2**31 - 1, 2**32 + 5, -3, "1997:40", ""]
@@ -81,7 +81,7 @@ def vectors() -> dict:
 
 
 if __name__ == "__main__":
-    path = Path(__file__).resolve().parents[3] / "contract" / "rng.json"
+    path = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "rng.json"
     path.parent.mkdir(exist_ok=True)
     path.write_text(json.dumps(vectors(), indent=1) + "\n")
     print(path)

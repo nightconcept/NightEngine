@@ -11,7 +11,7 @@ graphics, sounds and state callbacks.
 | `python/tests/` | Python core, host and packaging checks |
 | `lua/` | Flat Lua package root, core and LÖVE host |
 | `tests/lua/` | Lua core and host checks |
-| `contract/` | Shared compatibility fixtures |
+| `tests/fixtures/` | Shared compatibility fixtures |
 | `tools/love2d-mcp/` | Pinned MCP server bootstrap and connection example |
 | `examples/` | Runnable examples for both implementations |
 

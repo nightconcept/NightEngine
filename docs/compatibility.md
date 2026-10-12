@@ -1,9 +1,8 @@
 # Compatibility
 
-Both implementations pass fixtures under `contract/` before release. `rng.json`
+Both implementations pass fixtures under `tests/fixtures/` before release. `rng.json`
 fixes RNG outputs and canonical snapshot text/hashes. `behavior.json` fixes frame
-progression, held/pressed input and cue clearing. Unicycle's golden traces compare
-full game state every frame on both implementations.
+progression, held/pressed input and cue clearing.
 
 The contract includes button bits, pointer kinds/phases, scene stack order,
 frame hook order, targets, RNG, replay JSON and trace encoding. Language calling

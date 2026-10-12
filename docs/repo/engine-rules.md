@@ -27,7 +27,7 @@ pointer kinds and phases, scene stack order, frame hook order, targets, RNG,
 replay JSON and trace encoding.
 
 1. Change the Python and the Lua implementation in the same commit.
-2. If a simulation result changes, update the fixtures in `contract/` on purpose.
+2. If a simulation result changes, update the fixtures in `tests/fixtures/` on purpose.
 3. Keep replay widths and recorded targets backward compatible.
 4. Run `just check`. Both suites read the same fixtures.
 5. Record the change in `CHANGELOG.md`.

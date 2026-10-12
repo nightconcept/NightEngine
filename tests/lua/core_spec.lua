@@ -17,7 +17,7 @@ local function read(path)
     f:close()
     return s
 end
-local contract = json.decode(read(here .. "/../../contract/rng.json"))
+local contract = json.decode(read(here .. "/../fixtures/rng.json"))
 
 t.test("rng matches the Python vectors", function()
     for _, case in ipairs(contract.rng) do

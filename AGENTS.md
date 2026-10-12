@@ -20,7 +20,7 @@ Both implementations share deterministic frame, input, RNG, replay and trace con
 
 - `python/src/nightengine/`: Python core, Pyxel host, web, Android and LÖVE builders.
 - `lua/`: Lua package root. Games mount it as `nightengine`.
-- `contract/`: shared fixtures that both implementations pass.
+- `tests/fixtures/`: shared fixtures that both implementations pass.
 - `python/tests/`, `tests/lua/`: implementation checks.
 - `tools/love2d-mcp/`: pinned MCP bootstrap for the Lua dev bridge.
 - `examples/`: runnable examples for both implementations.
@@ -39,7 +39,7 @@ Both implementations share deterministic frame, input, RNG, replay and trace con
 - Read [Architecture](docs/architecture.md) and [Compatibility](docs/compatibility.md)
   before you change an interface.
 - Keep each core deterministic. A core imports no runtime and knows no game.
-- Change Python and Lua together. Keep both in agreement with `contract/`.
+- Change Python and Lua together. Keep both in agreement with `tests/fixtures/`.
 - Keep the observability tools and their licenses in the engine.
 - Exclude `lua/host/dev/` from game release archives.
 - Start shared engine changes from `main`. Games pin verified commits.

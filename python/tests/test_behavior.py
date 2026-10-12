@@ -17,7 +17,7 @@ class Counter(Scene):
 
 class BehaviorTest(unittest.TestCase):
     def test_shared_frame_input_and_cue_contract(self):
-        fixture = json.loads((Path(__file__).resolve().parents[2] / "contract/behavior.json").read_text())
+        fixture = json.loads((Path(__file__).resolve().parents[2] / "tests/fixtures/behavior.json").read_text())
         game = Game(7)
         game.count = 0
         game.push(Counter())
