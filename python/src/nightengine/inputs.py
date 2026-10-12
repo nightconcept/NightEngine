@@ -2,8 +2,10 @@
 
 The bits are the same in every game. A game masks out the buttons it does not use with `Game.input_mask`.
 A game can declare its own buttons above the 8 engine bits with `declare` and `Game.buttons`.
+`just dev key=value` pairs reach the game as host events (`dev_event`), which `Input.dev` reads.
 """
 
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
@@ -15,6 +17,8 @@ REPEAT_DELAY, REPEAT_RATE = 14, 5  # Menu cursor auto-repeat, in frames.
 
 DIRECTIONS = ((UP, (0, -1)), (DOWN, (0, 1)), (LEFT, (-1, 0)), (RIGHT, (1, 0)))
 EXTRA = 256  # The first bit a game may declare.
+DEV = "dev "  # The start of a `just dev` host event.
+PAIR = re.compile(r"[A-Za-z0-9_-]+=.*", re.S)
 
 
 @dataclass(frozen=True)
@@ -31,6 +35,14 @@ class Button:
 def declare(*buttons: Button) -> tuple[Button, ...]:
     """Give each button the next bit above the engine buttons, in order: 256, 512, and so on."""
     return tuple(replace(b, bit=EXTRA << i) for i, b in enumerate(buttons))
+
+
+def dev_event(pair: str) -> str:
+    """The host event for one `just dev` pair: "level=3" -> "dev level=3". The key is letters, digits, `_` and `-`.
+    Hosts send these on frame 0 of a live run, so the recording keeps them and a replay starts the same."""
+    if not PAIR.fullmatch(pair):
+        raise ValueError(f"a dev pair is key=value, not {pair!r}")
+    return DEV + pair
 
 
 def mask_of(buttons: Iterable[Button]) -> int:
@@ -61,6 +73,15 @@ class Input:
     def nav(self, button: int) -> bool:
         """True on the press, and again each repeat tick while a repeating button stays held."""
         return bool(self.repeat & button)
+
+    def dev(self) -> dict[str, str]:
+        """The `just dev` pairs in this frame's events, as {key: value}. A later pair with the same key wins."""
+        pairs = {}
+        for event in self.events:
+            if event.startswith(DEV):
+                key, _, value = event[len(DEV) :].partition("=")
+                pairs[key] = value
+        return pairs
 
     def axis(self) -> tuple[int, int]:
         """The held direction as (-1..1, -1..1). Diagonals are allowed; opposite keys cancel."""

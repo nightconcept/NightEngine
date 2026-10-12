@@ -29,6 +29,7 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 | `trace`: Canonical snapshot text and CRC-32 digest | Yes | Yes | Yes |
 | `replay-json`: Recording JSON: seed, width, inputs, sparse pointers and events | Yes | Yes | Yes |
 | `events`: Host events: text input recorded per frame and fed on playback | Yes | Yes | Yes |
+| `dev-pairs`: `just dev` key=value pairs as "dev key=value" host events, read by Input.dev | Yes | Yes | Yes |
 | `pointers`: Pointer kinds, phases and their replay encoding | Yes | Yes | Yes |
 | `targets`: Targets and the pointer kinds that each accepts | Yes | Yes | Yes |
 
@@ -76,6 +77,7 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 | Capability | Python/Pyxel | Lua/LÖVE | C#/MonoGame |
 | --- | --- | --- | --- |
 | `state`: Read frame, scene, pause flag, state hash and game inspection | Yes | Yes | Yes |
+| `start`: Start a live run in a named state: `just dev` pairs on frame 0, dev tools on | Yes | Yes | Yes |
 | `pause-step`: Pause, resume and step n simulation frames | Yes | Yes | Yes |
 | `hold`: Inject buttons through the normal, recorded input path | Yes | Yes | Yes |
 | `shot`: Save the rendered game pixels to PNG | Yes | Yes | Yes |

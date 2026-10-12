@@ -23,6 +23,11 @@ public abstract class Host : Microsoft.Xna.Framework.Game
     public int PendingSteps;
     public int InjectedInput;
     public Pointer[] InjectedPointers = [];
+    private List<string> pending = [];
+    // Send a host event to the game on the next live frame. The recording keeps it.
+    public void Post(string e) => pending.Add(e);
+    // `just dev` key=value pairs: "dev key=value" events on frame 0 (see Input.Dev).
+    public void PostDev(IEnumerable<string> pairs) { foreach (var pair in pairs) Post(Inputs.DevEvent(pair)); }
     protected Host(NightEngine.Game simulation)
     {
         Simulation = simulation; Recording = new(simulation.Seed, 7, simulation.Target);
@@ -77,7 +82,7 @@ public abstract class Host : Microsoft.Xna.Framework.Game
         if (Replay is not null && frame >= Replay.Frames.Count || StopAfter > 0 && frame >= StopAfter) { Exit(); return; }
         int code = Replay is null ? ReadKeys(Keyboard.GetState()) | AutomaticInput() | InjectedInput : Replay.Frames[frame];
         Pointer[] pointers = Replay is null ? ReadPointers().Concat(InjectedPointers).ToArray() : Replay.At(frame);
-        string[] events = Replay?.EventsAt(frame) ?? [];
+        string[] events = Replay?.EventsAt(frame) ?? [.. pending]; if (Replay is null) pending = [];
         Recording.Add(code, pointers, events); var cues = Simulation.Step(code, pointers, events); if (!offlineFrames) PlayCues(cues);
         InjectedPointers = PendingSteps > 0 ? InjectedPointers.Where(p => p.Active).Select(p => p with { Phase = "H" }).ToArray() : [];
         if (Simulation.QuitRequested) Exit(); base.Update(time);

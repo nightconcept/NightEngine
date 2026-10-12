@@ -2,13 +2,14 @@
 
 import atexit
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import pyxel
 
 from ..core import Game
+from ..inputs import dev_event
 from ..pacing import InputLatch, Pacer, carry
 from ..pointer import Pointer, PointerKind, PointerPhase
 from ..replay import Recording, digits_for
@@ -103,6 +104,7 @@ class App:
         target: Target | None = None,
         inspect: Callable[[Game], dict] | None = None,
         snapshot: Callable[[Game], object] | None = None,
+        dev: Sequence[str] = (),
     ):
         self.config, self.renderer, self.audio = config, renderer, audio
         self.pacer, self.latch = Pacer(step_hz=config.fps), InputLatch()
@@ -135,8 +137,8 @@ class App:
             seed = pyxel.rndi(0, 2**31 - 1)
         self.game = make_game(seed, target)
         self.recording = None if replay else Recording(seed, width=digits_for(self.game.input_mask), target=target)
-        if not replay:
-            self.pending = (*self.boot(), *self.pending)  # Frame 0 gets them. A replay has them in its recording.
+        if not replay:  # Frame 0 gets them. A replay has them in its recording.
+            self.pending = (*self.boot(), *map(dev_event, dev), *self.pending)
         self.fit()
         self.set_vsync(config.vsync)
         global current

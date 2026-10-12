@@ -37,16 +37,18 @@ def digest(value: Any) -> str:
 
 
 def trace(game, steps, snapshot: Callable[[Any], Any]) -> list[str]:
-    """Step `game` through `steps` ((code, pointers) pairs) and hash its snapshot before each step and after."""
+    """Step `game` through `steps` ((code, pointers) or (code, pointers, events)) and hash its snapshot before each
+    step and after."""
     hashes = [digest(snapshot(game))]
-    for code, pointers in steps:
-        game.step(code, pointers)
+    for step in steps:
+        game.step(*step)
         hashes.append(digest(snapshot(game)))
     return hashes
 
 
 def recording_steps(recording):
-    return ((code, recording.at(i)) for i, code in enumerate(recording.frames))
+    """The steps of a recording: (code, pointers, events) for each frame."""
+    return ((code, recording.at(i), recording.events_at(i)) for i, code in enumerate(recording.frames))
 
 
 def save(path: Path | str, hashes: list[str]):

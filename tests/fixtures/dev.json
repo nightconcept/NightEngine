@@ -1,0 +1,31 @@
+{
+  "pairs": [
+    "level=3",
+    "mode=time trial",
+    "path=a=b",
+    "empty="
+  ],
+  "events": [
+    "dev level=3",
+    "dev mode=time trial",
+    "dev path=a=b",
+    "dev empty="
+  ],
+  "invalid": [
+    "level",
+    "=3",
+    "a b=1",
+    ""
+  ],
+  "frame": [
+    "press key:Z",
+    "dev level=3",
+    "dev mode=time trial",
+    "dev level=4",
+    "developer"
+  ],
+  "dev": {
+    "level": "4",
+    "mode": "time trial"
+  }
+}

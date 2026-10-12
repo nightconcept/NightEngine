@@ -71,7 +71,7 @@ end
 function M.trace(game, recording, snapshot)
     local hashes = { M.digest(snapshot(game)) }
     for i, code in ipairs(recording.frames) do
-        game:step(code, recording:at(i - 1))
+        game:step(code, recording:at(i - 1), recording:events_at(i - 1))
         hashes[#hashes + 1] = M.digest(snapshot(game))
     end
     return hashes

@@ -30,6 +30,9 @@ All names below import from `nightengine`, except where a module is named.
   - `down(b)`: held now. `hit(b)`: pressed on this frame. `nav(b)`: pressed, or a repeat tick.
   - `axis() -> (dx, dy)`: the held direction. Diagonals are allowed and opposite keys cancel.
   - `direction() -> (dx, dy) | None`: one direction only, the newest press first. For tile movement.
+  - `dev() -> dict[str, str]`: the `just dev` pairs in this frame's events. Hosts send them on frame 0.
+- `dev_event("level=3") -> "dev level=3"`: the host event for one `just dev` pair. It raises `ValueError` for a pair
+  that is not `key=value`, with a key of letters, digits, `_` and `-`.
 - `InputTracker(mask=ALL, repeat=(), delay=14, rate=5).feed(code, pointers=()) -> Input`.
   A button in `repeat` ticks in `Input.repeat` after `delay` frames held, then every `rate` frames.
 
@@ -188,7 +191,8 @@ build for a phone and a build for a computer can differ without an `if` in the g
   sticks=((1, 0),), pad_mappings=gamepad.DB)`. `sticks` lists the `(pad, shift)` left sticks read as the d-pad.
   `App` loads the controller database before `pyxel.init` (`pad_mappings=None` skips it).
   (`integer_scale` applies on the desktop only: in a browser the game fills its canvas, so touches match the picture)
-  and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None)`. `App` picks the target
+  and `App(config, make_game, renderer, audio, seed=None, replay=None, target=None, dev=())`. `dev` holds
+  `just dev` pairs, sent to the game as host events on frame 0 of a live run. `App` picks the target
   (`choose_target`: a replay's own, else `target`, else `target.current()`), opens the window at the target's size,
   starts `platform`, and calls `make_game(seed, target)`. Each frame it reads the buttons and `platform.sample()`,
   records both, steps the game (a replay feeds the recorded ones), and resizes the screen if `game.screen_size`

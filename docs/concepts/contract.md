@@ -18,8 +18,13 @@ use the existing 17-digit encoding; hashes use CRC-32. Dictionaries are excluded
 Replay widths and recorded targets remain backward compatible. Simulation changes
 require an intentional contract and fixture update.
 
-`events.json` fixes sparse recorded host events in both languages. Python/Pyxel
-and Lua/LÖVE hosts feed events on playback and accept queued live events.
+`events.json` fixes sparse recorded host events in every runtime. All three hosts
+feed events on playback and accept queued live events.
+
+`dev.json` fixes `just dev` pairs. A host turns `level=3` into the host event
+`dev level=3` on frame 0 of a live run (`dev_event`), and the game reads the pairs
+with `Input.dev()`. The recording keeps the events, so a run started with
+`just dev` replays the same in every runtime.
 Nightrunner retains Python's seeded `random.Random` in its game adapter to preserve
 its existing recordings. The shared engine default remains the portable RNG.
 Python-specific host facilities include runtime rebinding, OS/browser settings

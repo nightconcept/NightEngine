@@ -15,8 +15,8 @@ Load the `nightengine` skill first.
 
 ## Run and inspect
 
-- `just run --runtime love` plays the LÖVE build. `just dev --runtime love key=value ...` sets
-  `NIGHTENGINE_DEV=1`, which opens the bridge on `127.0.0.1:12345`.
+- `just run --runtime love` plays the LÖVE build. `just dev --runtime love key=value ...` passes
+  `--dev` and the pairs, which opens the bridge on `127.0.0.1:12345`. The game reads the pairs with `inp:dev()`.
 - `python3 nightengine/tools/love2d-mcp/setup.py --out .tools/love2d-mcp` installs the love2d-mcp server into `.tools/love2d-mcp`. The game's
   `.mcp.json` registers it. Its `run_lua` environment has `ne`, the dev controls.
 - `just frames <file> --runtime love` renders a recording to PNG files.

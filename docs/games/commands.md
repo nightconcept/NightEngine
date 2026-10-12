@@ -65,7 +65,17 @@ dev *args:
 just dev level=3 boss=hydra
 ```
 
-`just dev` with no arguments starts the first scene with the dev tools on. The game
-parses the pairs in its own code and applies them before the first frame. A pair
-must give the same state on every runtime, so a recording made after `just dev`
-replays the same.
+`just dev` with no arguments starts the first scene with the dev tools on.
+
+The engine carries the pairs; the game gives them meaning. Each runtime's host takes
+`--dev` and the `key=value` arguments, and sends each pair to the game as the host
+event `dev key=value` on frame 0. The game reads them with `Input.dev()` (in
+`before_scene`, say) and sets up its state. Because the pairs are recorded events,
+a run started with `just dev` replays the same, and a pair gives the same state on
+every runtime. Seeds are not pairs: use `--seed N`.
+
+| Runtime | Host side |
+| --- | --- |
+| Python/Pyxel | `App(..., dev=pairs)`; the game's `game.py` parses `--dev` and the pairs |
+| Lua/LÖVE | `love <dir> --dev key=value ...`; `--dev` also opens the LovePilot bridge |
+| C#/MonoGame | `host.PostDev(pairs)` in the game's `Program.cs`; `--dev` opens the MCP bridge in Debug |

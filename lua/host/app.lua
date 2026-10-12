@@ -1,10 +1,12 @@
 --- The LÖVE host: a fixed frame loop, input, sound, recording, replays, PNG frames, and the dev bridge.
 --
--- love . [--seed N] [--target NAME] [--replay FILE] [--frames FILE OUT [EVERY]]
+-- love . [--seed N] [--target NAME] [--replay FILE] [--frames FILE OUT [EVERY]] [--dev] [key=value ...]
 --
 -- Every frame of input goes through Game:step, and a live run is saved to `last.json` in the save folder.
--- With NIGHTENGINE_DEV=1 the love2d-mcp bridge listens on 127.0.0.1:12345, and `run_lua` code gets `ne`.
+-- With --dev or NIGHTENGINE_DEV=1 the love2d-mcp bridge listens on 127.0.0.1:12345, and `run_lua` code gets `ne`.
+-- Each key=value pair (`just dev`) reaches the game as a "dev key=value" event on frame 0 (see Input:dev).
 local bit = require("bit")
+local inputs = require("nightengine.inputs")
 local replay = require("nightengine.replay")
 local targets = require("nightengine.target")
 local config, input, R, audio
@@ -36,10 +38,16 @@ local function write_file(path, data)
 end
 
 local function parse(args)
-    local opts, i = {}, 1
+    local opts, i = { pairs = {} }, 1
     while i <= #args do
         local a = args[i]
-        if a == "--seed" or a == "--target" or a == "--replay" then
+        if a == "--dev" then
+            opts.dev = true
+            i = i + 1
+        elseif a:match("^[%w_%-]+=") then -- A `just dev` pair, key=value.
+            opts.pairs[#opts.pairs + 1] = a
+            i = i + 1
+        elseif a == "--seed" or a == "--target" or a == "--replay" then
             opts[a:sub(3)] = args[i + 1]
             i = i + 2
         elseif a == "--frames" then
@@ -73,6 +81,9 @@ function App.load(args)
     if not App.replay then
         App.recording =
             replay.new(App.seed, nil, nil, replay.digits_for(App.game.input_mask or config.input_mask or 127), target)
+        for _, pair in ipairs(opts.pairs) do -- Frame 0 gets them. A replay has them in its recording.
+            App.post(inputs.dev_event(pair))
+        end
     end
     App.canvas = nil
     App.fit()
@@ -83,7 +94,7 @@ function App.load(args)
     end
     App.paused, App.steps, App.held = false, 0, { code = 0, frames = 0 }
     App.dev = require("nightengine.host.controls").new(App, config)
-    if os.getenv("NIGHTENGINE_DEV") == "1" then -- The bridge is excluded from release builds.
+    if opts.dev or os.getenv("NIGHTENGINE_DEV") == "1" then -- The bridge is excluded from release builds.
         App.bridge()
     end
 end

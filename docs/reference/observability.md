@@ -25,7 +25,7 @@ trace tools belong to the engine.
 
 ## Lua / love2d-mcp
 
-Set `NIGHTENGINE_DEV=1` for source runs. The engine host loads the vendored bridge
+Pass `--dev` (as `just dev` does) or set `NIGHTENGINE_DEV=1` for source runs. The engine host loads the vendored bridge
 on `127.0.0.1:12345`. Its `run_lua` environment contains `ne`, the same controls
 and game-supplied helpers.
 

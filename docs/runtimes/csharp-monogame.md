@@ -5,9 +5,9 @@ sidebar:
 
 # C# and MonoGame
 
-The C# core implements deterministic frames, scenes, input edges and repeats, target filtering, the portable RNG, replay JSON, and canonical traces. It imports no graphics runtime. Unicycle checks all four existing recordings against this core.
+The C# core implements deterministic frames, scenes, input edges and repeats, target filtering, the portable RNG, replay JSON, and canonical traces. It imports no graphics runtime. Unicycle checks its five recordings against this core.
 
-`csharp/MonoGame/Host.cs` supplies the fixed 30 Hz loop, viewport mapping, recording, replay, PNG capture, and lifecycle handling. Games derive from `Host` and supply bindings, drawing and sound. Compile these host sources against the platform's MonoGame 3.8.6 package. DesktopGL and Android use separate projects.
+`csharp/MonoGame/Host.cs` supplies the fixed 30 Hz loop, viewport mapping, recording, replay, PNG capture, and lifecycle handling. Games derive from `Host` and supply bindings, drawing and sound. `Post(event)` queues a host event for the next live frame, and `PostDev(pairs)` sends `just dev` pairs (`level=3`) as `Inputs.DevEvent` events; the game reads them with `Input.Dev()`. Compile these host sources against the platform's MonoGame 3.8.6 package. DesktopGL and Android use separate projects.
 
 Use .NET SDK 10.0.401. The core package version is 0.2.0. `just check` runs the contract checks. `just build` produces `NightEngine.Core.0.2.0.nupkg`. The release includes a source archive with the host and MCP adapter. It does not publish to an external NuGet feed.
 

@@ -26,7 +26,8 @@ Start at `nightengine/docs/index.md`. Then load the runtime skill:
 ## Loop
 
 1. Read the game's `AGENTS.md`. Run `just --list` for the commands and the `dev` keys.
-2. Make the change. To reach a level or a state quickly, use `just dev key=value ...`.
+2. Make the change. To reach a level or a state quickly, use `just dev key=value ...`. A new key goes in every
+   runtime the game has: the game reads it from `Input.dev()` on frame 0 (see Game commands).
 3. Run `just check` and `just lint`. Fix every failure.
 4. For a rules change: record a replay (`just autoplay <seed>`) and check the traces.
    Update golden fixtures (`just golden`) only when the rules change on purpose.

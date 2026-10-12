@@ -9,6 +9,10 @@
   `Recording.Parse`/`Json` are `FromJson`/`ToJson`, `Pointer.Row()` is `Pointer.Encode(p)`.
   Add `Inputs` (button bits), `Pointer.Decode`, and `Game.Push`/`Pop`.
 - Add `python -m nightengine.recipes`: checks that a game's justfile has the standard surface.
+- `just dev` pairs: `dev_event` and `Input.dev` in all three cores (contract `dev.json`), and every host
+  sends `key=value` arguments as frame-0 host events: Python `App(dev=...)`, Lua `--dev key=value`,
+  C# `Host.Post` and `Host.PostDev`. Lua `--dev` also opens the LovePilot bridge.
+- Fix: the Python and Lua trace helpers (`trace.recording_steps`, Lua `trace.trace`) feed recorded host events.
 
 ## 0.2.0 (2026-10-12)
 

@@ -3,6 +3,10 @@ namespace NightEngine;
 public static class Inputs
 {
     public const int Up = 1, Down = 2, Left = 4, Right = 8, A = 16, B = 32, C = 64, Menu = 128, All = 255;
+    public const string Dev = "dev "; // The start of a `just dev` host event.
+    // The host event for one `just dev` pair: "level=3" -> "dev level=3". The key is letters, digits, `_` and `-`.
+    public static string DevEvent(string pair) => System.Text.RegularExpressions.Regex.IsMatch(pair, "^[A-Za-z0-9_-]+=", System.Text.RegularExpressions.RegexOptions.CultureInvariant)
+        ? Dev + pair : throw new ArgumentException($"a dev pair is key=value, not {pair}");
 }
 
 public record Pointer(int Id, int X, int Y, int StartX, int StartY, string Phase, string Kind = "touch")
@@ -25,6 +29,13 @@ public record Input(int Held, int Pressed, int Repeat, Pointer[] Pointers, strin
     public bool Down(int bit) => (Held & bit) != 0;
     public bool Hit(int bit) => (Pressed & bit) != 0;
     public bool Nav(int bit) => (Repeat & bit) != 0;
+    // The `just dev` pairs in this frame's events. A later pair with the same key wins.
+    public Dictionary<string, string> Dev()
+    {
+        Dictionary<string, string> pairs = [];
+        foreach (var e in Events) if (e.StartsWith(Inputs.Dev, StringComparison.Ordinal)) { var pair = e[Inputs.Dev.Length..]; int i = pair.IndexOf('='); pairs[pair[..i]] = pair[(i + 1)..]; }
+        return pairs;
+    }
 }
 
 public sealed class InputTracker(int mask = 255, int[]? repeat = null, int delay = 14, int rate = 5)

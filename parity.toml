@@ -82,6 +82,12 @@ fixture = "events.json"
 api = ["replay.Recording.events_at"]
 
 [[capability]]
+id = "contract.dev-pairs"
+summary = "`just dev` key=value pairs as \"dev key=value\" host events, read by Input.dev"
+fixture = "dev.json"
+api = ["inputs.dev_event", "inputs.Input.dev"]
+
+[[capability]]
 id = "contract.pointers"
 summary = "Pointer kinds, phases and their replay encoding"
 debt = "No shared fixture. Replays with pointers are not checked across runtimes."
@@ -328,6 +334,13 @@ summary = "Read frame, scene, pause flag, state hash and game inspection"
 python = { status = "yes", at = ["host/dev.py:Controls.state", "host/dev.py:Controls.hash"] }
 lua = { status = "yes", at = ["host/controls.lua:state", "host/controls.lua:hash"] }
 csharp = { status = "yes", at = "MonoGame/DevBridge.cs:\"get_objects\"" }
+
+[[capability]]
+id = "dev.start"
+summary = "Start a live run in a named state: `just dev` pairs on frame 0, dev tools on"
+python = { status = "yes", at = "host/app.py:\"dev_event\"" }
+lua = { status = "yes", at = ["host/app.lua:\"dev_event\"", "host/app.lua:\"--dev\""] }
+csharp = { status = "yes", at = "MonoGame/Host.cs:PostDev" }
 
 [[capability]]
 id = "dev.pause-step"

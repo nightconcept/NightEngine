@@ -7,6 +7,8 @@ M.UP, M.DOWN, M.LEFT, M.RIGHT, M.A, M.B, M.C, M.MENU = 1, 2, 4, 8, 16, 32, 64, 1
 M.ALL = 255
 M.REPEAT_DELAY, M.REPEAT_RATE = 14, 5
 
+M.DEV = "dev " -- The start of a `just dev` host event.
+
 local DIRECTIONS = { { M.UP, 0, -1 }, { M.DOWN, 0, 1 }, { M.LEFT, -1, 0 }, { M.RIGHT, 1, 0 } }
 
 --- Buttons for one frame: `held`, `pressed` on this frame, `rep` (repeat) for menu cursors, and `pointers`.
@@ -31,6 +33,26 @@ end
 
 function Input:nav(button)
     return band(self.rep, button) ~= 0
+end
+
+--- The `just dev` pairs in this frame's events, as { key = value }. A later pair with the same key wins.
+function Input:dev()
+    local pairs_ = {}
+    for _, event in ipairs(self.events) do
+        if event:sub(1, #M.DEV) == M.DEV then
+            local key, value = event:sub(#M.DEV + 1):match("^([^=]*)=(.*)$")
+            pairs_[key] = value
+        end
+    end
+    return pairs_
+end
+
+--- The host event for one `just dev` pair: "level=3" -> "dev level=3". The key is letters, digits, `_` and `-`.
+function M.dev_event(pair)
+    if type(pair) ~= "string" or not pair:match("^[%w_%-]+=") then
+        error("a dev pair is key=value, not " .. tostring(pair), 2)
+    end
+    return M.DEV .. pair
 end
 
 function Input:axis()

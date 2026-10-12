@@ -17,7 +17,7 @@ Load the `nightengine` skill first.
 ## Run and inspect
 
 - `just dev --runtime monogame key=value ...` starts a Debug build with `--dev`, which opens the
-  DevBridge on loopback port 12346.
+  DevBridge on loopback port 12346. `Program.cs` passes the pairs to `host.PostDev`; the game reads `input.Dev()`.
 - `python3 nightengine/tools/monogame-mcp/setup.py --out .tools/monogame-mcp` installs the MCP adapter into `.tools/monogame-mcp`. The game's `.mcp.json`
   registers it. Its tools read state, capture the framebuffer, send input, run typed
   actions (pause, resume, step), watch state, list assets and reload assets.
