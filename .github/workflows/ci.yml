@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Pinned LovePilot install and build
-        run: python3 tools/lovepilot/setup.py --out .tools/lovepilot
+      - name: Pinned love2d-mcp install and build
+        run: python3 tools/love2d-mcp/setup.py --out .tools/love2d-mcp
       - name: MCP protocol smoke check
-        run: node tools/lovepilot/check.mjs
+        run: node tools/love2d-mcp/check.mjs

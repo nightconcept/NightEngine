@@ -1,4 +1,4 @@
--- LovePilot's game-side bridge (https://github.com/InfiniteLoopRD/lovepilot, commit cb2ddc8, MIT, see LICENSE).
+-- love2d-mcp's game-side bridge (https://forge.solivan.dev/nightconcept/love2d-mcp, commit 160ebfe, MIT, see LICENSE).
 -- NightEngine changes: it listens on 127.0.0.1 only (upstream listens on every interface), and `run_lua` code also
 -- sees `ne`, the game's debug API (nightengine.host.controls). It loads only when NIGHTENGINE_DEV=1.
 -- MCP Bridge - TCP server for communicating with MCP server

@@ -3,7 +3,7 @@
 -- love . [--seed N] [--target NAME] [--replay FILE] [--frames FILE OUT [EVERY]]
 --
 -- Every frame of input goes through Game:step, and a live run is saved to `last.json` in the save folder.
--- With NIGHTENGINE_DEV=1 the LovePilot bridge listens on 127.0.0.1:12345, and `run_lua` code gets `ne`.
+-- With NIGHTENGINE_DEV=1 the love2d-mcp bridge listens on 127.0.0.1:12345, and `run_lua` code gets `ne`.
 local bit = require("bit")
 local replay = require("nightengine.replay")
 local targets = require("nightengine.target")
@@ -245,7 +245,7 @@ function App.export(out, every)
     print("frames in " .. out)
 end
 
--- The dev bridge (LovePilot) -------------------------------------------------------------
+-- The dev bridge (love2d-mcp) ------------------------------------------------------------
 
 function App.bridge()
     local bridge = require("nightengine.host.dev.mcp_bridge")

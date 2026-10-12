@@ -9,7 +9,7 @@ function M.new(config)
     local KEYS, PAD_MENU, PAD_RIDER = config.keys or {}, config.pad_menu or {}, config.pad_players or {}
     local DEADZONE = config.deadzone or 0.4
     local UP, DOWN, LEFT, RIGHT = inputs.UP, inputs.DOWN, inputs.LEFT, inputs.RIGHT
-    I.is_down = love.keyboard.isDown -- LovePilot swaps in its own, which adds the keys it injects.
+    I.is_down = love.keyboard.isDown -- love2d-mcp swaps in its own, which adds the keys it injects.
     local pulse = 0 -- Buttons pressed for one frame by a key event (the Android Back button is Escape).
 
     function I.setup()

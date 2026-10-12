@@ -12,7 +12,7 @@ graphics, sounds and state callbacks.
 | `lua/` | Flat Lua package root, core and LÖVE host |
 | `tests/lua/` | Lua core and host checks |
 | `contract/` | Shared compatibility fixtures |
-| `tools/lovepilot/` | Pinned MCP server bootstrap and connection example |
+| `tools/love2d-mcp/` | Pinned MCP server bootstrap and connection example |
 | `examples/` | Runnable examples for both implementations |
 
 ## Develop

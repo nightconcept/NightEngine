@@ -23,21 +23,21 @@ Playwright harness to access `nightengine.host.app.current` through Pyodide:
 The harness, touch helpers, pointer diagnostic (`?app=debug`), frame exporter and
 trace tools belong to the engine.
 
-## Lua / LovePilot
+## Lua / love2d-mcp
 
 Set `NIGHTENGINE_DEV=1` for source runs. The engine host loads the vendored bridge
 on `127.0.0.1:12345`. Its `run_lua` environment contains `ne`, the same controls
 and game-supplied helpers.
 
 ```sh
-python3 nightengine/tools/lovepilot/setup.py --out .tools/lovepilot
+python3 nightengine/tools/love2d-mcp/setup.py --out .tools/love2d-mcp
 NIGHTENGINE_DEV=1 love love
 ```
 
-Use `tools/lovepilot/mcp.json` for MCP settings. Bootstrap pins upstream commit
-`cb2ddc8` and overlays the engine's checked-in dependency lock before `npm ci`.
-The lock updates the MCP SDK, proxy-addr, fast-uri and ip-address to fix four
-upstream dependency audit findings; bootstrap keeps the upstream source unchanged.
+Use `tools/love2d-mcp/mcp.json` for MCP settings. Bootstrap pins commit `160ebfe`
+of [love2d-mcp](https://forge.solivan.dev/nightconcept/love2d-mcp), our fork of
+LovePilot, before `npm ci`. The fork's lock updates the MCP SDK, proxy-addr,
+fast-uri and ip-address to fix four upstream dependency audit findings.
 Bridge provenance and MIT
 license ship with the engine. Game release archives omit the executable bridge.
 The bridge can execute Lua and is for local development.

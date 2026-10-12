@@ -29,7 +29,8 @@ LOVE = "11.5"
 RELEASES = f"https://github.com/love2d/love/releases/download/{LOVE}"
 # apktool 2: version 3 dropped renameManifestPackage.
 APKTOOL = "https://github.com/iBotPeaches/Apktool/releases/download/v2.12.1/apktool_2.12.1.jar"
-SKIP = {"spec", "tests", "lovepilot", "dev", ".DS_Store", "__pycache__"}  # Not shipped: tests, and the dev bridge.
+# Not shipped: tests and the dev bridge, including games' legacy lovepilot/ folder.
+SKIP = {"spec", "tests", "love2d-mcp", "lovepilot", "dev", ".DS_Store", "__pycache__"}
 
 
 def cache() -> Path:

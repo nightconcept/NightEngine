@@ -31,6 +31,7 @@ controls = ["keyboard"]
                 "nightengine/host/app.lua",
                 "nightengine/host/dev/mcp_bridge.lua",
                 "spec/test.lua",
+                "love2d-mcp/mcp_bridge.lua",
                 "lovepilot/mcp_bridge.lua",
             ):
                 path = source / name
