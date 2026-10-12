@@ -2,3 +2,11 @@ __pycache__/
 *.pyc
 .DS_Store
 .ruff_cache/
+.venv/
+build/
+dist/
+*.egg-info/
+.tools/
+node_modules/
+test-results/
+replays/

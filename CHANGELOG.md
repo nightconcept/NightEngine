@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+
 ### Core
 
 - A game declares its own buttons above the 8 engine buttons: `Button(name, keys, pad)`, `declare(...)` for the
@@ -37,25 +38,19 @@
 - `AudioManager.set_volume(music, sfx)` scales the music and effect channel gains from their values after `setup()`.
 - `frames` runs Pyxel headless (no window) and feeds the recorded host events.
 
-## 0.0.1 (2026-10-07)
 
-The first version, made with Unicycle! as the first game to ship on every target.
 
-### Core
-
-- Scenes and the scene stack, `Game` with a seeded RNG and sound cues, input tracking with press edges and repeat.
-- Pointers (touch, pen, mouse) as recorded input: `Input.pointers`, and `Recording` keeps them.
-- Recordings store `width` hex digits per frame, so a game can use input bits above the 8 buttons
-  (`digits_for(Game.input_mask)`). Older files load.
-- `Game.quit_requested` lets a scene quit. Content records, registries, canvases, sound checks, the autopilot shell,
-  and the test `Driver`.
-
-### Controllers and targets
+- Two languages: `rng.py` (`Rng`, xoshiro128** with splitmix32 seeding and FNV-1a string seeds) replaces
+  `random.Random` in `Game.rng`, and gives the same numbers in Lua. `trace.py` hashes a game's snapshot each frame
+  (CRC-32 of a canonical text), so a port can prove it plays the same. `contract/rng.json` holds the test vectors.
+- `lua/nightengine/`: a small Lua core for LÖVE ports (input bits, pointers, scenes, `Game`, targets, replays in the
+  same JSON, the rng, traces, and `test.lua`, a test runner for plain LuaJIT). Unicycle's LÖVE build uses it.
 
 - Controllers, Xbox first (`host/gamepad.py`): the shared `XBOX` layout, `xbox(pad, layout, shift)` key tables for
   pads 1-4, `merge`, and the left stick as the d-pad (`AppConfig.sticks`, on for pad 1 by default). `App` loads the
   bundled SDL_GameControllerDB (`host/gamepads/gamecontrollerdb.txt`, zlib license) through SDL's
   `SDL_GAMECONTROLLERCONFIG_FILE` hint, so about 2,000 more pads work. `AppConfig.pad_mappings` picks another file.
+
 - Targets (`target.py`): `desktop`, `web`, and `android`, each with a size and controls (keyboard, mouse, touch)
   from `[tool.nightengine.targets.<name>]`. Builds write their target into the app (`nightengine_build`), and a
   source run reads `NIGHTENGINE_TARGET`. `Game(seed, target)` and `Game.step` drop the pointers the target does not
@@ -68,6 +63,19 @@ The first version, made with Unicycle! as the first game to ship on every target
 - The page no longer claims that touch, mouse, and keyboard all work, since a target may drop some of them.
 - `web build|serve --target`, and the page takes the target's size. The APK builds as `android`, the desktop
   program as `desktop`.
+
+## 0.0.1 (2026-10-05)
+
+The first version, made with Unicycle! as the first game to ship on every target.
+
+### Core
+
+- Scenes and the scene stack, `Game` with a seeded RNG and sound cues, input tracking with press edges and repeat.
+- Pointers (touch, pen, mouse) as recorded input: `Input.pointers`, and `Recording` keeps them.
+- Recordings store `width` hex digits per frame, so a game can use input bits above the 8 buttons
+  (`digits_for(Game.input_mask)`). Older files load.
+- `Game.quit_requested` lets a scene quit. Content records, registries, canvases, sound checks, the autopilot shell,
+  and the test `Driver`.
 
 ### Host (pyxel)
 
@@ -92,5 +100,5 @@ The first version, made with Unicycle! as the first game to ship on every target
 
 ### Tested
 
-- Unit tests (143), bridge tests (Node), and Unicycle's Playwright checks in Chromium.
+- Unit tests (114), bridge tests (Node), and Unicycle's Playwright checks in Chromium.
 - Unicycle's APK on an Android 15 emulator (WebView 124): layout, touch, Back, and Quit.

@@ -1,0 +1,36 @@
+local t = require("nightengine.testing")
+local replay = require("nightengine.replay")
+local Game = require("nightengine.core")
+local class = require("nightengine.class")
+local scene = require("nightengine.scene")
+
+t.test("shared sparse host events survive recording and playback", function()
+    local f = assert(io.open("contract/events.json", "rb"))
+    local text = f:read("*a"):gsub("\n$", "")
+    f:close()
+    local rec = replay.from_json(text)
+    t.eq(rec:events_at(0), { "profile {}" })
+    t.eq(rec:events_at(1), {})
+    t.eq(rec:to_json(), text)
+    local Log = class("Log", scene.Scene)
+    function Log:update(game, inp)
+        game.seen[#game.seen + 1] = inp.events
+    end
+    local function make_game(seed)
+        local game = Game.new(seed)
+        game.seen = {}
+        game:push(Log.new())
+        return game
+    end
+    local game = replay.play(make_game, rec)
+    t.eq(game.seen, { { "profile {}" }, {}, { "press key:Z", "press pad:X" } })
+    local built = replay.new(5)
+    built:add(0, nil, { "profile {}" })
+    built:add(16)
+    built:add(0, nil, { "press key:Z", "press pad:X" })
+    t.eq(built:to_json(), text)
+    local d = t.driver(make_game(5))
+    d:event("once")
+    d:step(0, 2, nil, { "first" })
+    t.eq(d.game.seen, { { "once" }, { "first" }, {} })
+end)

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lovepilot": {
+      "command": "node",
+      "args": [".tools/lovepilot/build/index.js"]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nightengine"
+version = "0.1.2"
+description = "Nightcircle deterministic game engine and Pyxel host"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["pyxel==2.9.9"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nightengine = ["web/static/*", "web/harness/*.mjs", "web/harness/tests/*.mjs", "web/tests/*.mjs", "host/gamepads/*", "android/template/**/*", "android/template/*"]
