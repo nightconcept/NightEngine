@@ -60,3 +60,16 @@ jobs:
         run: python3 tools/love2d-mcp/setup.py --out .tools/love2d-mcp
       - name: MCP protocol smoke check
         run: node tools/love2d-mcp/check.mjs
+
+  csharp:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        with:
+          global-json-file: global.json
+      - run: dotnet run --project csharp/NightEngine.Tests
+      - run: dotnet format csharp/NightEngine.Tests/NightEngine.Tests.csproj --verify-no-changes

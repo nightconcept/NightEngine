@@ -4,13 +4,14 @@
 
 ## Intent
 
-NightEngine is the Nightcircle game engine for Python/Pyxel and Lua/LÖVE.
-Both implementations share deterministic frame, input, RNG, replay and trace contracts.
+NightEngine is the Nightcircle game engine for Python/Pyxel, Lua/LÖVE and C#/MonoGame.
+All implementations share deterministic frame, input, RNG, replay and trace contracts.
 
 ## Stack
 
 - Python 3.14, Pyxel 2.x (the pyxel-ne fork for Nightrunner), uv, ruff, ty.
 - LuaJIT 2.1, LÖVE 11.5, StyLua 2.
+- C#/.NET 10 and MonoGame 3.8.6. See [C#/MonoGame](docs/csharp-monogame.md).
 - Node for the browser pointer bridge tests and the love2d-mcp dev tool.
 - mise installs the tools from `mise.toml`; just runs the tasks.
 - Development platforms: Linux x64, macOS arm64 and Windows x64.

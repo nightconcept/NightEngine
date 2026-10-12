@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 (2026-10-12)
+
+- Add the deterministic C# core and native MonoGame host.
+- Add a Debug-only live MCP bridge and locked stdio adapter.
+- Package the C# core and host sources in GitHub releases.
+
 ## 0.1.2 (2026-10-11)
 
 - Consolidate `nightrunner` and `unicycle` onto `main`, preserving both histories.

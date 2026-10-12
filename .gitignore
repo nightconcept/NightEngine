@@ -10,3 +10,8 @@ dist/
 node_modules/
 test-results/
 replays/
+
+**/bin/
+**/obj/
+.tools/
+**/node_modules/

@@ -1,0 +1,29 @@
+name: C# release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  csharp:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        with:
+          global-json-file: global.json
+      - run: dotnet run --project csharp/NightEngine.Tests
+      - run: dotnet pack csharp/NightEngine.Core -c Release -o dist
+      - run: zip -r dist/nightengine-0.2.0-csharp-source.zip csharp tools/monogame-mcp docs/csharp-monogame.md global.json -x '*/bin/*' '*/obj/*' '*/node_modules/*'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: csharp-release
+          path: dist/*
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "NightEngine $GITHUB_REF_NAME" --notes "C# deterministic core, MonoGame host sources and live MCP adapter. Python and Lua remain supported."
+    permissions:
+      contents: write

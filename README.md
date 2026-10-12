@@ -1,6 +1,6 @@
 # NightEngine
 
-Nightcircle's game engine supports Python/Pyxel and Lua/LÖVE. Both implement the
+Nightcircle's game engine supports Python/Pyxel, Lua/LÖVE and C#/MonoGame. All implement the
 same deterministic frame, input, RNG, replay and trace contracts. Their hosts own
 runtime loops, recordings and development controls. Games supply rules, scenes,
 graphics, sounds and state callbacks.
@@ -29,12 +29,13 @@ on Linux x64, macOS arm64 and Windows x64. Use `just format` and `just typecheck
 for formatting and ty type checks. GitHub is the primary repository; a workflow
 mirrors it to [Forgejo](https://forge.solivan.dev/nightconcept/NightEngine). CI checks both implementations on all three platforms
 and builds the Python distribution and both example archives. Engine version:
-0.1.2. Games pin the engine commit or release deliberately.
+0.2.0. Games pin the engine commit or release deliberately.
 
 - [Architecture](docs/architecture.md)
 - [Compatibility](docs/compatibility.md)
 - [Python/Pyxel](docs/python-pyxel.md)
 - [Lua/LÖVE](docs/lua-love.md)
+- [C#/MonoGame](docs/csharp-monogame.md)
 - [Observability](docs/observability.md)
 
 Unicycle and Nightrunner are integration games. Shared development starts from

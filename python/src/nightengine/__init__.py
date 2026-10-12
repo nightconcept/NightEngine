@@ -19,7 +19,7 @@ from .systems import System, Systems
 from .target import KEYBOARD, MOUSE, TOUCH, Target
 from .testing import Driver
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 __all__ = [
     "A", "ALL", "B", "C", "DOWN", "KEYBOARD", "LEFT", "MENU", "MOUSE", "RIGHT", "TOUCH", "UP",

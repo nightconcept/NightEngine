@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>0.2.0</Version>
+    <Description>NightEngine deterministic frame, input, RNG and replay core.</Description>
+    
+  </PropertyGroup>
+</Project>
