@@ -317,7 +317,7 @@ target into `game.pyxapp`, and the page takes the target's size.
 It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
 `pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
 the game's environment. A fork's local label is dropped (`2.9.9+ne.2` loads `2.9.9`), so the page loads the
-stock runtime. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/web/tests/pointer.test.mjs`.
+stock runtime. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/python/src/nightengine/web/tests/pointer.test.mjs`.
 
 `--offline` copies the runtime into the build (`web/runtime.py`): `pyxel/` (pyxel.js, the Pyxel wheel, and its
 images) and `pyodide/v<version>/` (the Pyodide core), about 18 MB. The page then needs no network, which an APK
@@ -329,7 +329,7 @@ Playwright checks that run a real build in Chromium. A game adds `@playwright/te
 `playwright.config.mjs`:
 
 ```js
-import { harnessConfig } from './nightengine/web/harness/config.mjs';
+import { harnessConfig } from './nightengine/python/src/nightengine/web/harness/config.mjs';
 export default harnessConfig({build: 'dist/web-offline', gameTests: 'tests/browser'});
 ```
 
@@ -391,7 +391,11 @@ Each game's `docs/repo/content.md` keeps its own record formats and points to th
 
 ## Use in a game
 
-Add the engine as a submodule at `nightengine/`, so `import nightengine` works from the game's root:
+Add the engine as a submodule at `nightengine/`, tracking `main`. Install its
+Python package through `[tool.uv.sources]` with
+`nightengine = { path = "nightengine/python", editable = true }` and declare the
+`nightengine` dependency in the game. The package is imported from its installed
+source; the monorepo root is not the Python package:
 
 ```sh
 git submodule add https://forge.solivan.dev/nightconcept/NightEngine.git nightengine

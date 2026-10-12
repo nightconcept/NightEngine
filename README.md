@@ -34,5 +34,10 @@ and builds the Python distribution and both example archives. Engine version:
 - [Lua/LÖVE](docs/lua-love.md)
 - [Observability](docs/observability.md)
 
-Unicycle is the integration game. Its GitHub release builds exercise Pyxel web,
+Unicycle and Nightrunner are integration games. Shared development starts from
+`main`; games pin verified engine commits. Nightrunner preserves its existing
+Pyxel fork, seeded randomness, settings and display pacing. See the
+[Nightrunner API reference](docs/nightrunner-api.md).
+
+Unicycle's GitHub release builds exercise Pyxel web,
 Android, Linux and Windows, plus LÖVE archives, Windows, macOS and Android.
