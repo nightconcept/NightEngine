@@ -18,6 +18,7 @@ graphics, sounds and state callbacks.
 ## Develop
 
 ```sh
+mise install
 uv sync --project python
 just check
 just lint

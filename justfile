@@ -1,11 +1,11 @@
 check:
     uv run --project python python -m unittest discover -s python/tests -t python
-    luajit tests/lua.lua
+    mise x -- luajit tests/lua.lua
 
 lint:
     uvx ruff check python tools examples
     uvx ruff format --check python tools examples
-    stylua --check lua tests/lua tests/lua.lua examples/lua-love
+    mise x -- stylua --check lua tests/lua tests/lua.lua examples/lua-love
 
 build:
     uv build python --out-dir dist
