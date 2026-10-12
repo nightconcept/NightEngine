@@ -41,3 +41,11 @@ jobs:
         with:
           name: lua-love
           path: dist/lua-example/*.love
+  devtools:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Pinned LovePilot install and build
+        run: python3 tools/lovepilot/setup.py --out .tools/lovepilot
+      - name: MCP protocol smoke check
+        run: node tools/lovepilot/check.mjs

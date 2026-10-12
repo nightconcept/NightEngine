@@ -35,7 +35,10 @@ NIGHTENGINE_DEV=1 love love
 ```
 
 Use `tools/lovepilot/mcp.json` for MCP settings. Bootstrap pins upstream commit
-`cb2ddc8` and builds its Node server with `npm ci`. Bridge provenance and MIT
+`cb2ddc8` and overlays the engine's checked-in dependency lock before `npm ci`.
+The lock updates the MCP SDK, proxy-addr, fast-uri and ip-address to fix four
+upstream dependency audit findings; bootstrap keeps the upstream source unchanged.
+Bridge provenance and MIT
 license ship with the engine. Game release archives omit the executable bridge.
 The bridge can execute Lua and is for local development.
 
