@@ -26,5 +26,6 @@ uv run python -m nightengine.love build love windows
 The builder reads version, title and size from the game's pyproject.toml.
 `tool.nightengine.targets` defines targets. `tool.nightengine.android` supplies
 identity, orientation, icon and keystore. Game source lives in `love/`.
-Windows fusion builds on any system; macOS builds on macOS. Android requires
+Windows fusion builds on any system; macOS builds on macOS; the Linux AppImage (LÖVE's
+AppImage with the game fused in) builds on Linux x64. Android requires
 Java and SDK build-tools. Development bridge files are excluded from archives.

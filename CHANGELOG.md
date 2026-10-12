@@ -12,6 +12,8 @@
 - `just dev` pairs: `dev_event` and `Input.dev` in all three cores (contract `dev.json`), and every host
   sends `key=value` arguments as frame-0 host events: Python `App(dev=...)`, Lua `--dev key=value`,
   C# `Host.Post` and `Host.PostDev`. Lua `--dev` also opens the LovePilot bridge.
+- `python -m nightengine.love build linux`: a Linux x64 AppImage, LÖVE's AppImage with the game fused in.
+  It builds on Linux and uses appimagetool 1.9.1 with LÖVE's own AppImage runtime.
 - Fix: the Python and Lua trace helpers (`trace.recording_steps`, Lua `trace.trace`) feed recorded host events.
 
 ## 0.2.0 (2026-10-12)

@@ -32,6 +32,6 @@ Load the `nightengine` skill first.
 
 ## Build
 
-`just build love windows macos android` (any of them). With no argument it builds all that
-this system can. macOS builds need a Mac. Android needs Java and the SDK build tools.
+`just build desktop android --runtime love`. `desktop` builds this system's program: the Windows
+zip, the macOS app or the Linux AppImage. macOS builds need a Mac; the AppImage needs Linux x64. Android needs Java and the SDK build tools.
 Release archives never include `nightengine/host/dev/`, the bridge that runs Lua.

@@ -10,8 +10,8 @@ in the same commit as a builder or a release workflow.
 
 | Platform | Pyxel | LÖVE | MonoGame |
 | --- | --- | --- | --- |
-| Linux x64 | Released | `.love` archive (needs LÖVE) | Released |
-| macOS arm64 | Not verified | Released (build on macOS) | Released |
+| Linux x64 | Released | Released (AppImage, build on Linux) | Released |
+| macOS arm64 | Released | Released (build on macOS) | Released |
 | Windows x64 | Released | Released (fused exe) | Released |
 | Android | Released (WebView shell) | Released | Released (native) |
 | iOS | Not started | Not started | Not started |
@@ -26,7 +26,7 @@ in the same commit as a builder or a release workflow.
 | Runtime | Builder | Owner |
 | --- | --- | --- |
 | Pyxel | `python -m nightengine.desktop build`, `nightengine.web build`, `nightengine.android build` | Engine |
-| LÖVE | `python -m nightengine.love build [love\|windows\|macos\|android]` | Engine |
+| LÖVE | `python -m nightengine.love build [love\|windows\|macos\|linux\|android]` | Engine |
 | MonoGame | `monogame/build.py desktop\|android` | Unicycle (move to engine, see Roadmap) |
 
 Builders read the game's `pyproject.toml`. See [Game configuration](../games/configuration.md).

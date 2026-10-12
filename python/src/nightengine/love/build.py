@@ -1,10 +1,12 @@
 """Build a LÖVE game into release files from its pyproject.toml.
 
-python -m nightengine.love build [love] [windows] [macos] [android] [--out dist/love]
+python -m nightengine.love build [love] [windows] [macos] [linux] [android] [--out dist/love]
 
 - love:    <slug>-<version>.love, the game for any system with LÖVE 11.5 installed.
 - windows: <slug>-<version>-windows.zip, love.exe with the game fused in, and its DLLs. Builds on any system.
 - macos:   <slug>-<version>-macos.zip, <title>.app. Builds on macOS (it signs the app ad hoc).
+- linux:   <slug>-<version>-linux.AppImage, LÖVE's AppImage with the game fused in. Builds on Linux x64 (it runs
+           LÖVE's AppImage and appimagetool to unpack and pack it).
 - android: <slug>-<version>-love.apk, the LÖVE APK with the game inside, unpacked and packed again with apktool
            and signed with android/debug.keystore. Needs Java 17+ and the Android SDK build-tools.
 
@@ -27,6 +29,7 @@ from pathlib import Path
 ROOT = Path.cwd()
 LOVE = "11.5"
 RELEASES = f"https://github.com/love2d/love/releases/download/{LOVE}"
+APPIMAGETOOL = "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage"
 # apktool 2: version 3 dropped renameManifestPackage.
 APKTOOL = "https://github.com/iBotPeaches/Apktool/releases/download/v2.12.1/apktool_2.12.1.jar"
 # Not shipped: tests and the dev bridge, including games' legacy lovepilot/ folder.
@@ -137,6 +140,34 @@ def build_macos(out: Path, version: str) -> Path:
     return path
 
 
+def build_linux(out: Path, version: str) -> Path:
+    if not sys.platform.startswith("linux"):
+        raise RuntimeError("the Linux AppImage builds on Linux")
+    game = game_zip(out, "desktop")
+    work = out / "linux"
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir(parents=True)
+    env = {**os.environ, "APPIMAGE_EXTRACT_AND_RUN": "1"}  # No FUSE needed.
+    love, tool = fetch(f"{RELEASES}/love-{LOVE}-x86_64.AppImage"), fetch(APPIMAGETOOL)
+    for path in (love, tool):
+        path.chmod(0o755)
+    subprocess.run([str(love), "--appimage-extract"], cwd=work, env=env, check=True, stdout=subprocess.DEVNULL)
+    # LÖVE's own AppImage runtime, so appimagetool downloads nothing.
+    offset = int(subprocess.run([str(love), "--appimage-offset"], env=env, check=True, capture_output=True,
+                                text=True).stdout)  # fmt: skip
+    runtime = work / "runtime"
+    runtime.write_bytes(love.read_bytes()[:offset])
+    app = work / "squashfs-root"
+    binary = app / "bin" / "love"
+    binary.write_bytes(binary.read_bytes() + game.read_bytes())
+    binary.chmod(0o755)
+    path = out / f"{slug()}-{version}-linux.AppImage"
+    path.unlink(missing_ok=True)
+    subprocess.run([str(tool), "--no-appstream", "--runtime-file", str(runtime), str(app), str(path)],
+                   cwd=work, env={**env, "ARCH": "x86_64"}, check=True)  # fmt: skip
+    return path
+
+
 def sdk_tool(name: str) -> str:
     home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
     home = Path(home) if home else Path.home() / "Library" / "Android" / "sdk"
@@ -199,7 +230,10 @@ def build_android(out: Path, version: str) -> Path:
     return path
 
 
-BUILDS = {"love": build_love, "windows": build_windows, "macos": build_macos, "android": build_android}
+BUILDS = {"love": build_love, "windows": build_windows, "macos": build_macos, "linux": build_linux,
+          "android": build_android}  # fmt: skip
+# Builds that only run on one system.
+SYSTEMS = {"macos": "darwin", "linux": "linux"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -213,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = argv[1:]
     args = parser.parse_args(argv)
     ROOT = args.root.resolve()
-    names = args.builds or [n for n in BUILDS if n != "macos" or sys.platform == "darwin"]
+    names = args.builds or [n for n in BUILDS if sys.platform.startswith(SYSTEMS.get(n, ""))]
     args.out.mkdir(parents=True, exist_ok=True)
     version = project()["project"]["version"]
     for name in names:
