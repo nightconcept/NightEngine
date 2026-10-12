@@ -1,0 +1,37 @@
+name: Mirror
+
+# GitHub is the primary. This job copies every branch and tag to Forgejo.
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+  delete:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror
+  cancel-in-progress: false
+
+jobs:
+  forgejo:
+    if: github.repository == 'nightconcept/NightEngine'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Push branches and tags to Forgejo
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_MIRROR_TOKEN }}
+        run: |
+          if [ -z "$FORGEJO_TOKEN" ]; then
+            echo "::warning::FORGEJO_MIRROR_TOKEN is not set; skipping mirror push."
+            exit 0
+          fi
+          # A bare mirror clone has every branch as a local head. A checkout has only one,
+          # and `git push --mirror` from it deletes the other branches on the target.
+          git clone --mirror "https://github.com/${GITHUB_REPOSITORY}.git" repo.git
+          # Forgejo rejects refs/pull/*, so push heads and tags only.
+          git -C repo.git push --force --prune \
+            "https://nightconcept:${FORGEJO_TOKEN}@forge.solivan.dev/nightconcept/NightEngine.git" \
+            "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*"
