@@ -15,7 +15,10 @@ jobs:
           global-json-file: global.json
       - run: dotnet run --project csharp/NightEngine.Tests
       - run: dotnet pack csharp/NightEngine.Core -c Release -o dist
-      - run: zip -r dist/nightengine-0.2.0-csharp-source.zip csharp examples/csharp-monogame tools/monogame-mcp docs/csharp-monogame.md global.json -x '*/bin/*' '*/obj/*' '*/node_modules/*'
+      - name: Source zip
+        run: |
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' csharp/NightEngine.Core/NightEngine.Core.csproj)
+          zip -r "dist/nightengine-$version-csharp-source.zip" csharp examples/csharp-monogame tools/monogame-mcp docs/runtimes/csharp-monogame.md global.json -x '*/bin/*' '*/obj/*' '*/node_modules/*'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: csharp-release

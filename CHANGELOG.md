@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-10-12)
 
 - Add `parity.toml` and `tools/parity.py`: the layers, every capability and its status in each
   runtime. `just check` checks it; `just parity --release` gates `v*` tags. See docs/concepts/layers.md.
@@ -17,8 +17,6 @@
 - Fix: the LÖVE builder reads the engine's Lua files from the `nightengine/` submodule, so it builds on a
   Windows checkout where the `love/nightengine` link is a plain file.
 - Fix: the Python and Lua trace helpers (`trace.recording_steps`, Lua `trace.trace`) feed recorded host events.
-
-## 0.2.0 (2026-10-12)
 
 - Add the deterministic C# core and native MonoGame host.
 - Add a Debug-only live MCP bridge and locked stdio adapter.
