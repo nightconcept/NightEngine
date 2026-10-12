@@ -21,7 +21,7 @@ public sealed class DevBridge : IDisposable
             try
             {
                 string? line = await reader.ReadLineAsync(stop.Token); if (line is null || line.Length > 65536) return; using var doc = JsonDocument.Parse(line); var data = doc.RootElement.Clone();
-                var reply = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously); requests.Enqueue(new(data, reply)); object? result = await reply.Task.WaitAsync(TimeSpan.FromSeconds(8), stop.Token);
+                var reply = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously); requests.Enqueue(new(data, reply)); object? result = await reply.Task.WaitAsync(TimeSpan.FromSeconds(28), stop.Token);
                 await writer.WriteLineAsync(JsonSerializer.Serialize(new { _reqId = data.GetProperty("_reqId").GetInt32(), result }));
             }
             catch (Exception e) when (e is JsonException or ArgumentException or InvalidOperationException or TimeoutException or OperationCanceledException or IOException) { if (!stop.IsCancellationRequested) try { await writer.WriteLineAsync(JsonSerializer.Serialize(new { error = e.Message })); } catch (IOException) { } }

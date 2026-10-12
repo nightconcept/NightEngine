@@ -9,7 +9,7 @@ let id=0;
 function request(command,args={}) {
  return new Promise((resolve,reject)=>{
   const socket=net.createConnection({host:'127.0.0.1',port:12346}); let buffer='';
-  const timer=setTimeout(()=>{socket.destroy();reject(new Error('Start a Debug MonoGame build with --dev. Bridge timed out.'));},10000);
+  const timer=setTimeout(()=>{socket.destroy();reject(new Error('Start a Debug MonoGame build with --dev. Bridge timed out.'));},30000);
   socket.on('connect',()=>socket.write(JSON.stringify({command,...args,_reqId:++id})+'\n'));
   socket.on('error',error=>{clearTimeout(timer);reject(error);});
   socket.on('data',chunk=>{buffer+=chunk;if(buffer.includes('\n')) {clearTimeout(timer);socket.end();try {const result=JSON.parse(buffer.split('\n')[0]);if(result.error)reject(new Error(result.error));else resolve(result);}catch(error){reject(error);}}});

@@ -69,8 +69,9 @@ public abstract class Host : Microsoft.Xna.Framework.Game
         if (Replay is not null && frame >= Replay.Frames.Count || StopAfter > 0 && frame >= StopAfter) { Exit(); return; }
         int code = Replay is null ? ReadKeys(Keyboard.GetState()) | AutomaticInput() | InjectedInput : Replay.Frames[frame];
         Pointer[] pointers = Replay is null ? ReadPointers().Concat(InjectedPointers).ToArray() : Replay.At(frame);
-        InjectedPointers = []; string[] events = Replay?.EventsAt(frame) ?? [];
+        string[] events = Replay?.EventsAt(frame) ?? [];
         Recording.Add(code, pointers, events); PlayCues(Simulation.Step(code, pointers, events));
+        InjectedPointers = PendingSteps > 0 ? InjectedPointers.Where(p => p.Active).Select(p => p with { Phase = "H" }).ToArray() : [];
         if (Simulation.QuitRequested) Exit(); base.Update(time);
     }
     protected override void Draw(GameTime time)
