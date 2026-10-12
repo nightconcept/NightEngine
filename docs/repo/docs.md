@@ -40,7 +40,7 @@ Change the docs in the same commit as the code. These pages change most often:
 
 | When you change | Update |
 | --- | --- |
-| A feature in one runtime | `concepts/parity.md` |
+| A capability in any runtime | `parity.toml`, then `just parity` |
 | A builder or a release workflow | `concepts/platforms.md` |
 | A `[tool.nightengine]` key | `games/configuration.md` |
 | A standard recipe name | `games/commands.md` and the skills |

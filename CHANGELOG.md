@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `parity.toml` and `tools/parity.py`: every core, host and dev capability, its status in
+  each runtime, and a check in `just check`. See docs/concepts/layers.md.
+- C#: add `Buttons` with the eight engine button bits.
+
 ## 0.2.0 (2026-10-12)
 
 - Add the deterministic C# core and native MonoGame host.

@@ -1,0 +1,354 @@
+# Runtime parity manifest. The single source of truth for what each runtime implements.
+# `just parity` checks it and writes docs/concepts/parity.md. Rules: docs/concepts/layers.md.
+#
+# Each capability:
+#   id       layer.name. Layers: contract, core, host, dev.
+#   summary  One line.
+#   fixture  Shared fixture that proves the behaviour (contract layer).
+#   debt     A known gap in the proof, listed on the parity page.
+#   specific true when the capability exists because of one runtime (the ladder rule skips it).
+#   python, lua, csharp = { status, at, reason, since }
+#     status  yes | planned | native | none | undecided
+#     at      "file:Symbol" (or a list). Paths are relative to python/src/nightengine/, lua/ or csharp/.
+#             Symbol may be Class.member, or "literal text" in quotes. A bare file checks that it exists.
+#     reason  Required unless status is yes.
+#     since   Engine version that recorded an undecided status. The check fails after the next release.
+
+# Files that hold no capability of their own.
+[ignore]
+python = ["__init__.py", "host/__init__.py"]
+lua = ["class.lua", "json.lua", "py.lua"]
+csharp = []
+
+# ---------------------------------------------------------------------------------------------- contract
+
+[[capability]]
+id = "contract.buttons"
+summary = "The eight engine button bits: UP 1 … MENU 128"
+fixture = "behavior.json"
+python = { status = "yes", at = "inputs.py:ALL" }
+lua = { status = "yes", at = "inputs.lua:ALL" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:Buttons.All" }
+
+[[capability]]
+id = "contract.input-edges"
+summary = "Held, pressed and repeat state from one int per frame"
+fixture = "behavior.json"
+debt = "The fixture has no held button long enough to fire a repeat."
+python = { status = "yes", at = "inputs.py:InputTracker.feed" }
+lua = { status = "yes", at = "inputs.lua:InputTracker.feed" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:InputTracker.Feed" }
+
+[[capability]]
+id = "contract.step-order"
+summary = "Game.step: filter, track, effects, before hook, top scene, after hook, frame + 1, return cues"
+debt = "C# has no effects to tick (see core.fx). The fixture uses no effects."
+fixture = "behavior.json"
+python = { status = "yes", at = "core.py:Game.step" }
+lua = { status = "yes", at = "core.lua:Game.step" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:Game.Step" }
+
+[[capability]]
+id = "contract.cues"
+summary = "Sound cue names returned by each step and cleared after it"
+fixture = "behavior.json"
+python = { status = "yes", at = "core.py:Game.cue" }
+lua = { status = "yes", at = "core.lua:Game.cue" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:Game.Cue" }
+
+[[capability]]
+id = "contract.scene-stack"
+summary = "Push, pop, replace and the visible scenes under an overlay"
+debt = "No shared fixture. Each suite tests the stack on its own."
+python = { status = "yes", at = "scene.py:SceneStack" }
+lua = { status = "yes", at = "scene.lua:SceneStack" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:SceneStack.Visible" }
+
+[[capability]]
+id = "contract.rng"
+summary = "Portable seeded RNG: randint and getrandbits"
+fixture = "rng.json"
+python = { status = "yes", at = "rng.py:Rng" }
+lua = { status = "yes", at = "rng.lua:Rng.new" }
+csharp = { status = "yes", at = "NightEngine.Core/Rng.cs:Rng" }
+
+[[capability]]
+id = "contract.trace"
+summary = "Canonical snapshot text and CRC-32 hash"
+fixture = "rng.json"
+python = { status = "yes", at = "trace.py:canon" }
+lua = { status = "yes", at = "trace.lua:canon" }
+csharp = { status = "yes", at = "NightEngine.Core/Trace.cs:Trace.Canon" }
+
+[[capability]]
+id = "contract.replay-json"
+summary = "Recording JSON: seed, width, inputs, sparse pointers and events"
+fixture = "events.json"
+python = { status = "yes", at = "replay.py:Recording.from_json" }
+lua = { status = "yes", at = "replay.lua:from_json" }
+csharp = { status = "yes", at = "NightEngine.Core/Recording.cs:Recording.Parse" }
+
+[[capability]]
+id = "contract.events"
+summary = "Host events: text input recorded per frame and fed on playback"
+fixture = "events.json"
+python = { status = "yes", at = "replay.py:Recording.events_at" }
+lua = { status = "yes", at = "replay.lua:events_at" }
+csharp = { status = "yes", at = "NightEngine.Core/Recording.cs:Recording.EventsAt" }
+
+[[capability]]
+id = "contract.pointers"
+summary = "Pointer kinds, phases and their replay encoding"
+debt = "No shared fixture. Replays with pointers are not checked across runtimes."
+python = { status = "yes", at = "pointer.py:encode" }
+lua = { status = "yes", at = "pointer.lua:encode" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:Pointer.Row" }
+
+[[capability]]
+id = "contract.targets"
+summary = "Named targets and the controls that each accepts"
+debt = "No shared fixture for pointer filtering by target."
+python = { status = "yes", at = "target.py:Target.accepts" }
+lua = { status = "yes", at = "target.lua:accepts" }
+csharp = { status = "yes", at = "NightEngine.Core/Game.cs:Target.Accepts" }
+
+# -------------------------------------------------------------------------------------------------- core
+
+[[capability]]
+id = "core.fx"
+summary = "Screen effects ticked by the step: shake and flash"
+python = { status = "yes", at = "fx.py:ScreenFx" }
+lua = { status = "yes", at = "fx.lua:ScreenFx.tick" }
+csharp = { status = "planned", reason = "Ladder rule. Port ScreenFx when a MonoGame game needs it." }
+
+[[capability]]
+id = "core.scene-music"
+summary = "Each scene names its music track; the host plays it"
+python = { status = "yes", at = "core.py:Game.music" }
+lua = { status = "yes", at = "core.lua:Game.music" }
+csharp = { status = "planned", reason = "Ladder rule." }
+
+[[capability]]
+id = "core.custom-buttons"
+summary = "Game-declared buttons above the eight engine bits"
+python = { status = "yes", at = "inputs.py:declare" }
+lua = { status = "undecided", since = "0.2.0", reason = "A game can pass a wider mask, but there is no declare()." }
+csharp = { status = "undecided", since = "0.2.0", reason = "The Game constructor takes a mask, but there is no declare()." }
+
+[[capability]]
+id = "core.bindings"
+summary = "Runtime rebinding of keys and pad buttons"
+python = { status = "yes", at = "bindings.py:Bindings" }
+lua = { status = "undecided", since = "0.2.0", reason = "Only Nightrunner uses rebinding." }
+csharp = { status = "undecided", since = "0.2.0", reason = "Only Nightrunner uses rebinding." }
+
+[[capability]]
+id = "core.store"
+summary = "Settings and save storage through Game.write"
+python = { status = "yes", at = ["store.py:Store", "core.py:Game.write"] }
+lua = { status = "undecided", since = "0.2.0", reason = "Games on LÖVE keep no settings yet." }
+csharp = { status = "undecided", since = "0.2.0", reason = "Games on MonoGame keep no settings yet." }
+
+[[capability]]
+id = "core.content"
+summary = "JSON data records, reference checks and the handler registry"
+python = { status = "yes", at = ["content.py:records", "registry.py:Registry"] }
+lua = { status = "undecided", since = "0.2.0", reason = "Unicycle keeps its numbers in code." }
+csharp = { status = "undecided", since = "0.2.0", reason = "Unicycle keeps its numbers in code." }
+
+[[capability]]
+id = "core.systems"
+summary = "Ordered per-frame systems on a scene"
+python = { status = "yes", at = "systems.py:Systems" }
+lua = { status = "undecided", since = "0.2.0", reason = "Not used by a LÖVE game yet." }
+csharp = { status = "undecided", since = "0.2.0", reason = "Not used by a MonoGame game yet." }
+
+[[capability]]
+id = "core.pacing"
+summary = "Fixed simulation rate decoupled from the display rate"
+python = { status = "yes", at = "pacing.py:Pacer" }
+lua = { status = "native", reason = "The LÖVE host accumulates fixed steps in App.tick." }
+csharp = { status = "native", reason = "MonoGame fixed time step (TargetElapsedTime) in Host." }
+
+[[capability]]
+id = "core.test-driver"
+summary = "Headless driver: step, tap, press and run_until in tests"
+python = { status = "yes", at = "testing.py:Driver" }
+lua = { status = "yes", at = "testing.lua:Driver.step" }
+csharp = { status = "undecided", since = "0.2.0", reason = "C# tests drive Game.Step directly." }
+
+[[capability]]
+id = "core.autopilot"
+summary = "A bot that plays a seed and records the run"
+python = { status = "yes", at = "autopilot.py:run" }
+lua = { status = "undecided", since = "0.2.0", reason = "Unicycle records with the Python autopilot." }
+csharp = { status = "undecided", since = "0.2.0", reason = "Unicycle has its own C# autoplay tool." }
+
+[[capability]]
+id = "core.canvas"
+summary = "Code-drawn pixel art and palettes for Pyxel image banks"
+specific = true
+python = { status = "yes", at = ["canvas.py:Canvas", "palette.py"] }
+lua = { status = "none", reason = "LÖVE draws and loads images natively." }
+csharp = { status = "none", reason = "MonoGame draws and loads textures natively." }
+
+[[capability]]
+id = "core.sound-check"
+summary = "Validation of Pyxel sound tables"
+specific = true
+python = { status = "yes", at = "sound.py:note_errors" }
+lua = { status = "none", reason = "LÖVE plays sound files." }
+csharp = { status = "none", reason = "MonoGame plays sound files." }
+
+# -------------------------------------------------------------------------------------------------- host
+
+[[capability]]
+id = "host.loop"
+summary = "Fixed frame loop: read input, step, render, play cues"
+python = { status = "yes", at = "host/app.py:App.update" }
+lua = { status = "yes", at = "host/app.lua:App.tick" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:Host.Update" }
+
+[[capability]]
+id = "host.input"
+summary = "Keyboard, touch and mouse into one int and pointers"
+python = { status = "yes", at = ["host/app.py:App.read_input", "host/keys.py:read_buttons"] }
+lua = { status = "yes", at = "host/input.lua:M.new" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:ReadKeys" }
+
+[[capability]]
+id = "host.gamepad"
+summary = "Gamepads with a shared controller database"
+python = { status = "yes", at = "host/gamepad.py:xbox" }
+lua = { status = "yes", at = "host/input.lua:\"loadGamepadMappings\"" }
+csharp = { status = "planned", reason = "Unicycle reads the pad in its own host. Move it into Host.cs." }
+
+[[capability]]
+id = "host.record-replay"
+summary = "Record live input; play a recording back"
+python = { status = "yes", at = "host/app.py:App.next_input" }
+lua = { status = "yes", at = "host/app.lua:App.save" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:Host.Recording" }
+
+[[capability]]
+id = "host.render"
+summary = "Draw dispatch to the game's renderer"
+python = { status = "yes", at = "host/renderer.py:Renderer" }
+lua = { status = "yes", at = "host/app.lua:App.render" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:Render" }
+
+[[capability]]
+id = "host.audio"
+summary = "Play cues and scene music"
+python = { status = "yes", at = "host/audio.py:AudioManager" }
+lua = { status = "yes", at = "host/audio.lua:play" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:PlayCues" }
+
+[[capability]]
+id = "host.viewport"
+summary = "Letterbox the game screen and map window points to game points"
+python = { status = "yes", at = "host/platform.py:Screen" }
+lua = { status = "yes", at = "host/app.lua:App.fit" }
+csharp = { status = "yes", at = "NightEngine.Core/Letterbox.cs:Letterbox.Logical" }
+
+[[capability]]
+id = "host.frames"
+summary = "Render a recording to PNG files with no window"
+python = { status = "yes", at = "host/frames.py:frames_main" }
+lua = { status = "yes", at = "host/app.lua:App.export" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:OfflineFrames" }
+
+[[capability]]
+id = "host.storage"
+summary = "Where settings live on desktop, browser and phone"
+python = { status = "yes", at = "host/storage.py:open_store" }
+lua = { status = "undecided", since = "0.2.0", reason = "Follows core.store." }
+csharp = { status = "undecided", since = "0.2.0", reason = "Follows core.store." }
+
+[[capability]]
+id = "host.platform-info"
+summary = "Safe area, touch device and screen size hints"
+python = { status = "yes", at = "host/platform.py:SafeArea" }
+lua = { status = "undecided", since = "0.2.0", reason = "LÖVE exposes safe area natively; no engine API yet." }
+csharp = { status = "undecided", since = "0.2.0", reason = "No engine API yet." }
+
+[[capability]]
+id = "host.pyxel-helpers"
+summary = "Pyxel text, sprite and image-bank helpers"
+specific = true
+python = { status = "yes", at = ["host/ui.py:text", "host/assets.py:pack"] }
+lua = { status = "none", reason = "Pyxel only." }
+csharp = { status = "none", reason = "Pyxel only." }
+
+# --------------------------------------------------------------------------------------------------- dev
+
+[[capability]]
+id = "dev.state"
+summary = "Read frame, scene, pause flag and game inspection"
+python = { status = "yes", at = "host/dev.py:Controls.state" }
+lua = { status = "yes", at = "host/controls.lua:state" }
+csharp = { status = "yes", at = "MonoGame/DevBridge.cs:\"get_objects\"" }
+
+[[capability]]
+id = "dev.hash"
+summary = "Canonical state hash of the live game"
+python = { status = "yes", at = "host/dev.py:Controls.hash" }
+lua = { status = "yes", at = "host/controls.lua:hash" }
+csharp = { status = "planned", reason = "Ladder rule. Add a hash action to the bridge." }
+
+[[capability]]
+id = "dev.pause-step"
+summary = "Pause, resume and step n simulation frames"
+python = { status = "yes", at = ["host/dev.py:Controls.pause", "host/dev.py:Controls.step"] }
+lua = { status = "yes", at = ["host/controls.lua:pause", "host/controls.lua:step"] }
+csharp = { status = "yes", at = ["MonoGame/DevBridge.cs:\"pause\"", "MonoGame/DevBridge.cs:\"step\""] }
+
+[[capability]]
+id = "dev.hold"
+summary = "Inject buttons through the normal, recorded input path"
+python = { status = "yes", at = "host/dev.py:Controls.hold" }
+lua = { status = "yes", at = "host/controls.lua:hold" }
+csharp = { status = "yes", at = "MonoGame/DevBridge.cs:\"send_input\"" }
+
+[[capability]]
+id = "dev.shot"
+summary = "Save the rendered game pixels to PNG"
+python = { status = "yes", at = "host/dev.py:Controls.shot" }
+lua = { status = "yes", at = "host/controls.lua:shot" }
+csharp = { status = "yes", at = "MonoGame/Host.cs:Screenshot" }
+
+[[capability]]
+id = "dev.save"
+summary = "Save the live recording"
+python = { status = "yes", at = "host/dev.py:Controls.save" }
+lua = { status = "yes", at = "host/controls.lua:save" }
+csharp = { status = "yes", at = "MonoGame/DevBridge.cs:\"save_replay\"" }
+
+[[capability]]
+id = "dev.mcp-bridge"
+summary = "Live MCP bridge for agents"
+python = { status = "none", reason = "pyxel-mcp observes Pyxel scripts headless." }
+lua = { status = "yes", at = "host/dev/mcp_bridge.lua" }
+csharp = { status = "yes", at = "MonoGame/DevBridge.cs:DevBridge" }
+
+[[capability]]
+id = "dev.asset-reload"
+summary = "List and reload built assets in a running game"
+python = { status = "none", reason = "Downward: not needed by Pyxel games." }
+lua = { status = "none", reason = "Downward: not needed yet. The bridge can run Lua." }
+csharp = { status = "yes", at = "MonoGame/DevBridge.cs:\"reload_assets\"" }
+
+[[capability]]
+id = "dev.trace-tools"
+summary = "Trace a recording and find the first differing frame"
+python = { status = "yes", at = "trace.py:first_difference" }
+lua = { status = "yes", at = "trace.lua:first_difference" }
+csharp = { status = "undecided", since = "0.2.0", reason = "Unicycle.Tools traces; the engine has no first_difference." }
+
+[[capability]]
+id = "dev.pointer-diagnostic"
+summary = "Browser page that shows raw pointer input (?app=debug)"
+specific = true
+python = { status = "yes", at = "host/diagnostic.py:main" }
+lua = { status = "none", reason = "No browser build." }
+csharp = { status = "none", reason = "No browser build." }

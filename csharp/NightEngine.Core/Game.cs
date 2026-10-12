@@ -1,5 +1,10 @@
 namespace NightEngine;
 
+public static class Buttons
+{
+    public const int Up = 1, Down = 2, Left = 4, Right = 8, A = 16, B = 32, C = 64, Menu = 128, All = 255;
+}
+
 public record Pointer(int Id, int X, int Y, int StartX, int StartY, string Phase, string Kind = "touch")
 {
     public bool Active => Phase is not "R" and not "C";

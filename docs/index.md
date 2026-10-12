@@ -32,7 +32,7 @@ flowchart LR
 
 1. Read [Architecture](concepts/architecture.md) and the [Contract](concepts/contract.md).
 2. Follow the [Engine rules](repo/engine-rules.md) and the [Workflow](repo/workflow.md).
-3. Keep [Runtime parity](concepts/parity.md) and the docs true. See [Documentation](repo/docs.md).
+3. Keep the [Layers and parity](concepts/layers.md) manifest and the docs true. See [Documentation](repo/docs.md).
 4. Put multi-step work in an [execution plan](exec-plans/active/README.md).
 
 ## Reference

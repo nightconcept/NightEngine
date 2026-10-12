@@ -31,11 +31,18 @@ The contract is in [Compatibility](../concepts/contract.md). It covers button bi
 pointer kinds and phases, scene stack order, frame hook order, targets, RNG,
 replay JSON and trace encoding.
 
-1. Change the Python and the Lua implementation in the same commit.
+1. Change the Python, Lua and C# implementations in the same commit.
 2. If a simulation result changes, update the fixtures in `tests/fixtures/` on purpose.
 3. Keep replay widths and recorded targets backward compatible.
 4. Run `just check`. Both suites read the same fixtures.
 5. Record the change in `CHANGELOG.md`.
+
+## Parity
+
+Every capability in a core, host or dev folder is listed in `parity.toml`.
+When you add, move or rename one, update its entry and run `just parity`.
+Decide the status for the other runtimes with the rules in
+[Layers and parity](../concepts/layers.md).
 
 ## Development tools
 

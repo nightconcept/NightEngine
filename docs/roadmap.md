@@ -54,11 +54,12 @@ Some games still use older ways. See [Use the engine in a game](games/consume.md
 
 Move each game to the submodule on a pinned `main` commit or tag.
 
-## 6. Decide the parity line
+## 6. Close the parity work
 
-Many Python features are not in Lua or C#. See [Runtime parity](concepts/parity.md).
-For each feature, decide one of two things. It joins the shared contract with fixtures,
-or it stays a documented runtime feature.
+[Runtime parity](concepts/parity.md) lists the open items. Each `undecided` status must
+be decided before the next engine release; `just check` fails after the version moves.
+Pay off the contract debts with shared fixtures for repeats, the scene stack, pointers
+and targets. The rules are in [Layers and parity](concepts/layers.md).
 
 ## 7. Verify every platform in CI
 

@@ -49,7 +49,9 @@ Targets: Linux x64, macOS arm64, Windows x64, Android and iOS. See [Vision](docs
   before you change an interface.
 - Keep each core deterministic. A core imports no runtime and knows no game.
 - Change Python, Lua and C# together for contract changes. Keep all in agreement with `tests/fixtures/`.
-- Change the docs, parity matrix and skills in the same commit as the code. See [Documentation](docs/repo/docs.md).
+- Every core, host and dev capability is in `parity.toml`. Update it and run `just parity`.
+  Decide catch-up with [Layers and parity](docs/concepts/layers.md).
+- Change the docs and skills in the same commit as the code. See [Documentation](docs/repo/docs.md).
 - Keep the observability tools and their licenses in the engine.
 - Exclude `lua/host/dev/` from game release archives.
 - Start shared engine changes from `main`. Games pin verified commits.
@@ -74,7 +76,8 @@ Direction:
 Reference:
 
 - [Documentation Map](docs/index.md) — Engine portal for game makers and contributors
-- [Runtime parity](docs/concepts/parity.md) — Which feature exists in which runtime
+- [Layers and parity](docs/concepts/layers.md) — The layers, the manifest and the catch-up rules
+- [Runtime parity](docs/concepts/parity.md) — Generated table of each capability per runtime
 - [Platforms](docs/concepts/platforms.md) — Which runtime builds which platform
 - [Game layout](docs/games/layout.md) — Convention-over-configuration folders for games
 - [Game commands](docs/games/commands.md) — Standard `just` recipe names for games

@@ -2,6 +2,7 @@
 set windows-shell := ["pwsh", "-NoLogo", "-NoProfile", "-Command"]
 
 check:
+    uv run --project python python tools/parity.py --check
     uv run --project python python -m unittest discover -s python/tests -t python
     mise x -- luajit tests/lua.lua
     mise x -- dotnet run --project csharp/NightEngine.Tests
@@ -25,6 +26,10 @@ build:
     mise x -- dotnet pack csharp/NightEngine.Core -c Release -o dist/csharp
     uv run --project python python -m nightengine.web build --root examples/python-pyxel --out dist/python-example
     uv run --project python python -m nightengine.love build love --root examples/lua-love --out dist/lua-example
+
+# Check parity.toml against the code and rewrite docs/concepts/parity.md.
+parity:
+    uv run --project python python tools/parity.py
 
 docs:
     mise x -- pnpm --dir site build

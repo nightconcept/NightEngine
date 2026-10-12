@@ -1,6 +1,6 @@
 ---
 sidebar:
-  order: 3
+  order: 6
 ---
 
 # Choosing a runtime
