@@ -4,6 +4,11 @@ import { docsSchema } from '@astrojs/starlight/schema';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rewriteMdLinks } from './md-links';
+
+// The site's base path on GitHub Pages, matching astro.config.mjs.
+const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1];
+const base = process.env.GITHUB_ACTIONS === 'true' && repoName ? `/${repoName}` : '';
 
 /**
  * Loads docs directly from the repository's root docs/ directory.
@@ -52,7 +57,22 @@ function externalDocsLoader(relativeDocsDir: string) {
         return origParseData(entry);
       };
 
-      return globLoader.load(context);
+      // Rewrite .md links in each body before Astro renders it.
+      const docsDir = path.resolve(rootDir, relativeDocsDir);
+      const entryTypes = new Map(context.entryTypes);
+      const markdown = entryTypes.get('.md');
+      if (markdown) {
+        entryTypes.set('.md', {
+          ...markdown,
+          async getEntryInfo(params: any) {
+            const info = await markdown.getEntryInfo(params);
+            const body = rewriteMdLinks(info.body, fileURLToPath(params.fileUrl), docsDir, base);
+            return { ...info, body };
+          },
+        });
+      }
+
+      return globLoader.load({ ...context, entryTypes });
     },
   };
 }

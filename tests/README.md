@@ -9,4 +9,4 @@
   - `events.json`: a sparse host event recording that must round-trip unchanged.
 
 Python tests are in `python/tests/`. If a simulation result changes, update
-the fixtures on purpose. See [Compatibility](../docs/compatibility.md).
+the fixtures on purpose. See [Compatibility](../docs/concepts/contract.md).

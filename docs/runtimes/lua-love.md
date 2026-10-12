@@ -1,3 +1,8 @@
+---
+sidebar:
+  order: 2
+---
+
 # Lua / LÖVE
 
 Use LÖVE 11.5. In this repository, `mise install` supplies it on Linux x64,

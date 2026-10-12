@@ -12,7 +12,10 @@ graphics, sounds and state callbacks.
 | `lua/` | Flat Lua package root, core and LÖVE host |
 | `tests/lua/` | Lua core and host checks |
 | `tests/fixtures/` | Shared compatibility fixtures |
-| `tools/love2d-mcp/` | Pinned MCP server bootstrap and connection example |
+| `csharp/` | C# core, MonoGame host sources and contract tests |
+| `skills/` | Agent skills that games link |
+| `docs/`, `site/` | Documentation and the site that renders it |
+| `tools/` | Pinned MCP bootstraps for the LÖVE and MonoGame bridges |
 | `examples/` | Runnable examples for both implementations |
 
 ## Develop
@@ -32,17 +35,14 @@ and builds the Python distribution and both example archives. Engine version:
 0.2.0. Games pin the engine commit or release deliberately.
 
 - [Documentation Map](docs/index.md)
-- [Architecture](docs/architecture.md)
-- [Compatibility](docs/compatibility.md)
-- [Python/Pyxel](docs/python-pyxel.md)
-- [Lua/LÖVE](docs/lua-love.md)
-- [C#/MonoGame](docs/csharp-monogame.md)
-- [Observability](docs/observability.md)
+- [Vision](docs/vision.md) and [Roadmap](docs/roadmap.md)
+- [Use the engine in a game](docs/games/consume.md)
+- [Runtime parity](docs/concepts/parity.md) and [Platforms](docs/concepts/platforms.md)
 
 Unicycle and Nightrunner are integration games. Shared development starts from
 `main`; games pin verified engine commits. Nightrunner preserves its existing
 Pyxel fork, seeded randomness, settings and display pacing. See the
-[Nightrunner API reference](docs/nightrunner-api.md).
+[Nightrunner API reference](docs/reference/nightrunner-api.md).
 
 Unicycle's GitHub release builds exercise Pyxel web,
 Android, Linux and Windows, plus LÖVE archives, Windows, macOS and Android.

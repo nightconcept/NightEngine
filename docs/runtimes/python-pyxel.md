@@ -1,3 +1,8 @@
+---
+sidebar:
+  order: 1
+---
+
 # nightengine
 
 A small, game-agnostic engine on top of Pyxel 2.x. A game is a thin layer on the engine: its data, its rules,

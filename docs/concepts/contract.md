@@ -1,4 +1,9 @@
-# Compatibility
+---
+sidebar:
+  order: 2
+---
+
+# Compatibility contract
 
 Both implementations pass fixtures under `tests/fixtures/` before release. `rng.json`
 fixes RNG outputs and canonical snapshot text/hashes. `behavior.json` fixes frame
@@ -18,4 +23,4 @@ and Lua/LÖVE hosts feed events on playback and accept queued live events.
 Nightrunner retains Python's seeded `random.Random` in its game adapter to preserve
 its existing recordings. The shared engine default remains the portable RNG.
 Python-specific host facilities include runtime rebinding, OS/browser settings
-storage, device hints and pyxel-ne display pacing; see [API reference](nightrunner-api.md).
+storage, device hints and pyxel-ne display pacing; see [API reference](../reference/nightrunner-api.md).

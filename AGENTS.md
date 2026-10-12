@@ -4,14 +4,18 @@
 
 ## Intent
 
-NightEngine is the Nightcircle game engine for Python/Pyxel, Lua/LÖVE and C#/MonoGame.
-All implementations share deterministic frame, input, RNG, replay and trace contracts.
+NightEngine is the single engine entry point for Nightcircle games. It supports three runtimes:
+Python/Pyxel (prototypes), Lua/LÖVE (more features) and C#/MonoGame (most features).
+All share deterministic frame, input, RNG, replay and trace contracts. Games pin it as a submodule.
+The engine ships cores, hosts, builders, conventions, agent skills and the docs site.
+Targets: Linux x64, macOS arm64, Windows x64, Android and iOS. See [Vision](docs/vision.md).
 
 ## Stack
 
 - Python 3.14, Pyxel 2.x (the pyxel-ne fork for Nightrunner), uv, ruff, ty.
 - LuaJIT 2.1, LÖVE 11.5, StyLua 2.
-- C#/.NET 10 and MonoGame 3.8.6. See [C#/MonoGame](docs/csharp-monogame.md).
+- C#/.NET 10 and MonoGame 3.8.6.
+- Astro Starlight for the docs site in `site/` (pnpm).
 - Node for the browser pointer bridge tests and the love2d-mcp dev tool.
 - mise installs the tools from `mise.toml`; just runs the tasks.
 - Development platforms: Linux x64, macOS arm64 and Windows x64.
@@ -21,9 +25,12 @@ All implementations share deterministic frame, input, RNG, replay and trace cont
 
 - `python/src/nightengine/`: Python core, Pyxel host, web, Android and LÖVE builders.
 - `lua/`: Lua package root. Games mount it as `nightengine`.
+- `csharp/`: C# core (`NightEngine.Core`), MonoGame host sources and contract tests.
+- `skills/`: agent skills that games link into `.agents/skills/`.
+- `docs/`: the single source of truth. `site/` renders it.
 - `tests/fixtures/`: shared fixtures that both implementations pass.
 - `python/tests/`, `tests/lua/`: implementation checks.
-- `tools/love2d-mcp/`: pinned MCP bootstrap for the Lua dev bridge.
+- `tools/`: pinned MCP bootstraps for the LÖVE and MonoGame dev bridges.
 - `examples/`: runnable examples for both implementations.
 
 ## Essential Commands
@@ -38,10 +45,11 @@ All implementations share deterministic frame, input, RNG, replay and trace cont
 
 ## Hard Rules
 
-- Read [Architecture](docs/architecture.md) and [Compatibility](docs/compatibility.md)
+- Read [Architecture](docs/concepts/architecture.md) and the [Contract](docs/concepts/contract.md)
   before you change an interface.
 - Keep each core deterministic. A core imports no runtime and knows no game.
-- Change Python and Lua together. Keep both in agreement with `tests/fixtures/`.
+- Change Python, Lua and C# together for contract changes. Keep all in agreement with `tests/fixtures/`.
+- Change the docs, parity matrix and skills in the same commit as the code. See [Documentation](docs/repo/docs.md).
 - Keep the observability tools and their licenses in the engine.
 - Exclude `lua/host/dev/` from game release archives.
 - Start shared engine changes from `main`. Games pin verified commits.
@@ -55,14 +63,21 @@ Agent workflow:
 
 - [Engine rules](docs/repo/engine-rules.md) — Core limits, enforcement and contract changes
 - [Workflow](docs/repo/workflow.md) — Branches, verification, CI, releases and plans
+- [Documentation](docs/repo/docs.md) — Where a page goes, page format, keeping docs true
+
+Direction:
+
+- [Vision](docs/vision.md) — The charter: runtimes, platforms, conventions, AI native
+- [Roadmap](docs/roadmap.md) — Gaps between today and the vision, in order
+- [Execution plans](docs/exec-plans/active/README.md) — Active and completed plans
 
 Reference:
 
-- [Documentation Map](docs/index.md) — Engine portal, documentation index and contracts
-- [Architecture](docs/architecture.md) — Cores, hosts, layout and game checkout
-- [Compatibility](docs/compatibility.md) — Shared contract and fixtures
-- [Python/Pyxel](docs/python-pyxel.md) — Python API, host, web, Android and desktop builds
-- [Lua/LÖVE](docs/lua-love.md) — LÖVE host setup and builds
-- [Observability](docs/observability.md) — `app.dev` controls and the love2d-mcp bridge
-- [Nightrunner APIs](docs/nightrunner-api.md) — Bindings, events, storage and pacing
-- [Execution plans](docs/exec-plans/active/README.md) — Active and completed plans
+- [Documentation Map](docs/index.md) — Engine portal for game makers and contributors
+- [Runtime parity](docs/concepts/parity.md) — Which feature exists in which runtime
+- [Platforms](docs/concepts/platforms.md) — Which runtime builds which platform
+- [Game layout](docs/games/layout.md) — Convention-over-configuration folders for games
+- [Game commands](docs/games/commands.md) — Standard `just` recipe names for games
+- [Python/Pyxel](docs/runtimes/python-pyxel.md), [Lua/LÖVE](docs/runtimes/lua-love.md),
+  [C#/MonoGame](docs/runtimes/csharp-monogame.md) — Runtime APIs, hosts and builds
+- [Observability](docs/reference/observability.md) — `app.dev` controls and the MCP bridges

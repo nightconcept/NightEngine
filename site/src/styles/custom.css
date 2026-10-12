@@ -1,4 +1,5 @@
 /* Hide the first H1 in the markdown content body since Starlight renders its own header title */
+.sl-markdown-content > h1:first-child,
 .sl-markdown-content > .sl-heading-wrapper.level-h1:first-child {
   display: none;
 }

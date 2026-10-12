@@ -13,7 +13,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'NightEngine Docs',
-      description: 'Deterministic game engine for Python/Pyxel and Lua/LÖVE',
+      description: 'Nightcircle game engine for Python/Pyxel, Lua/LÖVE and C#/MonoGame',
       social: [
         {
           icon: 'github',
@@ -22,40 +22,18 @@ export default defineConfig({
         },
       ],
       customCss: ['./src/styles/custom.css'],
+      // Each group reads one docs/ folder. A new page needs no change here.
+      // Order pages with `sidebar: { order: n }` front matter. See docs/repo/docs.md.
       sidebar: [
-        {
-          label: 'Overview',
-          slug: 'index',
-        },
-        {
-          label: 'Core Concepts',
-          items: [
-            { label: 'Architecture', slug: 'architecture' },
-            { label: 'Compatibility Contract', slug: 'compatibility' },
-          ],
-        },
-        {
-          label: 'Implementations',
-          items: [
-            { label: 'Python / Pyxel', slug: 'python-pyxel' },
-            { label: 'Lua / LÖVE', slug: 'lua-love' },
-          ],
-        },
-        {
-          label: 'APIs & Observability',
-          items: [
-            { label: 'Nightrunner APIs', slug: 'nightrunner-api' },
-            { label: 'Observability & Dev Bridge', slug: 'observability' },
-          ],
-        },
-        {
-          label: 'Development & Workflow',
-          items: [
-            { label: 'Engine Rules', slug: 'repo/engine-rules' },
-            { label: 'Workflow & Releases', slug: 'repo/workflow' },
-            { label: 'Active Execution Plans', slug: 'exec-plans/active/readme' },
-          ],
-        },
+        { label: 'Overview', slug: 'index' },
+        { label: 'Vision', slug: 'vision' },
+        { label: 'Roadmap', slug: 'roadmap' },
+        { label: 'Concepts', items: [{ autogenerate: { directory: 'concepts' } }] },
+        { label: 'Making games', items: [{ autogenerate: { directory: 'games' } }] },
+        { label: 'Runtimes', items: [{ autogenerate: { directory: 'runtimes' } }] },
+        { label: 'Reference', items: [{ autogenerate: { directory: 'reference' } }] },
+        { label: 'Engine development', items: [{ autogenerate: { directory: 'repo' } }] },
+        { label: 'Execution plans', collapsed: true, items: [{ autogenerate: { directory: 'exec-plans' } }] },
       ],
     }),
     astroMermaid(),

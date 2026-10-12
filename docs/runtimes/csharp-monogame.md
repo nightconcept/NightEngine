@@ -1,3 +1,8 @@
+---
+sidebar:
+  order: 3
+---
+
 # C# and MonoGame
 
 The C# core implements deterministic frames, scenes, input edges and repeats, target filtering, the portable RNG, replay JSON, and canonical traces. It imports no graphics runtime. Unicycle checks all four existing recordings against this core.

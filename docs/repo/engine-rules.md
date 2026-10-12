@@ -1,6 +1,11 @@
+---
+sidebar:
+  order: 1
+---
+
 # Engine rules
 
-These rules apply to every change in `python/` and `lua/`.
+These rules apply to every change in `python/`, `lua/` and `csharp/`.
 
 ## Core limits
 
@@ -22,7 +27,7 @@ These rules apply to every change in `python/` and `lua/`.
 
 ## Contract changes
 
-The contract is in [Compatibility](../compatibility.md). It covers button bits,
+The contract is in [Compatibility](../concepts/contract.md). It covers button bits,
 pointer kinds and phases, scene stack order, frame hook order, targets, RNG,
 replay JSON and trace encoding.
 

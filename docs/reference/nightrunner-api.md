@@ -71,5 +71,5 @@ Browser helpers live in `nightengine/python/src/nightengine/web/harness`.
 The web builder strips a fork's local version label so Pyxel 2.9.9+ne.2 loads
 stock 2.9.9 in the browser. Desktop builds retain the installed fork.
 
-See [Python/Pyxel](python-pyxel.md) for the rest of the API and
+See [Python/Pyxel](../runtimes/python-pyxel.md) for the rest of the API and
 [observability](observability.md) for the developer tools.
