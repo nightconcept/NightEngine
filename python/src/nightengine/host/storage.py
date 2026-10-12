@@ -5,7 +5,7 @@ Nothing here calls pyxel, so a game can read its settings before `pyxel.init` (t
 
 import os
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from ..store import FileStore, Store
 from . import platform
@@ -45,7 +45,7 @@ def data_dir(
     if system == "darwin":
         return home / "Library" / "Application Support" / vendor / app
     base = env.get("XDG_DATA_HOME")
-    root = Path(base) if base and Path(base).is_absolute() else home / ".local" / "share"
+    root = Path(base) if base and PurePosixPath(base).is_absolute() else home / ".local" / "share"
     return root / vendor.lower() / app.lower()
 
 

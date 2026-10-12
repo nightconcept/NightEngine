@@ -59,7 +59,7 @@ class AndroidTest(unittest.TestCase):
             web = project / "app" / "src" / "main" / "assets" / "web"
             self.assertIn('applicationId "dev.example.toy"', gradle)
             self.assertIn("versionCode 10203", gradle)
-            self.assertIn(str((root / "android" / "debug.keystore").resolve()), gradle)
+            self.assertIn((root / "android" / "debug.keystore").resolve().as_posix(), gradle)
             self.assertIn('android:screenOrientation="sensorLandscape"', manifest)
             self.assertIn('android:icon="@drawable/ic_launcher"', manifest)
             self.assertIn(">Toy Game<", strings)
