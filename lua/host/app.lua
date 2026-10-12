@@ -226,8 +226,14 @@ function App.export(out, every)
         type(every) == "number" and every >= 1 and every == math.floor(every),
         "frame interval must be a positive integer"
     )
-    local quoted = "'" .. out:gsub("'", "'\"'\"'") .. "'"
-    assert(os.execute("mkdir -p " .. quoted) == 0, "could not create frame output directory")
+    local command
+    if package.config:sub(1, 1) == "\\" then -- Windows: cmd.exe mkdir creates parents but fails on a folder.
+        local path = out:gsub("/", "\\")
+        command = 'if not exist "' .. path .. '" mkdir "' .. path .. '"'
+    else
+        command = "mkdir -p '" .. out:gsub("'", "'\"'\"'") .. "'"
+    end
+    assert(os.execute(command) == 0, "could not create frame output directory")
     local game, rec = App.game, App.replay
     App.exporting = true
     local function shot(name)

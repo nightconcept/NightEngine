@@ -98,11 +98,16 @@ function M.run(dirs, filter)
     local failures, count = 0, 0
     for _, dir in ipairs(dirs) do
         local files = {}
-        local list = io.popen('find "' .. dir .. '" -name "*_spec.lua" | sort')
+        local command = 'find "' .. dir .. '" -name "*_spec.lua"'
+        if package.config:sub(1, 1) == "\\" then -- Windows: cmd.exe has no POSIX find.
+            command = 'dir /b /s /a-d "' .. dir:gsub("/", "\\") .. '\\*_spec.lua" 2>nul'
+        end
+        local list = io.popen(command)
         for line in list:lines() do
             files[#files + 1] = line
         end
         list:close()
+        table.sort(files)
         for _, file in ipairs(files) do
             tests = {}
             local chunk = assert(loadfile(file))
@@ -120,6 +125,10 @@ function M.run(dirs, filter)
         end
     end
     io.write(string.format("%d tests, %d failed\n", count, failures))
+    if count == 0 then
+        io.write("no tests ran\n")
+        return 1
+    end
     return failures
 end
 
