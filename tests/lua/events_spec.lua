@@ -3,7 +3,7 @@ local replay = require("nightengine.replay")
 local Game = require("nightengine.core")
 local class = require("nightengine.class")
 local scene = require("nightengine.scene")
-local here = debug.getinfo(1, "S").source:sub(2):match("^(.*)/")
+local here = debug.getinfo(1, "S").source:sub(2):match("^(.*)[/\\]")
 
 t.test("shared sparse host events survive recording and playback", function()
     local f = assert(io.open(here .. "/../../contract/events.json", "rb"))

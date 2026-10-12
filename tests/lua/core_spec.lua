@@ -10,7 +10,7 @@ local scene = require("nightengine.scene")
 local class = require("nightengine.class")
 local Game = require("nightengine.core")
 
-local here = debug.getinfo(1, "S").source:sub(2):match("^(.*)/")
+local here = debug.getinfo(1, "S").source:sub(2):match("^(.*)[/\\]")
 local function read(path)
     local f = assert(io.open(path, "rb"))
     local s = f:read("*a")
