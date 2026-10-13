@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 (2026-10-12)
+
+- C#: `NightEngine.Core` is trimmable. `Recording.ToJson` writes with `Utf8JsonWriter` instead of reflection, with
+  the same text, so a game's trimmed release build still saves replays.
+- `python -m nightengine.desktop build` on macOS zips only `<slug>.app` (PyInstaller also leaves a bare
+  program next to it) and keeps the app's framework links. Unicycle's macOS zip drops from 41 MB to 15 MB.
+
 ## 0.2.0 (2026-10-12)
 
 - Add `parity.toml` and `tools/parity.py`: the layers, every capability and its status in each

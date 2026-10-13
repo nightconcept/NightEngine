@@ -19,13 +19,59 @@ public sealed class Recording(long seed, int width = 7, Target? target = null)
         if (events is { Length: > 0 }) Events[Frames.Count] = (string[])events.Clone();
         Frames.Add(code);
     }
+    // Utf8JsonWriter, not JsonSerializer: no reflection, so a trimmed game still saves replays.
     public string ToJson()
     {
-        var data = new Dictionary<string, object?> { ["seed"] = Seed, ["width"] = Width, ["inputs"] = string.Concat(Frames.Select(c => c.ToString($"x{Width}"))) };
-        if (Pointers.Count > 0) data["pointers"] = Pointers.ToDictionary(p => p.Key.ToString(), p => p.Value.Select(Pointer.Encode).ToArray());
-        if (Events.Count > 0) data["events"] = Events.ToDictionary(p => p.Key.ToString(), p => p.Value);
-        if (Target != null) data["target"] = new { name = Target.Name, width = Target.Width, height = Target.Height, controls = Target.Inputs };
-        return JsonSerializer.Serialize(data);
+        using var buffer = new MemoryStream();
+        using (var json = new Utf8JsonWriter(buffer))
+        {
+            json.WriteStartObject();
+            json.WriteNumber("seed", Seed);
+            json.WriteNumber("width", Width);
+            json.WriteString("inputs", string.Concat(Frames.Select(c => c.ToString($"x{Width}"))));
+            if (Pointers.Count > 0)
+            {
+                json.WriteStartObject("pointers");
+                foreach (var (frame, contacts) in Pointers)
+                {
+                    json.WriteStartArray(frame.ToString(CultureInfo.InvariantCulture));
+                    foreach (var p in contacts)
+                    {
+                        json.WriteStartArray();
+                        foreach (int n in new[] { p.Id, p.X, p.Y, p.StartX, p.StartY }) json.WriteNumberValue(n);
+                        json.WriteStringValue(p.Phase);
+                        if (p.Kind != "touch") json.WriteStringValue(p.Kind[..1]);
+                        json.WriteEndArray();
+                    }
+                    json.WriteEndArray();
+                }
+                json.WriteEndObject();
+            }
+            if (Events.Count > 0)
+            {
+                json.WriteStartObject("events");
+                foreach (var (frame, events) in Events)
+                {
+                    json.WriteStartArray(frame.ToString(CultureInfo.InvariantCulture));
+                    foreach (string e in events) json.WriteStringValue(e);
+                    json.WriteEndArray();
+                }
+                json.WriteEndObject();
+            }
+            if (Target != null)
+            {
+                json.WriteStartObject("target");
+                json.WriteString("name", Target.Name);
+                json.WriteNumber("width", Target.Width);
+                json.WriteNumber("height", Target.Height);
+                json.WriteStartArray("controls");
+                foreach (string c in Target.Inputs) json.WriteStringValue(c);
+                json.WriteEndArray();
+                json.WriteEndObject();
+            }
+            json.WriteEndObject();
+        }
+        return System.Text.Encoding.UTF8.GetString(buffer.ToArray());
     }
     public void Save(string path)
     {

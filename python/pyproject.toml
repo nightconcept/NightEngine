@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nightengine"
-version = "0.2.0"
+version = "0.2.1"
 description = "Nightcircle deterministic game engine and Pyxel host"
 readme = "README.md"
 requires-python = ">=3.11"

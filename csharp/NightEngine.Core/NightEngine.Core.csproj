@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Description>NightEngine deterministic frame, input, RNG and replay core.</Description>
-    
+    <!-- Games may trim their release builds: the analyzers reject reflection the trimmer cannot see. -->
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 </Project>

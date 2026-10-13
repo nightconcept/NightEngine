@@ -2,7 +2,8 @@
 
 It reads the game's `[tool.nightengine.web]` table (entry, packages, assets) and `[project] version`, writes
 `<slug>.pyxapp`, runs `pyxel app2exe` on it, and zips the program folder to
-`<out>/<slug>-<version>-<system>-<machine>.zip`. PyInstaller cannot cross-build: a Windows .exe needs Windows.
+`<out>/<slug>-<version>-<system>-<machine>.zip` (on macOS, only `<slug>.app`).
+PyInstaller cannot cross-build: a Windows .exe needs Windows.
 The program runs as the `desktop` target (see target.py).
 PyInstaller must be importable: `uv run --with pyinstaller python -m nightengine.desktop build`.
 """
@@ -46,6 +47,13 @@ def build(root: Path, out: Path) -> Path:
     web.write_app(work / f"{name}.pyxapp", root, config.entry, web.game_files(root, config), script)
     subprocess.run([sys.executable, "-m", "pyxel", "app2exe", f"{name}.pyxapp"], cwd=work, check=True)
     archive = out / f"{name}-{version}-{target()}"
+    if sys.platform == "darwin":
+        # PyInstaller makes the program twice on macOS: <name>.app and a bare <name>. Ship the app, and keep its
+        # framework links (ditto does, shutil copies their targets).
+        path = Path(f"{archive}.zip")
+        path.unlink(missing_ok=True)
+        subprocess.run(["ditto", "-c", "-k", "--keepParent", str(work / "dist" / f"{name}.app"), str(path)], check=True)
+        return path
     return Path(shutil.make_archive(str(archive), "zip", work / "dist"))
 
 
