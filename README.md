@@ -46,3 +46,7 @@ Pyxel fork, seeded randomness, settings and display pacing. See the
 
 Unicycle's GitHub release builds exercise Pyxel web,
 Android, Linux and Windows, plus LÖVE archives, Windows, macOS and Android.
+
+## License
+
+[MIT](LICENSE). `python/src/nightengine/host/gamepads/` keeps the SDL zlib license in its folder.
