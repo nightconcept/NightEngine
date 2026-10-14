@@ -9,7 +9,7 @@ from pathlib import Path
 import pyxel
 
 from ..core import Game
-from ..inputs import dev_event
+from ..inputs import dev_event, text_events
 from ..pacing import InputLatch, Pacer, carry
 from ..pointer import Pointer, PointerKind, PointerPhase
 from ..replay import Recording, digits_for
@@ -174,13 +174,21 @@ class App:
 
     def read_input(self) -> tuple[int, tuple[Pointer, ...], tuple[str, ...]]:
         """This frame's live input: the buttons, the pointers, and the host events. It also sets `device`, and
-        adds "press key:<NAME>" or "press pad:<NAME>" while the game listens (`Game.listen`)."""
+        adds "press key:<NAME>" or "press pad:<NAME>" while the game listens (`Game.listen`).
+
+        While the game sets `wants_text`, the keyboard types instead of pressing buttons: its text arrives as `text`
+        host events (`inputs.text_events`, read with `Input.text`), and keyboard keys press no button. Pads and
+        pointers still do."""
         keyboard, pad = self.key_tables()
-        key_code = read_buttons(keyboard)
+        typing = bool(getattr(self.game, "wants_text", False))
+        platform.text_input(typing)
+        key_code = 0 if typing else read_buttons(keyboard)
         pad_code = read_buttons(pad) | gamepad.read_sticks(self.config.sticks)
         code = key_code | pad_code | platform.buttons()
         pointers = platform.sample()
         events, self.pending = list(self.pending), ()
+        if typing:
+            events += text_events(platform.take_text())
         if self.game.listen:
             pressed = keys.first_pressed()
             if pressed:
@@ -227,7 +235,8 @@ class App:
         self.renderer.alpha = 1.0
 
     def update(self):
-        if pyxel.btnp(pyxel.KEY_Q) or (pyxel.btn(pyxel.KEY_ALT) and pyxel.btnp(pyxel.KEY_F4)):
+        typing = bool(getattr(self.game, "wants_text", False))  # Q is a letter while the player types.
+        if (pyxel.btnp(pyxel.KEY_Q) and not typing) or (pyxel.btn(pyxel.KEY_ALT) and pyxel.btnp(pyxel.KEY_F4)):
             self.quit()
             return
         if self.dev.paused:

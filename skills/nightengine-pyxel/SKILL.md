@@ -23,6 +23,8 @@ Load the `nightengine` skill first.
   Use `check_refs` and `Registry.missing` in the content test.
 - Only `render/`, `app.py`, `audio.py` and `frames.py` import `pyxel`.
   `tests/test_layers.py` checks this.
+- Typed text: set `game.wants_text = True` and read `inp.text()`. Never read keys for text in the rules.
+- Page-side JS (workers, WASM, model files): list them in `[tool.nightengine.web]` `scripts` and `static`.
 
 ## Build
 

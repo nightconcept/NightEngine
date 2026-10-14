@@ -27,8 +27,8 @@ sidebar:
 2. Run `just lint`. It runs ruff check, ruff format check and StyLua check.
    If it fails on format, run `just format`.
 3. If you change builders or packaging, run `just build`.
-4. If you change the browser pointer bridge, run
-   `node --test python/src/nightengine/web/tests/pointer.test.mjs`.
+4. If you change the browser bridge (pointers or text), run
+   `node --test python/src/nightengine/web/tests/pointer.test.mjs python/src/nightengine/web/tests/text.test.mjs`.
 5. If you change `tools/love2d-mcp/`, run
    `python3 tools/love2d-mcp/setup.py --out .tools/love2d-mcp` and
    `node tools/love2d-mcp/check.mjs`.
@@ -37,7 +37,7 @@ CI on GitHub runs on push to `main`, on `v*` tags and on pull requests.
 It installs tools with `jdx/mise-action`, so CI and local runs use the same versions.
 
 - `check` runs `just check` on Linux x64, macOS arm64 and Windows x64.
-- `lint` runs `just lint` and the pointer bridge test on Linux.
+- `lint` runs `just lint` and the browser bridge tests on Linux.
 - `build` runs `just build` on Linux and uploads the archives.
 - `devtools` runs the love2d-mcp install and smoke check on Linux.
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Python web build: `[tool.nightengine.web]` takes `scripts` (JS modules the page loads after `launcher.mjs`) and
+  `static` (files and folders served next to `index.html`, outside `game.pyxapp`). A game can ship its own
+  workers, WASM and model files, offline and in the APK.
+- Python: typed text. While a game sets `wants_text`, the App sends each frame's typing as `text` host events
+  (`inputs.text_events`) and the keyboard presses no buttons. `Input.text()` reads them. The desktop reads
+  `pyxel.input_text`; the page bridge (`web/static/text.mjs`) uses a hidden text field that opens a phone's
+  on-screen keyboard. `platform.text_input` and `platform.take_text` are the host API. Lua and C# are planned.
+
 ## 0.2.1 (2026-10-12)
 
 - C#: `NightEngine.Core` is trimmable. `Recording.ToJson` writes with `Utf8JsonWriter` instead of reflection, with

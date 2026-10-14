@@ -58,6 +58,17 @@ class Bridge:
         self.closed = True
         return True
 
+    typing = None
+    typed = ""
+
+    def textInput(self, on):  # noqa: N802 (the JS name)
+        self.typing = on
+        return on
+
+    def takeText(self):  # noqa: N802 (the JS name)
+        text, self.typed = self.typed, ""
+        return text
+
 
 def in_browser(bridge):
     return mock.patch.dict(sys.modules, {"js": SimpleNamespace(window=SimpleNamespace(nightBridge=bridge))})
@@ -107,6 +118,37 @@ class BrowserTest(unittest.TestCase):
             platform.init(64, 64)
         with self.assertRaisesRegex(OSError, "Allow site storage"):
             platform.load("replay")
+
+
+class TextTest(unittest.TestCase):
+    def tearDown(self):
+        platform.init(64, 64)
+
+    def test_a_page_opens_the_field_once_and_drains_the_queue(self):
+        bridge = Bridge()
+        with in_browser(bridge):
+            platform.init(64, 64)
+            self.assertEqual(platform.take_text(), "")  # Typing is off.
+            platform.text_input(True)
+            platform.text_input(True)
+            self.assertIs(bridge.typing, True)
+            bridge.typed = "hi\n"
+            self.assertEqual(platform.take_text(), "hi\n")
+            self.assertEqual(platform.take_text(), "")
+            platform.text_input(False)
+            self.assertIs(bridge.typing, False)
+
+    def test_the_desktop_reads_input_text_and_the_three_keys(self):
+        platform.init(64, 64)
+        platform.text_input(True)
+        keys = SimpleNamespace(KEY_BACKSPACE=1, KEY_RETURN=2, KEY_ESCAPE=3)
+        pressed = {1, 2}
+        with mock.patch.multiple(pyxel, create=True, input_text="ab\x07", btnp=lambda k, *a: k in pressed,
+                                 **vars(keys)):  # fmt: skip
+            self.assertEqual(platform.take_text(), "ab\b\n")
+        platform.text_input(False)
+        with mock.patch.multiple(pyxel, create=True, input_text="zz", btnp=lambda k, *a: True, **vars(keys)):
+            self.assertEqual(platform.take_text(), "")
 
 
 class DesktopTest(unittest.TestCase):
@@ -198,6 +240,22 @@ class AppTest(unittest.TestCase):
             for _ in range(len(frames) + 2):  # Past the end: the replay stops.
                 replayed.update()
         self.assertEqual(replayed.log.seen, script)
+
+    def test_while_the_game_wants_text_keys_type_instead_of_pressing(self):
+        app = app_for()
+        app.game.wants_text = True
+        with (
+            mock.patch.object(platform, "sample", return_value=()),
+            mock.patch.object(platform, "take_text", side_effect=["q!\n", ""]),
+            mock.patch("nightengine.host.app.read_buttons", return_value=0) as read,
+            mock.patch.multiple(
+                pyxel, create=True, btnp=lambda *a: True, btn=lambda b: False, btnv=lambda a: 0, quit=mock.DEFAULT
+            ),  # fmt: skip
+        ):
+            app.update()  # Q is pressed, but it is a letter now: no quit.
+            pyxel.quit.assert_not_called()
+        self.assertEqual(app.recording.events[0], ("text q!", "text \n"))
+        self.assertEqual(read.call_count, 1)  # Only the pad table was read; the keyboard pressed nothing.
 
     def test_a_quit_request_saves_and_quits(self):
         app = app_for()

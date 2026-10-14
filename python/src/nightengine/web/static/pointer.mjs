@@ -1,5 +1,8 @@
-// The nightengine browser bridge: touch, pen, and mouse as one pointer stream, sampled once per game frame.
+// The nightengine browser bridge: touch, pen, and mouse as one pointer stream, sampled once per game frame, and
+// typed text (text.mjs).
 // host/platform.py reads it as window.nightBridge. Coordinates are logical game pixels.
+import { installText } from './text.mjs';
+
 export const TERMINAL = new Set(['RELEASED', 'CANCELLED']);
 
 export function logicalPoint(x, y, rect, width, height) {
@@ -112,6 +115,7 @@ export function installBridge(canvas, width, height, env = window, enabled = () 
   probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
   document.body.appendChild(probe);
   let backs = 0;  // Presses of a system Back button (an Android app), read once each by takeBack().
+  let text = null;  // The hidden text field, made on the first textInput(true).
   const bridge = {
     sample: () => JSON.stringify(tracker.sample()),
     back: () => { backs += 1; },
@@ -161,7 +165,14 @@ export function installBridge(canvas, width, height, env = window, enabled = () 
       try { return env.localStorage.getItem(`nightengine:${key}`); }
       catch { throw new Error('Browser storage is unavailable. Allow site storage to read saved data.'); }
     },
-    destroy: () => { cancel(); listeners.forEach(remove => remove()); probe.remove(); },
+    // Typing on or off (platform.text_input). On: focus a hidden field, which opens a phone's keyboard.
+    textInput: on => {
+      if (on && !text) text = installText(document, canvas);
+      return text ? text.open(on) : false;
+    },
+    // The text typed since the last call (platform.take_text): "\n" Enter, "\b" Backspace, "\x1b" Escape.
+    takeText: () => (text ? text.take() : ''),
+    destroy: () => { cancel(); listeners.forEach(remove => remove()); probe.remove(); text?.field.remove(); },
   };
   env.nightBridge = bridge;
   return bridge;

@@ -42,6 +42,7 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 | `scene-music`: Each scene names its music track | Yes | Yes | Planned |
 | `input-axis`: Axis and direction helpers on Input | Yes | Yes | Planned |
 | `custom-buttons`: Game-declared buttons above the eight engine bits | Yes | Planned | Planned |
+| `input-text`: Typed text as `text` host events, read by Input.text | Yes | Planned | Planned |
 | `pointer-helpers`: Primary pointer, press and release, and hit tests | Yes | Yes | Planned |
 | `target-tables`: Named targets, sizing and target JSON | Yes | Yes | Planned |
 | `replay-play`: Play a recording into a game; replay widths | Yes | Yes | Planned |
@@ -70,6 +71,8 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 | `frames`: Render a recording to PNG files with no window | Yes | Yes | Yes |
 | `storage`: Where settings live on desktop, browser and phone | Yes | Planned | Planned |
 | `platform-info`: Safe area, touch device and screen size hints | Yes | Planned | Planned |
+| `text-input`: Typing while the game wants text: keyboard and on-screen keyboard to text events | Yes | Planned | Planned |
+| `web-scripts`: A game's own JS modules and static files in the web page | Yes | None | None |
 | `pyxel-helpers`: Pyxel text, sprite and image-bank helpers | Yes | None | None |
 
 ### Dev
@@ -93,6 +96,8 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 - `core.input-axis` on C#/MonoGame: planned. Not ported yet.
 - `core.custom-buttons` on Lua/LÖVE: planned. Games pass a wider mask by hand.
 - `core.custom-buttons` on C#/MonoGame: planned. Games pass a wider mask by hand.
+- `core.input-text` on Lua/LÖVE: planned. Engine core helper over the events contract.
+- `core.input-text` on C#/MonoGame: planned. Engine core helper over the events contract.
 - `core.pointer-helpers` on C#/MonoGame: planned. Not ported yet.
 - `core.target-tables` on C#/MonoGame: planned. Recording.FromJson reads targets inline.
 - `core.replay-play` on C#/MonoGame: planned. Hosts and tools loop over frames by hand.
@@ -113,6 +118,8 @@ _Generated from `parity.toml` by `just parity`. Do not edit by hand._
 - `host.storage` on C#/MonoGame: planned. Follows core.store.
 - `host.platform-info` on Lua/LÖVE: planned. LÖVE exposes the safe area; no engine API yet.
 - `host.platform-info` on C#/MonoGame: planned. No engine API yet.
+- `host.text-input` on Lua/LÖVE: planned. LÖVE has love.textinput and setTextInput; no engine API yet.
+- `host.text-input` on C#/MonoGame: planned. MonoGame has Window.TextInput; no engine API yet.
 
 ### Contract debts
 

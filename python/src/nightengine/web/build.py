@@ -9,6 +9,11 @@ The game describes itself in its pyproject.toml:
     entry = "game.py"                          # optional, the default
     packages = ["nightrunner", "nightengine"]  # their .py files, without tests/
     assets = ["assets"]                        # every file under these dirs
+    scripts = ["web/brain.mjs"]                # optional: JS modules the page loads after launcher.mjs
+    static = ["web/worker.mjs", "web/models"]  # optional: files and folders served next to index.html
+
+`scripts` and `static` are paths in the game, and the build keeps them at the same path next to index.html (not in
+game.pyxapp), so a script can import a worker or fetch a model file by a relative URL. A script is copied too.
 
 `--target` picks the build target (`web` unless given; see target.py). The build writes it into the app, and the
 page takes the target's size.
@@ -46,6 +51,11 @@ class WebConfig:
     entry: str = "game.py"
     packages: tuple[str, ...] = ()
     assets: tuple[str, ...] = ()
+    scripts: tuple[str, ...] = ()  # JS modules the page loads after launcher.mjs, in this order.
+    static: tuple[str, ...] = ()  # Files and folders copied next to index.html, outside game.pyxapp.
+
+
+LISTS = ("packages", "assets", "scripts", "static")
 
 
 def read_config(root: Path) -> WebConfig:
@@ -53,8 +63,34 @@ def read_config(root: Path) -> WebConfig:
     table = data.get("tool", {}).get("nightengine", {}).get("web")
     if table is None:
         raise ValueError(f"{root / 'pyproject.toml'} has no [tool.nightengine.web] table")
-    table = {**table, "packages": tuple(table.get("packages", ())), "assets": tuple(table.get("assets", ()))}
+    table = {**table, **{key: tuple(table.get(key, ())) for key in LISTS}}
     return WebConfig(**table)
+
+
+def page_files(root: Path, config: WebConfig) -> list[Path]:
+    """The game's own page files (`scripts`, then every file under `static`), relative to the root. A path must be
+    inside the game, and must not take the name of a file the build writes."""
+    files: list[Path] = []
+    for entry in (*config.scripts, *config.static):
+        path = (root / entry).resolve()
+        if not path.is_relative_to(root):
+            raise ValueError(f"web file {entry!r} is outside the game")
+        if path.is_dir():
+            found = [p for p in path.rglob("*") if p.is_file() and not SKIP_DIRS & set(p.relative_to(root).parts)]
+        elif path.is_file():
+            found = [path]
+        else:
+            raise FileNotFoundError(f"web file {entry!r} not found")
+        files += [p.relative_to(root) for p in sorted(found) if p.relative_to(root) not in files]
+    taken = {p.name for p in STATIC.iterdir()} | {"game.pyxapp", "debug.pyxapp", "pyxel", "pyodide"}
+    for rel in files:
+        if rel.parts[0] in taken:
+            raise ValueError(f"web file {rel.as_posix()!r} would replace the build's own {rel.parts[0]!r}")
+    return files
+
+
+def script_tags(config: WebConfig) -> str:
+    return "".join(f'\n  <script type="module" src="{Path(s).as_posix()}"></script>' for s in config.scripts)
 
 
 def package_files(root: Path, package: str) -> list[Path]:
@@ -130,6 +166,9 @@ def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool 
     for path in STATIC.iterdir():
         if path.is_file():
             shutil.copyfile(path, out / path.name)
+    for rel in page_files(root, config):
+        (out / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / rel, out / rel)
     pyxel_version = runtime_version(version("pyxel"))
     if offline:
         runtime.vendor(out, pyxel_version)
@@ -139,7 +178,7 @@ def build(root: Path, out: Path, config: WebConfig | None = None, offline: bool 
         note = "The browser runtime needs internet access."
     page = out / "index.html"
     fills = {"PYXEL_JS": pyxel_js, "RUNTIME_NOTE": note, "TITLE": config.title, "WIDTH": chosen.width,
-             "HEIGHT": chosen.height}  # fmt: skip
+             "HEIGHT": chosen.height, "SCRIPTS": script_tags(config)}  # fmt: skip
     text = page.read_text()
     for key, value in fills.items():
         text = text.replace("{{" + key + "}}", str(value))

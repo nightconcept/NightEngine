@@ -79,6 +79,47 @@ class WebBuildTest(unittest.TestCase):
             self.assertIn("cdn.jsdelivr.net/gh/kitao/pyxel@", page)
             self.assertFalse((out / "pyxel").exists())
 
+    def test_scripts_and_static_files_are_served_next_to_the_page(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "game"
+            root.mkdir()
+            make_game(root)
+            (root / "web" / "models" / "m").mkdir(parents=True)
+            (root / "web" / "brain.mjs").write_text("export {}")
+            (root / "web" / "worker.mjs").write_text("// worker")
+            (root / "web" / "models" / "m" / "model.onnx").write_bytes(b"\x00\x01")
+            (root / "pyproject.toml").write_text(PYPROJECT + 'scripts = ["web/brain.mjs"]\n'
+                                                 'static = ["web/worker.mjs", "web/models"]\n')  # fmt: skip
+            config = read_config(root)
+            self.assertEqual((config.scripts, config.static), (("web/brain.mjs",), ("web/worker.mjs", "web/models")))
+            out = build(root, Path(tmp) / "dist")
+            page = (out / "index.html").read_text()
+            self.assertLess(page.index('src="launcher.mjs"'), page.index('<script type="module" src="web/brain.mjs">'))
+            self.assertEqual((out / "web" / "models" / "m" / "model.onnx").read_bytes(), b"\x00\x01")
+            self.assertTrue((out / "web" / "worker.mjs").is_file() and (out / "web" / "brain.mjs").is_file())
+            with zipfile.ZipFile(out / "game.pyxapp") as app:
+                self.assertFalse([n for n in app.namelist() if n.startswith("app/web/")])
+
+    def test_web_files_must_exist_stay_inside_and_not_replace_the_build(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "game"
+            root.mkdir()
+            make_game(root)
+            (root / "launcher.mjs").write_text("x")
+            for static, error in ((("missing.mjs",), FileNotFoundError), (("../x",), ValueError),
+                                  (("launcher.mjs",), ValueError)):  # fmt: skip
+                config = WebConfig("Toy", 320, 180, packages=("toy", "nightengine"), static=static)
+                with self.subTest(static), self.assertRaises(error):
+                    build(root, Path(tmp) / "dist", config)
+
+    def test_a_config_without_web_files_writes_no_script_tags(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "game"
+            root.mkdir()
+            make_game(root)
+            page = (build(root, Path(tmp) / "dist") / "index.html").read_text()
+            self.assertEqual(page.count("<script"), 2)
+
     def test_a_fork_label_is_dropped_so_the_page_loads_the_stock_runtime(self):
         self.assertEqual(runtime_version("2.9.9+ne.2"), "2.9.9")
         self.assertEqual(runtime_version("2.9.9"), "2.9.9")

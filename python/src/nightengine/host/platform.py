@@ -1,4 +1,5 @@
-"""The platform the game runs on: pointer input (touch or mouse), screen and safe-area info, and browser storage.
+"""The platform the game runs on: pointer input (touch or mouse), typed text, screen and safe-area info, and browser
+storage.
 
 `App` calls `init` after `pyxel.init` and `sample` once per frame, and passes the pointers to `Game.step`.
 In a browser built by `nightengine.web`, the page installs `window.nightBridge` (web/static/pointer.mjs), and
@@ -66,8 +67,24 @@ class MouseTracker:
         return (Pointer(0, *pos, *self.start, phase, PointerKind.MOUSE),)
 
 
+class TextReader:
+    """Typed text on the desktop: pyxel's `input_text` plus Enter, Backspace and Escape (Backspace repeats while
+    held), as one string per frame with "\\n", "\\b" and "\\x1b" for the three keys."""
+
+    REPEAT = (20, 3)  # Frames before Backspace repeats, then frames between repeats.
+
+    def take(self) -> str:
+        typed = "".join(ch for ch in getattr(pyxel, "input_text", "") if ch.isprintable())
+        for key, ch in ((pyxel.KEY_BACKSPACE, "\b"), (pyxel.KEY_RETURN, "\n"), (pyxel.KEY_ESCAPE, "\x1b")):
+            if pyxel.btnp(key, *self.REPEAT) if key == pyxel.KEY_BACKSPACE else pyxel.btnp(key):
+                typed += ch
+        return typed
+
+
 screen = Screen()
 _bridge = None
+_text_open = False
+_text = TextReader()
 _mouse: MouseTracker | None = None
 _info = {"touch": False, "platform": "desktop"}
 
@@ -75,7 +92,8 @@ _info = {"touch": False, "platform": "desktop"}
 def init(width: int, height: int, mouse: bool = True):
     """Call after pyxel.init. Finds the browser bridge if the page installed one. `mouse=False` leaves the desktop
     mouse unread, for a target without mouse controls."""
-    global _bridge, _mouse, _info
+    global _bridge, _mouse, _info, _text_open
+    _text_open = False
     if width <= 0 or height <= 0:
         raise ValueError("Logical screen dimensions must be positive")
     screen.width, screen.height = width, height
@@ -143,6 +161,26 @@ def _refresh_info():
     screen.viewport_height = _info["viewport_height"]
     screen.orientation = _info["orientation"]
     screen.safe_area = SafeArea(**_info["safe_area"])
+
+
+def text_input(open_: bool):
+    """Start or stop typing. In a page, the bridge focuses a hidden text field, which opens the on-screen keyboard on
+    a phone, or blurs it. On the desktop, typing needs nothing to start. `App` calls it when `Game.wants_text`
+    changes."""
+    global _text_open
+    if open_ != _text_open and available():
+        _bridge.textInput(bool(open_))
+    _text_open = bool(open_)
+
+
+def take_text() -> str:
+    """The text typed since the last call, with "\\n" for Enter, "\\b" for Backspace and "\\x1b" for Escape.
+    Empty while typing is off."""
+    if not _text_open:
+        return ""
+    if available():
+        return str(_bridge.takeText() or "")
+    return _text.take()
 
 
 def is_touch_device() -> bool:

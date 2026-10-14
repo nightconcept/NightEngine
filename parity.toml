@@ -142,6 +142,14 @@ lua = { status = "planned", reason = "Games pass a wider mask by hand.", plan = 
 csharp = { status = "planned", reason = "Games pass a wider mask by hand.", plan = "docs/roadmap.md" }
 
 [[capability]]
+id = "core.input-text"
+summary = "Typed text as `text` host events, read by Input.text"
+api = ["inputs.Input.text", "inputs.text_events"]
+python = { status = "yes" }
+lua = { status = "planned", reason = "Engine core helper over the events contract.", plan = "docs/roadmap.md" }
+csharp = { status = "planned", reason = "Engine core helper over the events contract.", plan = "docs/roadmap.md" }
+
+[[capability]]
 id = "core.pointer-helpers"
 summary = "Primary pointer, press and release, and hit tests"
 api = ["pointer.primary", "pointer.pressed", "pointer.released", "pointer.in_rect"]
@@ -318,6 +326,20 @@ summary = "Safe area, touch device and screen size hints"
 python = { status = "yes", at = "host/platform.py:SafeArea" }
 lua = { status = "planned", reason = "LÖVE exposes the safe area; no engine API yet.", plan = "docs/roadmap.md" }
 csharp = { status = "planned", reason = "No engine API yet.", plan = "docs/roadmap.md" }
+
+[[capability]]
+id = "host.text-input"
+summary = "Typing while the game wants text: keyboard and on-screen keyboard to text events"
+python = { status = "yes", at = ["host/platform.py:text_input", "host/platform.py:take_text", "host/app.py:\"wants_text\""] }
+lua = { status = "planned", reason = "LÖVE has love.textinput and setTextInput; no engine API yet.", plan = "docs/roadmap.md" }
+csharp = { status = "planned", reason = "MonoGame has Window.TextInput; no engine API yet.", plan = "docs/roadmap.md" }
+
+[[capability]]
+id = "host.web-scripts"
+summary = "A game's own JS modules and static files in the web page"
+python = { status = "yes", at = ["web/build.py:page_files", "web/build.py:script_tags"] }
+lua = { status = "none", reason = "LÖVE has no browser build." }
+csharp = { status = "none", reason = "MonoGame has no browser build." }
 
 [[capability]]
 id = "host.pyxel-helpers"

@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from nightengine import ALL, DOWN, LEFT, MENU, RIGHT, UP, A, B, C, Input, InputTracker
+from nightengine import ALL, DOWN, LEFT, MENU, RIGHT, UP, A, B, C, Input, InputTracker, text_events
 
 
 class ReferenceTracker:
@@ -81,6 +81,19 @@ class InputTest(unittest.TestCase):
         self.assertIsNone(Input().direction())
         self.assertEqual(Input(held=UP | LEFT, pressed=LEFT).direction(), (-1, 0))
         self.assertEqual(Input(held=UP | LEFT).direction(), (0, -1))
+
+
+class TextTest(unittest.TestCase):
+    def test_text_events_split_runs_and_control_keys(self):
+        self.assertEqual(text_events("hi\bx\n"), ["text hi", "text \b", "text x", "text \n"])
+        self.assertEqual(text_events("\x1b"), ["text \x1b"])
+        self.assertEqual(text_events("a\tb\x00"), ["text ab"])
+        self.assertEqual(text_events(""), [])
+
+    def test_input_text_joins_the_frames_text_events_in_order(self):
+        events = ("dev level=3", *text_events("Hello, Jack!\n"), "press key:A", "text  ")
+        self.assertEqual(Input(events=events).text(), "Hello, Jack!\n ")
+        self.assertEqual(Input().text(), "")
 
 
 if __name__ == "__main__":

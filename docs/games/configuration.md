@@ -24,6 +24,8 @@ width = 640
 height = 480
 packages = ["mygame", "nightengine"]
 assets = ["mygame/assets"]
+scripts = ["web/brain.mjs"]               # Optional: JS modules the page loads, after launcher.mjs.
+static = ["web/worker.mjs", "web/models"] # Optional: files and folders served next to index.html.
 
 # One table per target. `controls` filters the input that the target accepts.
 [tool.nightengine.targets.desktop]

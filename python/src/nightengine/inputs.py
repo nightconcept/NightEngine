@@ -3,6 +3,7 @@
 The bits are the same in every game. A game masks out the buttons it does not use with `Game.input_mask`.
 A game can declare its own buttons above the 8 engine bits with `declare` and `Game.buttons`.
 `just dev key=value` pairs reach the game as host events (`dev_event`), which `Input.dev` reads.
+Typed text reaches the game as host events too (`text_events`), which `Input.text` reads.
 """
 
 import re
@@ -18,6 +19,8 @@ REPEAT_DELAY, REPEAT_RATE = 14, 5  # Menu cursor auto-repeat, in frames.
 DIRECTIONS = ((UP, (0, -1)), (DOWN, (0, 1)), (LEFT, (-1, 0)), (RIGHT, (1, 0)))
 EXTRA = 256  # The first bit a game may declare.
 DEV = "dev "  # The start of a `just dev` host event.
+TEXT = "text "  # The start of a typed-text host event.
+ENTER, BACKSPACE, ESCAPE = "\n", "\b", "\x1b"  # The control characters a text event can hold.
 PAIR = re.compile(r"[A-Za-z0-9_-]+=.*", re.S)
 
 
@@ -43,6 +46,25 @@ def dev_event(pair: str) -> str:
     if not PAIR.fullmatch(pair):
         raise ValueError(f"a dev pair is key=value, not {pair!r}")
     return DEV + pair
+
+
+def text_events(typed: str) -> list[str]:
+    """The host events for text typed in one frame: one `text <chars>` event for each run of printable characters,
+    and one event for each Enter, Backspace or Escape (`text \\n`, `text \\b`, `text \\x1b`). Other control
+    characters are dropped."""
+    events: list[str] = []
+    run = ""
+    for ch in typed:
+        if ch in (ENTER, BACKSPACE, ESCAPE):
+            if run:
+                events.append(TEXT + run)
+                run = ""
+            events.append(TEXT + ch)
+        elif ch.isprintable():
+            run += ch
+    if run:
+        events.append(TEXT + run)
+    return events
 
 
 def mask_of(buttons: Iterable[Button]) -> int:
@@ -82,6 +104,11 @@ class Input:
                 key, _, value = event[len(DEV) :].partition("=")
                 pairs[key] = value
         return pairs
+
+    def text(self) -> str:
+        """The text typed this frame, from its `text` host events, in order. "\\n" is Enter, "\\b" Backspace and
+        "\\x1b" Escape. Empty on most frames. The host sends text only while the game sets `wants_text`."""
+        return "".join(event[len(TEXT) :] for event in self.events if event.startswith(TEXT))
 
     def axis(self) -> tuple[int, int]:
         """The held direction as (-1..1, -1..1). Diagonals are allowed; opposite keys cancel."""

@@ -31,8 +31,13 @@ All names below import from `nightengine`, except where a module is named.
   - `axis() -> (dx, dy)`: the held direction. Diagonals are allowed and opposite keys cancel.
   - `direction() -> (dx, dy) | None`: one direction only, the newest press first. For tile movement.
   - `dev() -> dict[str, str]`: the `just dev` pairs in this frame's events. Hosts send them on frame 0.
+  - `text() -> str`: the text typed on this frame, from its `text` host events, in order. `"\n"` is Enter, `"\b"`
+    Backspace and `"\x1b"` Escape. Empty unless the game sets `wants_text` (see `app` below).
 - `dev_event("level=3") -> "dev level=3"`: the host event for one `just dev` pair. It raises `ValueError` for a pair
   that is not `key=value`, with a key of letters, digits, `_` and `-`.
+- `text_events("hi\n") -> ["text hi", "text \n"]`: the host events for one frame of typed text. Each run of
+  printable characters is one event, and each Enter, Backspace or Escape is one event. Other control characters
+  are dropped.
 - `InputTracker(mask=ALL, repeat=(), delay=14, rate=5).feed(code, pointers=()) -> Input`.
   A button in `repeat` ticks in `Input.repeat` after `delay` frames held, then every `rate` frames.
 
@@ -200,6 +205,11 @@ build for a phone and a build for a computer can differ without an `if` in the g
   `mouse=True` shows the system cursor when the target takes the mouse.
   `q` quits and saves the run to `replays/last.json`. The run is also saved when the window closes (`atexit`) and
   when the game sets `quit_requested`.
+  **Typed text.** While the game sets `wants_text = True` (an attribute the game adds; the core does not need it),
+  the App turns typing on (`platform.text_input`), posts each frame's text as `text` host events
+  (`text_events`), and the keyboard presses no buttons, so letters type instead of moving. `q` does not quit while
+  typing. Pads, pointers and soft keys still press buttons. The recording keeps the text events, so a replay needs
+  no keyboard.
 - `platform`: where the game runs.
   - `init(width, height, mouse=True)` (App calls it). With `mouse=False` the desktop mouse is not read.
   - `resize(width, height)`: a new logical size. In a page, `bridge.resize` maps later contacts to it and the page
@@ -210,6 +220,11 @@ build for a phone and a build for a computer can differ without an `if` in the g
     (`top`, `right`, `bottom`, `left` insets in logical pixels: keep text and touch targets out of them).
   - `platform()` (`android` or `desktop`), `is_touch_device()`.
   - `save(key, data)` and `load(key)`: browser storage. False and None on the desktop. A blocked read raises `OSError`.
+  - `text_input(open_)` and `take_text() -> str`: typing on or off, and the text typed since the last call
+    (`"\n"`, `"\b"`, `"\x1b"` for Enter, Backspace, Escape). On the desktop it reads `pyxel.input_text` and the
+    three keys. In a page the bridge focuses a hidden text field (`web/static/text.mjs`), which opens the
+    on-screen keyboard on a phone; it focuses again on each touch of the game, because a phone opens its keyboard
+    only for a focus that a touch caused. A phone keyboard that composes words sends each word when it ends.
 - `diagnostic`: a pointer and safe-area check for a device. The web build serves it at `?app=debug`.
 - `frames.frames_main(title, width, height, renderer, make_game, summary, modes=None, every=120)` is the
   command line of a game's `frames.py`. It renders a recording every `--every` frames, at the recording's target
@@ -229,14 +244,23 @@ height = 360
 entry = "game.py"                          # the default
 packages = ["nightrunner", "nightengine"]  # their .py files, without tests/ and docs/
 assets = ["assets"]                        # every file under these dirs
+scripts = ["web/brain.mjs"]                # optional: JS modules the page loads after launcher.mjs
+static = ["web/worker.mjs", "web/models"]  # optional: files and folders next to index.html
 ```
+
+`scripts` and `static` are the game's own page files: workers, WASM, model files. The build copies each one to the
+same path next to `index.html`, outside `game.pyxapp`, so they load with relative URLs and need no network in an
+offline build or the APK. The page loads each script as a module, in order, after `launcher.mjs`. A path must be
+inside the game and must not take the name of a file the build writes. Python reaches a script's globals through
+Pyodide's `js` module, in the game's host layer only.
 
 `--target` picks the target (default `web`; `android` shows the phone build in a browser). The build writes the
 target into `game.pyxapp`, and the page takes the target's size.
 
 It writes `game.pyxapp`, `debug.pyxapp` (the diagnostic), and the page: `index.html`, `launcher.mjs`,
-`pointer.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
-the game's environment. `web/tests/pointer.test.mjs` tests the bridge: `node --test nightengine/python/src/nightengine/web/tests/pointer.test.mjs`.
+`pointer.mjs` and `text.mjs` (the bridge), and `style.css`. The page loads the Pyxel runtime from a CDN, at the version installed in
+the game's environment. `web/tests/pointer.test.mjs` and `web/tests/text.test.mjs` test the bridge:
+`node --test nightengine/python/src/nightengine/web/tests/pointer.test.mjs nightengine/python/src/nightengine/web/tests/text.test.mjs`.
 
 `--offline` copies the runtime into the build (`web/runtime.py`): `pyxel/` (pyxel.js, the Pyxel wheel, and its
 images) and `pyodide/v<version>/` (the Pyodide core), about 18 MB. The page then needs no network, which an APK

@@ -43,7 +43,7 @@ jobs:
         with:
           cache: true
       - run: just lint
-      - run: node --test python/src/nightengine/web/tests/pointer.test.mjs
+      - run: node --test python/src/nightengine/web/tests/pointer.test.mjs python/src/nightengine/web/tests/text.test.mjs
   build:
     runs-on: ubuntu-24.04
     steps:
