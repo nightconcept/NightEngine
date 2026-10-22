@@ -31,9 +31,9 @@ url = "https://conda.anaconda.org/conda-forge/win-64/vcomp14-14.51.36247-habf1de
 checksum = "sha256:731e043390c9457299484d39e427221fc868a9249540a498a5a4f6456c7744d1"
 
 [[tools.dotnet]]
-version = "10.0.401"
+version = "10.0.402"
 backend = "core:dotnet"
-specifiers = ["10.0.401"]
+specifiers = ["10.0.402"]
 
 [[tools."http:love"]]
 version = "11.5"

@@ -1,6 +1,6 @@
 # Supported development platforms: linux-x64, macos-arm64 and windows-x64.
 [tools]
-dotnet = "10.0.401"
+dotnet = "10.0.402"
 python = "3.14"
 uv = "0.13"
 ruff = "0.17"
