@@ -1,5 +1,5 @@
 [tools]
-"core:dotnet" = "10.0.202"
+"core:dotnet" = "10.0.402"
 python = "3.13"
 uv = "latest"
 "pipx:pre-commit" = { version = "latest" }
